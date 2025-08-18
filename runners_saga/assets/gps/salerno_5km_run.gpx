@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="Xcode" version="1.1">
+    <metadata>
+        <name>5km Run - Lungomare Trieste, Salerno</name>
+        <desc>Simulated 5km run along the waterfront in Salerno, Italy, with varying pace.</desc>
+        <author>
+            <name>Your Name</name>
+        </author>
+        <time>2025-08-17T08:00:00Z</time>
+    </metadata>
+    
+    <wpt lat="40.67280" lon="14.76750">
+        <name>Start</name>
+        <time>2025-08-17T08:00:00Z</time>
+    </wpt>
+    
+    <wpt lat="40.67240" lon="14.77020">
+        <name>Point 1</name>
+        <time>2025-08-17T08:01:25Z</time>
+    </wpt>
+    
+    <wpt lat="40.67180" lon="14.77450">
+        <name>Point 2</name>
+        <time>2025-08-17T08:03:00Z</time>
+    </wpt>
+
+    <wpt lat="40.67120" lon="14.77880">
+        <name>Point 3</name>
+        <time>2025-08-17T08:04:30Z</time>
+    </wpt>
+    
+    <wpt lat="40.67050" lon="14.78350">
+        <name>Point 4</name>
+        <time>2025-08-17T08:06:05Z</time>
+    </wpt>
+    
+    <wpt lat="40.67000" lon="14.78780">
+        <name>Point 5</name>
+        <time>2025-08-17T08:07:40Z</time>
+    </wpt>
+    
+    <wpt lat="40.66950" lon="14.79250">
+        <name>Point 6</name>
+        <time>2025-08-17T08:09:10Z</time>
+    </wpt>
+
+    <wpt lat="40.66900" lon="14.79700">
+        <name>Turnaround</name>
+        <time>2025-08-17T08:10:45Z</time>
+    </wpt>
+
+    <wpt lat="40.66960" lon="14.79400">
+        <name>Point 7</name>
+        <time>2025-08-17T08:12:15Z</time>
+    </wpt>
+    
+    <wpt lat="40.67020" lon="14.78950">
+        <name>Point 8</name>
+        <time>2025-08-17T08:13:50Z</time>
+    </wpt>
+    
+    <wpt lat="40.67080" lon="14.78500">
+        <name>Point 9</name>
+        <time>2025-08-17T08:15:25Z</time>
+    </wpt>
+    
+    <wpt lat="40.67150" lon="14.78020">
+        <name>Point 10</name>
+        <time>2025-08-17T08:17:00Z</time>
+    </wpt>
+    
+    <wpt lat="40.67200" lon="14.77580">
+        <name>Point 11</name>
+        <time>2025-08-17T08:18:35Z</time>
+    </wpt>
+
+    <wpt lat="40.67250" lon="14.77150">
+        <name>Point 12</name>
+        <time>2025-08-17T08:20:00Z</time>
+    </wpt>
+    
+    <wpt lat="40.67280" lon="14.76750">
+        <name>Finish</name>
+        <time>2025-08-17T08:21:20Z</time>
+    </wpt>
+</gpx>
+
+

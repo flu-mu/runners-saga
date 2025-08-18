@@ -1,0 +1,23 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow public read access to audio files
+    match /audio/episodes/{episodeId}/{fileName} {
+      allow read: if true; // Public read access for audio files
+      allow write: if false; // No write access
+    }
+    
+    // Allow public read access to any file in the audio directory
+    match /audio/{allPaths=**} {
+      allow read: if true; // Public read access for all audio files
+      allow write: if false; // No write access
+    }
+    
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+

@@ -1,0 +1,205 @@
+<speak>
+  <!-- Episode 2: "The Radio Tower" -->
+
+  <!-- Scene 1: Mission Briefing -->
+  <p>
+    <voice name="CommanderMorrison">
+      <prosody pitch="-2%" rate="95%">Riley! Get in here! We've got a problem.</prosody>
+      <break time="500ms"/>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">What's the situation, Commander?</prosody>
+    </voice>
+
+    <voice name="CommanderMorrison">
+      <prosody pitch="-2%" rate="95%">Communications are going to hell. Lost contact with three settlements in the last twelve hours. Springfield, Millfield, even Haven Ridge - complete radio silence.</prosody>
+      <break time="400ms"/>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="100%">That's not normal interference. Someone's jamming us, or worse - those settlements might be gone.</prosody>
+    </voice>
+
+    <voice name="Tommy">
+      <prosody pitch="+5%" rate="105%">My cousin lives in Springfield. They had over two hundred people last week.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">What do we need to do?</prosody>
+    </voice>
+
+    <voice name="CommanderMorrison">
+      <prosody pitch="-2%" rate="95%">Downtown communications hub. Old WXYZ tower, forty stories up. If we can get a signal booster online up there, we might be able to punch through whatever's blocking us.</prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="100%">Downtown's a nightmare, Riley. We're talking about maybe five thousand infected packed into twenty city blocks. And that's the ones we can see.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">How do we get to a forty-story building without being noticed by five thousand zombies?</prosody>
+    </voice>
+
+    <voice name="CommanderMorrison">
+      <prosody pitch="-2%" rate="95%">Very carefully. Maya, you're taking point on this one. Riley, you carry the radio equipment - it's delicate, but it's our only shot.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">This thing weighs as much as a car battery. <break time="200ms"/></prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="100%">We'll take the maintenance tunnels as far as we can, then it's rooftop to rooftop. The infected don't look up much.</prosody>
+    </voice>
+
+    <voice name="DrChen">
+      <prosody pitch="0%" rate="90%">—ase... do you... copy? This is... Chen... Atlanta...</prosody>
+      <break time="500ms"/>
+    </voice>
+
+    <voice name="CommanderMorrison">
+      <prosody pitch="-2%" rate="95%">Dr. Chen! Dr. Chen, we're reading you but barely! Repeat your message!</prosody>
+    </voice>
+
+    <voice name="DrChen">
+      <prosody pitch="0%" rate="90%">—ommunications... sabotage... someone doesn't want... settlements talking... be careful who you... trust...</prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="100%">Sabotage. That means someone with technical knowledge is actively working against us.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">Someone who knows our radio frequencies, our equipment... <break time="200ms"/></prosody>
+    </voice>
+
+    <voice name="Tommy">
+      <prosody pitch="+5%" rate="105%">Someone who might be listening right now.</prosody>
+    </voice>
+
+    <voice name="CommanderMorrison">
+      <prosody pitch="-2%" rate="95%">All the more reason to get that tower online. Move out, and maintain radio silence until you reach the objective.</prosody>
+    </voice>
+  </p>
+
+  <!-- Scene 2: The Underground Journey -->
+  <p>
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Stay close, watch your step. These tunnels flood during heavy rain, and some of the electrical systems are still live.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">This radio gear is throwing off my balance. How far to the tower? <break time="200ms"/></prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Half mile through here, then we surface in the basement of the Meridian Building. From there, it's rooftop parkour to the communications hub.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">What was that? <break time="200ms"/></prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Could be water... could be something else. Keep moving, but stay quiet.</prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Riley, we might not be alone down here.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">There! Did you see that? Light ahead, moving.</prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">That's a flashlight. Human. Question is: friend or enemy?</prosody>
+    </voice>
+
+    <voice name="MysteriousVoice">
+      <prosody pitch="-2%" rate="95%">—know they're down here... equipment's too valuable to ignore...</prosody>
+    </voice>
+
+    <voice name="SecondVoice">
+      <prosody pitch="-1%" rate="95%">—orders are clear. No one reaches that tower...</prosody>
+    </voice>
+  </p>
+
+  <!-- Scene 3: Rooftop Navigation -->
+  <p>
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Okay, we're three blocks from the tower. Fire escape up to the roof of this building, then we jump building to building.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">There are so many of them down there. Like a slow-moving river of death.</prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">The good news is they don't look up. The bad news is if we make noise, all of them will.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">You can see everything from up here. The whole city... it's like a ghost town with a zombie problem.</prosody>
+    </voice>
+  </p>
+
+  <!-- Scene 4: Tower Assault -->
+  <p>
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Thirty-eighth floor... almost there... You okay with the equipment?</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">It's heavy, but I've got it. Maya, what's our play when we reach the roof?</prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Those people dismantling equipment - they can't be more than three or four. We set up fast, get a signal out, then get gone before they know what hit us.</prosody>
+    </voice>
+
+    <voice name="HostileLeader">
+      <prosody pitch="-2%" rate="95%">What the hell? How did you get up here?</prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Same way you did, genius. Riley, start setting up the booster!</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">Maya, I need two minutes to get this online!</prosody>
+    </voice>
+
+    <voice name="DrChen">
+      <prosody pitch="0%" rate="90%">Courier Base, this is Dr. Chen, Atlanta Safe Zone. Please respond!</prosody>
+    </voice>
+  </p>
+
+  <!-- Scene 5: Victory and New Mysteries -->
+  <p>
+    <voice name="CommanderMorrison">
+      <prosody pitch="-2%" rate="95%">Riley! Maya! You did it! We've got contact with seventeen settlements!</prosody>
+    </voice>
+
+    <voice name="Tommy">
+      <prosody pitch="+5%" rate="105%">Riley! You should hear the radio traffic! People are crying, they're so happy to talk to each other again!</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">It feels good to reconnect people. But Commander, we learned something troubling up there.</prosody>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="95%">Organized saboteurs, well-equipped, working for someone called 'The Shepherd.' They're actively trying to keep settlements isolated.</prosody>
+    </voice>
+
+    <voice name="DrChen">
+      <prosody pitch="0%" rate="90%">The Shepherd isn't just a local problem. We've identified similar sabotage operations in twelve states. This is coordinated, nationwide. And Commander... they know about our research.</prosody>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">Then we'd better make sure he doesn't get his way.</prosody>
+    </voice>
+  </p>
+</speak>
