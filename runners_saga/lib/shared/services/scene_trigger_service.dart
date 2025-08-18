@@ -309,8 +309,8 @@ class SceneTriggerService {
       
       // Set up completion listener
       // _audioPlayer.onPlayerComplete.listen((_) {
-        _onSceneAudioComplete(sceneType);
-      });
+      //   _onSceneAudioComplete(sceneType);
+      // });
       
       // Fallback timer in case audio doesn't complete properly
       Timer(const Duration(seconds: 10), () {
