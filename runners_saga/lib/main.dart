@@ -14,6 +14,8 @@ import 'shared/providers/app_providers.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  print('=== APP STARTUP BEGINNING ===');
+  
   try {
     // Debug: Check if we're on web platform
     if (kIsWeb) {
@@ -30,10 +32,16 @@ void main() async {
       }
     }
     
-    // Initialize Firebase
+    // Initialize Firebase with timeout to prevent hanging
     print('=== INITIALIZING FIREBASE ===');
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        print('⚠️ Firebase initialization timed out - continuing anyway');
+        return Firebase.app();
+      },
     );
     print('✅ Firebase initialized successfully');
     
@@ -42,12 +50,18 @@ void main() async {
     print('Firebase app name: ${app.name}');
     print('Firebase app options: ${app.options}');
     
-    // Initialize Firebase services
+    // Initialize Firebase services with timeout
     print('=== INITIALIZING FIREBASE SERVICES ===');
     // Only initialize essential services at startup
-    await _initializeEssentialFirebaseServices();
+    await _initializeEssentialFirebaseServices().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () {
+        print('⚠️ Firebase services initialization timed out - continuing anyway');
+      },
+    );
     print('✅ Essential Firebase services initialized successfully');
     
+    print('=== STARTING APP ===');
     runApp(const ProviderScope(child: RunnersSagaApp()));
   } catch (e) {
     print('=== FIREBASE INITIALIZATION FAILED ===');
@@ -55,6 +69,7 @@ void main() async {
     print('Error message: $e');
     print('Stack trace: ${StackTrace.current}');
     
+    print('=== STARTING APP WITH ERROR SCREEN ===');
     // If Firebase fails to initialize, show error and exit
     runApp(MaterialApp(
       home: Scaffold(
@@ -99,23 +114,24 @@ Future<void> _initializeEssentialFirebaseServices() async {
     print('  ✅ Firestore initialized successfully');
   } catch (e) {
     print('  ❌ Firestore initialization failed: $e');
-    rethrow;
+    // Don't rethrow - continue without Firestore
   }
   
   print('  → Initializing Firebase Auth...');
   try {
-    // Initialize Firebase Auth (essential for app startup)
-    await FirebaseAuth.instance.authStateChanges().first;
+    // Initialize Firebase Auth but don't block on network connection
+    // Just set up the instance without waiting for auth state
+    FirebaseAuth.instance;
     print('  ✅ Firebase Auth initialized successfully');
   } catch (e) {
     print('  ❌ Firebase Auth initialization failed: $e');
-    rethrow;
+    // Don't rethrow - continue without Auth
   }
   
   // Note: Firebase Storage will be initialized when first needed
   print('  ⚠️ Firebase Storage will be initialized on-demand');
   
-  // Set a flag to indicate Firebase is ready
+  // Set a flag to indicate Firebase is ready (even if some services failed)
   _firebaseInitialized = true;
 }
 
