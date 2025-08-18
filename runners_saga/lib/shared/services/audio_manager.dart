@@ -55,26 +55,26 @@ class AudioManager {
   /// Initialize the audio manager
   Future<void> initialize() async {
     // Set up audio players
-    await _backgroundMusicPlayer.setReleaseMode(ReleaseMode.loop);
-    await _storyAudioPlayer.setReleaseMode(ReleaseMode.stop);
-    await _sfxPlayer.setReleaseMode(ReleaseMode.stop);
+    // await _backgroundMusicPlayer.setReleaseMode(ReleaseMode.loop);
+    // await _storyAudioPlayer.setReleaseMode(ReleaseMode.stop);
+    // await _sfxPlayer.setReleaseMode(ReleaseMode.stop);
     
     // Set initial volumes
-    await _backgroundMusicPlayer.setVolume(_backgroundMusicVolume);
-    await _storyAudioPlayer.setVolume(_storyAudioVolume);
-    await _sfxPlayer.setVolume(_sfxVolume);
+    // await _backgroundMusicPlayer.setVolume(_backgroundMusicVolume);
+    // await _storyAudioPlayer.setVolume(_storyAudioVolume);
+    // await _sfxPlayer.setVolume(_sfxVolume);
     
     // Set up completion handlers
-    _storyAudioPlayer.onPlayerComplete.listen((_) => _onStoryAudioComplete());
-    _sfxPlayer.onPlayerComplete.listen((_) => _onSfxComplete());
+    // _storyAudioPlayer.onPlayerComplete.listen((_) => _onStoryAudioComplete());
+    // _sfxPlayer.onPlayerComplete.listen((_) => _onSfxComplete());
   }
   
   /// Play background music
   Future<void> playBackgroundMusic(String audioFile, {double? volume}) async {
     try {
-      await _backgroundMusicPlayer.setSource(AssetSource(audioFile));
-      await _backgroundMusicPlayer.setVolume(volume ?? _backgroundMusicVolume);
-      await _backgroundMusicPlayer.resume();
+      // await _backgroundMusicPlayer.setSource(AssetSource(audioFile));
+      // await _backgroundMusicPlayer.setVolume(volume ?? _backgroundMusicVolume);
+      // await _backgroundMusicPlayer.resume();
       
       _isBackgroundMusicPlaying = true;
       onAudioStart?.call(audioFile);
@@ -95,9 +95,9 @@ class AudioManager {
         await _fadeOutStoryAudio();
       }
       
-      await _storyAudioPlayer.setSource(AssetSource(audioFile));
-      await _storyAudioPlayer.setVolume(volume ?? _storyAudioVolume);
-      await _storyAudioPlayer.resume();
+      // await _storyAudioPlayer.setSource(AssetSource(audioFile));
+      // await _storyAudioPlayer.setVolume(volume ?? _storyAudioVolume);
+      // await _storyAudioPlayer.resume();
       
       _isStoryAudioPlaying = true;
       onAudioStart?.call(audioFile);
@@ -118,12 +118,12 @@ class AudioManager {
     try {
       // Stop any currently playing SFX
       if (_isSfxPlaying) {
-        await _sfxPlayer.stop();
+        // await _sfxPlayer.stop();
       }
       
-      await _sfxPlayer.setSource(AssetSource(audioFile));
-      await _sfxPlayer.setVolume(volume ?? _sfxVolume);
-      await _sfxPlayer.resume();
+      // await _sfxPlayer.setSource(AssetSource(audioFile));
+      // await _sfxPlayer.setVolume(volume ?? _sfxVolume);
+      // await _sfxPlayer.resume();
       
       _isSfxPlaying = true;
       
@@ -136,43 +136,43 @@ class AudioManager {
   
   /// Stop background music
   Future<void> stopBackgroundMusic() async {
-    await _backgroundMusicPlayer.stop();
+    // await _backgroundMusicPlayer.stop();
     _isBackgroundMusicPlaying = false;
   }
   
   /// Stop story audio
   Future<void> stopStoryAudio() async {
     if (!_isStoryAudioPlaying) return;
-    await _fadeOutStoryAudio();
-    await _storyAudioPlayer.stop();
+    // await _fadeOutStoryAudio();
+    // await _storyAudioPlayer.stop();
     _isStoryAudioPlaying = false;
   }
   
   /// Stop sound effect
   Future<void> stopSfx() async {
-    await _sfxPlayer.stop();
+    // await _sfxPlayer.stop();
     _isSfxPlaying = false;
   }
   
   /// Pause all audio
   Future<void> pauseAll() async {
-    await _backgroundMusicPlayer.pause();
-    await _storyAudioPlayer.pause();
-    await _sfxPlayer.pause();
+    // await _backgroundMusicPlayer.pause();
+    // await _storyAudioPlayer.pause();
+    // await _sfxPlayer.pause();
   }
   
   /// Resume all audio
   Future<void> resumeAll() async {
-    if (_isBackgroundMusicPlaying) await _backgroundMusicPlayer.resume();
-    if (_isStoryAudioPlaying) await _storyAudioPlayer.resume();
-    if (_isSfxPlaying) await _sfxPlayer.resume();
+    // if (_isBackgroundMusicPlaying) await _backgroundMusicPlayer.resume();
+    // if (_isStoryAudioPlaying) await _storyAudioPlayer.resume();
+    // if (_isSfxPlaying) await _sfxPlayer.resume();
   }
   
   /// Stop all audio
   Future<void> stopAll() async {
-    await _backgroundMusicPlayer.stop();
-    await _storyAudioPlayer.stop();
-    await _sfxPlayer.stop();
+    // await _backgroundMusicPlayer.stop();
+    // await _storyAudioPlayer.stop();
+    // await _sfxPlayer.stop();
     
     _isBackgroundMusicPlaying = false;
     _isStoryAudioPlaying = false;
@@ -186,15 +186,15 @@ class AudioManager {
     switch (type) {
       case AudioType.background:
         _backgroundMusicVolume = clampedVolume;
-        await _backgroundMusicPlayer.setVolume(clampedVolume);
+        // await _backgroundMusicPlayer.setVolume(clampedVolume);
         break;
       case AudioType.story:
         _storyAudioVolume = clampedVolume;
-        await _storyAudioPlayer.setVolume(clampedVolume);
+        // await _storyAudioPlayer.setVolume(clampedVolume);
         break;
       case AudioType.sfx:
         _sfxVolume = clampedVolume;
-        await _sfxPlayer.setVolume(clampedVolume);
+        // await _sfxPlayer.setVolume(clampedVolume);
         break;
     }
   }
@@ -206,7 +206,7 @@ class AudioManager {
     
     for (int i = 0; i <= fadeSteps; i++) {
       final volume = (_storyAudioVolume * i / fadeSteps);
-      await _storyAudioPlayer.setVolume(volume);
+      // await _storyAudioPlayer.setVolume(volume);
       await Future.delayed(fadeDuration ~/ fadeSteps);
     }
   }
@@ -218,7 +218,7 @@ class AudioManager {
     
     for (int i = fadeSteps; i >= 0; i--) {
       final volume = (_storyAudioVolume * i / fadeSteps);
-      await _storyAudioPlayer.setVolume(volume);
+      // await _storyAudioPlayer.setVolume(volume);
       await Future.delayed(fadeDuration ~/ fadeSteps);
     }
   }
@@ -247,12 +247,12 @@ class AudioManager {
         
         for (int i = fadeSteps; i >= 0; i--) {
           final volume = (_backgroundMusicVolume * i / fadeSteps);
-          await _backgroundMusicPlayer.setVolume(volume);
+          // await _backgroundMusicPlayer.setVolume(volume);
           await Future.delayed(fadeDuration ~/ fadeSteps);
         }
       } else {
         // Immediate volume reduction
-        await _backgroundMusicPlayer.setVolume(_backgroundMusicVolume * 0.3);
+        // await _backgroundMusicPlayer.setVolume(_backgroundMusicVolume * 0.3);
       }
       
       print('🔇 AudioManager: External music volume ducked');
@@ -271,12 +271,12 @@ class AudioManager {
         
         for (int i = 0; i <= fadeSteps; i++) {
           final volume = (_backgroundMusicVolume * i / fadeSteps);
-          await _backgroundMusicPlayer.setVolume(volume);
+          // await _backgroundMusicPlayer.setVolume(volume);
           await Future.delayed(fadeDuration ~/ fadeSteps);
         }
       } else {
         // Immediate volume restoration
-        await _backgroundMusicPlayer.setVolume(_backgroundMusicVolume);
+        // await _backgroundMusicPlayer.setVolume(_backgroundMusicVolume);
       }
       
       print('🔊 AudioManager: External music volume restored');
@@ -311,9 +311,9 @@ class AudioManager {
   /// Dispose resources
   Future<void> dispose() async {
     await stopAll();
-    await _backgroundMusicPlayer.dispose();
-    await _storyAudioPlayer.dispose();
-    await _sfxPlayer.dispose();
+    // await _backgroundMusicPlayer.dispose();
+    // await _storyAudioPlayer.dispose();
+    // await _sfxPlayer.dispose();
   }
 }
 

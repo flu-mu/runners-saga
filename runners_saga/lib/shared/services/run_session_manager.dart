@@ -369,20 +369,20 @@ class RunSessionManager {
         final url = 'http://localhost:8080/assets/$audioFile';
         
         // Create a local player variable to handle completion
-        final player = AudioPlayer();
+        // final player = AudioPlayer();
         
         // Set up completion listener
-        player.onPlayerComplete.listen((_) {
-          if (kDebugMode) {
-            print('🎵 Audio completed: $audioFile');
-          }
-          // Notify scene completion
-          onSceneCompleted?.call(scene);
-          player.dispose();
-        });
+        // player.onPlayerComplete.listen((_) {
+        //   if (kDebugMode) {
+        //     print('🎵 Audio completed: $audioFile');
+        //   }
+        //   // Notify scene completion
+        //   onSceneCompleted?.call(scene);
+        //   player.dispose();
+        // });
         
-        await player.setSourceUrl(url);
-        await player.resume();
+        // await player.setSourceUrl(url);
+        // await player.resume();
         
         if (kDebugMode) {
           print('🎵 Audio loaded with URL: $url');

@@ -24,7 +24,7 @@ class SceneTriggerService {
   // Dynamic array of available audio files for the current episode
   static List<String> _availableAudioFiles = [];
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  // final AudioPlayer _audioPlayer = AudioPlayer();
   final Set<SceneType> _playedScenes = <SceneType>{};
   
   bool _isRunning = false;
@@ -72,8 +72,8 @@ class SceneTriggerService {
     this.onProgressUpdate = onProgressUpdate;
     
     // Initialize the audio player
-    _audioPlayer.setReleaseMode(ReleaseMode.stop);
-    _audioPlayer.setVolume(1.0);
+    // _audioPlayer.setReleaseMode(ReleaseMode.stop);
+    // _audioPlayer.setVolume(1.0);
     
     _resetState();
   }
@@ -266,8 +266,8 @@ class SceneTriggerService {
         // On web, prefer a direct URL and fall back to MP3 if WAV has issues
         final url = _toWebAssetUrl(audioFile);
         print('🎵 [WEB] Using URL source: $url');
-        await _audioPlayer.setSourceUrl(url);
-        await _audioPlayer.resume();
+              // await _audioPlayer.setSourceUrl(url);
+      // await _audioPlayer.resume();
       } else {
         // Mobile: Handle Firebase Storage URLs and local files
         final episodeId = _getCurrentEpisodeId();
@@ -289,16 +289,16 @@ class SceneTriggerService {
 
         try {
           // Try to play from local file first
-          await _audioPlayer.setSource(DeviceFileSource(localFilePath));
-          await _audioPlayer.resume();
+                  // await _audioPlayer.setSource(DeviceFileSource(localFilePath));
+        // await _audioPlayer.resume();
           print('✅ [MOBILE] Audio started successfully with DeviceFileSource from: $localFilePath');
         } catch (e) {
           print('⚠️ Failed to play from local file ($localFilePath): $e');
           print('🎵 [MOBILE] Falling back to playing from remote URL: $audioFile');
           try {
             // Fallback to remote URL if local file fails
-            await _audioPlayer.setSourceUrl(audioFile);
-            await _audioPlayer.resume();
+                    // await _audioPlayer.setSourceUrl(audioFile);
+        // await _audioPlayer.resume();
             print('✅ [MOBILE] Audio started successfully with UrlSource from: $audioFile');
           } catch (urlError) {
             print('❌ Failed to play from remote URL ($audioFile): $urlError');
@@ -308,7 +308,7 @@ class SceneTriggerService {
       }
       
       // Set up completion listener
-      _audioPlayer.onPlayerComplete.listen((_) {
+      // _audioPlayer.onPlayerComplete.listen((_) {
         _onSceneAudioComplete(sceneType);
       });
       
@@ -356,7 +356,7 @@ class SceneTriggerService {
     if (!_isScenePlaying) return;
     
     try {
-      await _audioPlayer.stop();
+      // await _audioPlayer.stop();
       _isScenePlaying = false;
       _currentScene = null;
     } catch (e) {
@@ -371,7 +371,7 @@ class SceneTriggerService {
     if (!_isScenePlaying) return;
     
     try {
-      await _audioPlayer.pause();
+      // await _audioPlayer.pause();
     } catch (e) {
       if (kDebugMode) {
         print('Error pausing scene audio: $e');
@@ -384,7 +384,7 @@ class SceneTriggerService {
     if (!_isScenePlaying || _currentScene == null) return;
     
     try {
-      await _audioPlayer.resume();
+      // await _audioPlayer.resume();
     } catch (e) {
       if (kDebugMode) {
         print('Error resuming scene audio: $e');
@@ -405,7 +405,7 @@ class SceneTriggerService {
   /// Dispose resources
   void dispose() {
     stop();
-    _audioPlayer.dispose();
+    // _audioPlayer.dispose();
   }
 
   /// Get scene info for a specific scene type
