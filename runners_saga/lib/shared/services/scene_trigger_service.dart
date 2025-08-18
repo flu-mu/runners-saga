@@ -289,20 +289,19 @@ class SceneTriggerService {
 
         try {
           // Try to play from local file first
-                  // await _audioPlayer.setSource(DeviceFileSource(localFilePath));
-        // await _audioPlayer.resume();
+          // await _audioPlayer.setSource(DeviceFileSource(localFilePath));
+          // await _audioPlayer.resume();
           print('✅ [MOBILE] Audio started successfully with DeviceFileSource from: $localFilePath');
         } catch (e) {
           print('⚠️ Failed to play from local file ($localFilePath): $e');
           print('🎵 [MOBILE] Falling back to playing from remote URL: $audioFile');
           try {
             // Fallback to remote URL if local file fails
-                    // await _audioPlayer.setSourceUrl(audioFile);
-        // await _audioPlayer.resume();
+            // await _audioPlayer.setSourceUrl(audioFile);
+            // await _audioPlayer.resume();
             print('✅ [MOBILE] Audio started successfully with UrlSource from: $audioFile');
           } catch (urlError) {
             print('❌ Failed to play from remote URL ($audioFile): $urlError');
-            // No AssetSource fallback for URLs, as it's incorrect.
           }
         }
       }
