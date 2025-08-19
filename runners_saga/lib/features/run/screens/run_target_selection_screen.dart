@@ -102,10 +102,10 @@ class _RunTargetSelectionScreenState extends ConsumerState<RunTargetSelectionScr
                   decoration: BoxDecoration(
                     color: kSurfaceBase,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: kElectricAqua.withOpacity(0.3)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                            border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -175,9 +175,9 @@ class _RunTargetSelectionScreenState extends ConsumerState<RunTargetSelectionScr
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                              color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,11 +202,11 @@ class _RunTargetSelectionScreenState extends ConsumerState<RunTargetSelectionScr
                             hintStyle: const TextStyle(color: Colors.grey),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -247,7 +247,7 @@ class _RunTargetSelectionScreenState extends ConsumerState<RunTargetSelectionScr
                                 },
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: Colors.white,
-                                  side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                                  side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -276,7 +276,7 @@ class _RunTargetSelectionScreenState extends ConsumerState<RunTargetSelectionScr
                     label: const Text('Create Custom Target'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -329,7 +329,7 @@ class _RunTargetSelectionScreenState extends ConsumerState<RunTargetSelectionScr
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.15) : Colors.transparent,
+          color: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
@@ -368,7 +368,7 @@ class _RunTargetSelectionScreenState extends ConsumerState<RunTargetSelectionScr
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.15) : Theme.of(context).colorScheme.surface,
+          color: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15) : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor,
@@ -394,7 +394,7 @@ class _RunTargetSelectionScreenState extends ConsumerState<RunTargetSelectionScr
                 target.description,
                 style: TextStyle(
                   fontSize: 12,
-                  color: isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.8) : Theme.of(context).textTheme.bodyMedium?.color,
+                  color: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.8) : Theme.of(context).textTheme.bodyMedium?.color,
                 ),
                 textAlign: TextAlign.center,
               ),

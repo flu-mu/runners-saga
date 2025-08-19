@@ -173,7 +173,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [kElectricAqua.withOpacity(0.2), kDeepTeal.withOpacity(0.1)],
+          colors: [kElectricAqua.withValues(alpha: 0.2), kDeepTeal.withValues(alpha: 0.1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -218,10 +218,10 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
       decoration: BoxDecoration(
         color: kSurfaceBase,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kElectricAqua.withOpacity(0.3)),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -262,9 +262,9 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -297,7 +297,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
       decoration: BoxDecoration(
         color: kSurfaceBase,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kRoyalPlum.withOpacity(0.3)),
+        border: Border.all(color: kRoyalPlum.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,9 +334,9 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: kMeadowGreen.withOpacity(0.2),
+              color: kMeadowGreen.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: kMeadowGreen.withOpacity(0.5)),
+              border: Border.all(color: kMeadowGreen.withValues(alpha: 0.5)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -365,7 +365,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
       decoration: BoxDecoration(
         color: kSurfaceBase,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kEmberCoral.withOpacity(0.3)),
+        border: Border.all(color: kEmberCoral.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,9 +390,9 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
             children: _achievements.map((achievement) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: kEmberCoral.withOpacity(0.2),
+                color: kEmberCoral.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: kEmberCoral.withOpacity(0.5)),
+                border: Border.all(color: kEmberCoral.withValues(alpha: 0.5)),
               ),
               child: Text(
                 achievement,

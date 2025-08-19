@@ -55,10 +55,10 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
       decoration: BoxDecoration(
         color: kSurfaceBase,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kElectricAqua.withOpacity(0.3)),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -115,7 +115,7 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                           border: Border.all(color: Colors.white, width: 3),
                           boxShadow: [
                             BoxShadow(
-                              color: kElectricAqua.withOpacity(0.5),
+                              color: kElectricAqua.withValues(alpha: 0.5),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -141,11 +141,11 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                   // Zoom in button
                   Container(
                     decoration: BoxDecoration(
-                      color: kSurfaceBase.withOpacity(0.9),
+                      color: kSurfaceBase.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -165,11 +165,11 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                   // Zoom out button
                   Container(
                     decoration: BoxDecoration(
-                      color: kSurfaceBase.withOpacity(0.9),
+                      color: kSurfaceBase.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -190,11 +190,11 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                   if (polylinePoints.length > 1)
                     Container(
                       decoration: BoxDecoration(
-                        color: kSurfaceBase.withOpacity(0.9),
+                        color: kSurfaceBase.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -245,7 +245,7 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: kMeadowGreen.withOpacity(0.9),
+              color: kMeadowGreen.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Colors.white, width: 1),
             ),
