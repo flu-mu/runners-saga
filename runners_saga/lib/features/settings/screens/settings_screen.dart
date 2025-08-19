@@ -29,7 +29,7 @@ class SettingsScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               color: kSurfaceBase,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kElectricAqua.withOpacity(0.3)),
+              border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [

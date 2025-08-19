@@ -185,6 +185,8 @@ class RunSessionController extends _$RunSessionController {
     
     manager.onSceneCompleted = (scene) {
       ref.read(currentSceneProvider.notifier).updateScene(null);
+      // Mark the scene as completed in the played scenes list
+      ref.read(playedScenesProvider.notifier).addScene(scene);
     };
   }
   

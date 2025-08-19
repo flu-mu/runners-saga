@@ -1,5 +1,5 @@
 import 'dart:async';
-// import 'package:audioplayers/audioplayers.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 enum AudioType {
@@ -21,9 +21,9 @@ class AudioItem {
 }
 
 class AudioManager {
-  // final AudioPlayer _backgroundMusicPlayer = AudioPlayer();
-  // final AudioPlayer _storyAudioPlayer = AudioPlayer();
-  // final AudioPlayer _sfxPlayer = AudioPlayer();
+  final AudioPlayer _backgroundMusicPlayer = AudioPlayer();
+  final AudioPlayer _storyAudioPlayer = AudioPlayer();
+  final AudioPlayer _sfxPlayer = AudioPlayer();
   
   // Volume levels
   double _backgroundMusicVolume = 0.5;

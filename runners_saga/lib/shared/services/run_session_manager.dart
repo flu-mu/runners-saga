@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:audioplayers/audioplayers.dart';
 import 'progress_monitor_service.dart';
 import 'scene_trigger_service.dart';
 import 'audio_manager.dart';
+import 'firestore_service.dart';
 import '../models/episode_model.dart';
 import '../models/run_model.dart';
 import '../models/run_target_model.dart';
@@ -87,7 +89,6 @@ class RunSessionManager {
       _progressMonitor.initialize(
         targetTime: userTargetTime,
         targetDistance: userTargetDistance,
-        trackingMode: trackingMode,
         onDistanceUpdate: _onDistanceUpdate,
         onTimeUpdate: _onTimeUpdate,
         onPaceUpdate: _onPaceUpdate,
@@ -205,8 +206,21 @@ class RunSessionManager {
     _sceneTrigger.stop();
     await _audioManager.stopAll();
     
-    // Create run model
+    // Create run model with GPS data
     _currentRun = _createRunModel();
+    
+    // Save the run to database with GPS route
+    if (_currentRun != null) {
+      try {
+        final firestore = FirestoreService();
+        final runId = await firestore.saveRun(_currentRun!);
+        await firestore.completeRun(runId, _currentRun!);
+        
+        print('💾 RunSessionManager: Run saved to database with ${_currentRun!.route.length} GPS points');
+      } catch (e) {
+        print('⚠️ RunSessionManager: Failed to save run to database: $e');
+      }
+    }
     
     // Notify state change
     onSessionStateChanged?.call(sessionState);
@@ -454,8 +468,11 @@ class RunSessionManager {
   RunModel _createRunModel() {
     final stats = _progressMonitor.getRunStats();
     
+    // Get the current user ID from Firebase Auth
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user';
+    
     return RunModel(
-      userId: 'current_user_id', // This should come from auth
+      userId: currentUserId,
       startTime: _sessionStartTime!,
       endTime: DateTime.now(),
       route: _progressMonitor.route

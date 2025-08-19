@@ -192,7 +192,8 @@ class FirestoreService {
       Query query = _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
-          .orderBy('startTime', descending: true)
+          // Temporarily removed orderBy to avoid index requirement
+          // .orderBy('startTime', descending: true)
           .limit(limit);
       
       if (startAfter != null) {
@@ -236,15 +237,21 @@ class FirestoreService {
   // Get runs by season
   Future<List<RunModel>> getRunsBySeason(String seasonId, {int limit = 50}) async {
     try {
+      final userId = currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
       final querySnapshot = await _firestoreInstance
-          .collection('runs')
+          .collection(_runsCollection)
+          .where('userId', isEqualTo: userId)
           .where('seasonId', isEqualTo: seasonId)
           .orderBy('startTime', descending: true)
           .limit(limit)
           .get();
 
       return querySnapshot.docs
-          .map((doc) => RunModel.fromJson(doc.data()))
+          .map((doc) => RunModel.fromJson(_convertDocData(doc)))
           .toList();
     } catch (e) {
       throw Exception('Failed to get runs by season: $e');
@@ -436,7 +443,7 @@ class FirestoreService {
   }
   
   // Stream of user runs for real-time updates
-  // Note: To add back orderBy('startTime'), create composite index: userId (ascending) + startTime (descending)
+  // Note: Requires composite index: userId (ascending) + startTime (descending)
   Stream<List<RunModel>> getUserRunsStream({int limit = 50}) {
     try {
       final userId = currentUserId;
@@ -447,6 +454,8 @@ class FirestoreService {
       return _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
+          // Temporarily removed orderBy to avoid index requirement
+          // .orderBy('startTime', descending: true)
           .limit(limit)
           .snapshots()
           .map((snapshot) => snapshot.docs
@@ -458,7 +467,7 @@ class FirestoreService {
   }
   
   // Stream of completed runs only
-  // Note: To add back orderBy('startTime'), create composite index: userId (ascending) + status (ascending) + startTime (descending)
+  // Note: Requires composite index: userId (ascending) + status (ascending) + startTime (descending)
   Stream<List<RunModel>> getCompletedRunsStream({int limit = 50}) {
     try {
       final userId = currentUserId;
@@ -470,6 +479,7 @@ class FirestoreService {
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
           .where('status', isEqualTo: RunStatus.completed.name)
+          .orderBy('startTime', descending: true)
           .limit(limit)
           .snapshots()
           .map((snapshot) => snapshot.docs

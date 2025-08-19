@@ -23,12 +23,12 @@ class SceneHud extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: kMidnightNavy.withOpacity(0.95),
+        color: kMidnightNavy.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kElectricAqua.withOpacity(0.8), width: 2),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.8), width: 2),
         boxShadow: [
           BoxShadow(
-            color: kElectricAqua.withOpacity(0.3),
+            color: kElectricAqua.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
             spreadRadius: 2,
@@ -49,7 +49,7 @@ class SceneHud extends ConsumerWidget {
               Text(
                 'STORY TRANSMISSION',
                 style: TextStyle(
-                  color: kElectricAqua.withOpacity(0.8),
+                  color: kElectricAqua.withValues(alpha: 0.8),
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
@@ -176,7 +176,7 @@ class _AnimatedDotsState extends State<_AnimatedDots> with TickerProviderStateMi
               width: 6,
               height: 6,
               decoration: BoxDecoration(
-                color: kElectricAqua.withOpacity(0.3 + (_dotAnimations[index].value * 0.7)),
+                color: kElectricAqua.withValues(alpha: 0.3 + (_dotAnimations[index].value * 0.7)),
                 shape: BoxShape.circle,
               ),
             );

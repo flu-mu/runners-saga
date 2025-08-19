@@ -22,8 +22,7 @@ import '../widgets/run_map_panel.dart';
 import '../widgets/scene_hud.dart';
 import '../widgets/scene_progress_indicator.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
-import '../../../shared/widgets/gps_simulation_widget.dart';
-import '../../../shared/services/gps_simulation_service.dart';
+
 
 class RunScreen extends ConsumerStatefulWidget {
   const RunScreen({super.key});
@@ -44,8 +43,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
   Duration _elapsedTime = Duration.zero;
   Duration _pausedTime = Duration.zero; // Time when paused
   
-  // GPS simulation service for testing
-  final GpsSimulationService _gpsSimulationService = GpsSimulationService();
+  // GPS tracking for real runs
   
   @override
   void initState() {
@@ -72,7 +70,6 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     try {
       _disposed = true;
       _stopSimpleTimer();
-      _gpsSimulationService.dispose();
     } catch (e) {
       // Log error but don't let it prevent disposal
       print('⚠️ RunScreen: Error during dispose: $e');
@@ -1351,18 +1348,6 @@ class _RunScreenState extends ConsumerState<RunScreen> {
                   Center(
                     child: _buildControlButtons(),
                   ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // GPS Simulation Widget (for testing)
-                  if (kDebugMode) // Only show in debug mode
-                    GpsSimulationWidget(
-                      simulationService: _gpsSimulationService,
-                      onPositionUpdate: (position) {
-                        print('🎯 GPS Simulation: Position update received: ${position.latitude}, ${position.longitude}');
-                        // Here you can integrate with your progress monitor or run session
-                      },
-                    ),
                   
                   const SizedBox(height: 24), // Bottom padding for safe area
                 ],

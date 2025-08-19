@@ -1,0 +1,93 @@
+<speak>
+  <!-- Scene 3: Inside the Hospital -->
+  <p>
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">
+        <audio src="breath_steady.wav"/>
+        This place is like a museum of the apocalypse. Everything's exactly like people left it.
+      </prosody>
+      <break time="400ms"/>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="100%">
+        Stay focused. Pharmacy should be down the hall from your position.
+      </prosody>
+      <break time="400ms"/>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">
+        Radiology... Surgery... there! Pharmacy straight ahead.
+      </prosody>
+      <break time="500ms"/>
+    </voice>
+
+    <voice name="Tommy">
+      <prosody pitch="+5%" rate="105%">
+        Riley! That noise on the third floor - they're moving toward the stairwells! A lot of them!
+      </prosody>
+      <break time="300ms"/>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">
+        How long do I have?
+      </prosody>
+      <break time="300ms"/>
+    </voice>
+
+    <voice name="Tommy">
+      <prosody pitch="+5%" rate="105%">
+        At their speed... maybe three minutes before they reach your floor.
+      </prosody>
+      <break time="400ms"/>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">
+        <audio src="door_locked.wav"/>
+        It's locked! Electronic lock, still powered!
+      </prosody>
+      <break time="400ms"/>
+    </voice>
+
+    <voice name="Maya">
+      <prosody pitch="-1%" rate="100%">
+        Look for a keycard. Check the nurses' station nearby.
+      </prosody>
+      <break time="300ms"/>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">
+        <audio src="papers_rustling.wav"/>
+        Got it! Emergency pharmacy access.
+      </prosody>
+      <break time="400ms"/>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">
+        <audio src="door_beep_open.wav"/>
+        The refrigeration's still working! I can see the insulin!
+      </prosody>
+      <break time="300ms"/>
+    </voice>
+
+    <voice name="Riley">
+      <prosody pitch="0%" rate="100%">
+        <audio src="vials_clinking.wav"/>
+        Blue vials, Humalog... Got them! Six vials should be enough!
+      </prosody>
+      <break time="400ms"/>
+    </voice>
+
+    <voice name="Tommy">
+      <prosody pitch="+5%" rate="105%">
+        Riley! They're in the stairwell! You've got maybe ninety seconds!
+      </prosody>
+      <break time="400ms"/>
+    </voice>
+  </p>
+</speak>

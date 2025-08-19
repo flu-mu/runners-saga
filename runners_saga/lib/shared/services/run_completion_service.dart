@@ -73,8 +73,8 @@ class RunCompletionService {
         }
       }
 
-      // Stop the run session
-      await _container.read(runSessionControllerProvider.notifier).stopSession();
+      // Don't stop the run session here - it's already stopped by the calling code
+      // await _container.read(runSessionControllerProvider.notifier).stopSession();
 
       final summaryData = RunSummaryData(
         totalTime: totalTime,
@@ -114,8 +114,8 @@ class RunCompletionService {
         endTime: startTime.add(totalTime),
       );
       
-      // Save run to history (optional)
-      await _saveRunToHistory(summaryData);
+      // Don't save run to history here - RunSessionManager already creates the run with GPS data
+      // await _saveRunToHistory(summaryData);
       
       // Debug: Log route information
       print('📍 RunCompletionService: Final route has ${summaryData.route.length} GPS points');
@@ -258,59 +258,11 @@ class RunCompletionService {
     return achievements;
   }
   
-  /// Save run to user's history
+  /// Save run to user's history - NO LONGER NEEDED
+  /// RunSessionManager now handles saving runs with GPS data
   Future<void> _saveRunToHistory(RunSummaryData summaryData) async {
-    try {
-      // Check if Firebase is ready
-      if (!isFirebaseReady) {
-        print('⚠️ RunCompletionService: Firebase not ready, skipping run save');
-        return;
-      }
-      
-      final episode = summaryData.episode;
-      
-      // Create FirestoreService instance first
-      final firestore = FirestoreService();
-      
-      final run = RunModel(
-        userId: 'current',
-        startTime: summaryData.startTime,
-        endTime: summaryData.endTime,
-        totalDistance: summaryData.totalDistance,
-        totalTime: summaryData.totalTime,
-        averagePace: summaryData.averagePace,
-        maxPace: summaryData.averagePace,
-        minPace: summaryData.averagePace,
-        status: RunStatus.completed,
-        route: summaryData.route,
-        // Store full episode identifier in seasonId per request (e.g., S01E01)
-        seasonId: episode?.id ?? 'S01E01',
-        missionId: episode?.id ?? 'S01E01',
-        runTarget: RunTarget(
-          id: 'completed_time_${summaryData.totalTime.inMinutes}',
-          type: RunTargetType.time,
-          value: summaryData.totalTime.inMinutes.toDouble(),
-          displayName: '${summaryData.totalTime.inMinutes} minutes',
-          description: 'Completed time target',
-          createdAt: DateTime.now(),
-          isCustom: true,
-        ),
-      );
-
-      // Persist via FirestoreService
-      try {
-        final runId = await firestore.saveRun(run);
-        await firestore.completeRun(runId, run);
-      } catch (e) {
-        // Don't block progress write if run save fails
-        print('⚠️ Warning: run save failed, continuing to progress write: $e');
-      }
-
-      // No longer writing to user_progress; runs collection is the source of truth
-    } catch (e) {
-      print('⚠️ RunCompletionService: Could not save run to history: $e');
-      // Don't fail the completion process if save fails
-    }
+    // This method is no longer used - RunSessionManager saves the run
+    print('ℹ️ RunCompletionService: _saveRunToHistory called but no longer needed');
   }
 }
 

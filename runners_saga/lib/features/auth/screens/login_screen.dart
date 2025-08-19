@@ -18,7 +18,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscurePassword = true;
   
   // Define border color to avoid const expression issues
-  late final Color _borderColor = kTextMid.withOpacity(0.3);
+  late final Color _borderColor = kTextMid.withValues(alpha: 0.3);
 
   @override
   void dispose() {

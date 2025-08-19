@@ -1,6 +1,6 @@
 # The Runner's Saga - Development Tasks & Roadmap
 
-## 🎯 Current Status: Phase 1 - Foundation & Design
+## 🎯 Current Status: Phase 2 - Core Functionality (GPS Tracking & Data Persistence)
 
 ### ✅ Completed Tasks
 - [x] Project setup and Flutter environment configuration
@@ -18,22 +18,45 @@
 - [x] Run completion and saving functionality
 - [x] Enhanced run history display with statistics
 - [x] Run details view with comprehensive information
+- [x] **NEW**: Complete user flow from Home → Episode → Run working
+- [x] **NEW**: Audio scene triggering during runs working
+- [x] **NEW**: App builds and runs successfully on iOS device
+- [x] **NEW**: GPS simulation service removed (was causing confusion)
+- [x] **NEW**: Duplicate run entries fixed
+- [x] **NEW**: Run completion service streamlined
 
-### 🔄 In Progress
-- [ ] Firebase project setup and configuration
-- [ ] Authentication flow implementation
+### 🔄 In Progress - CRITICAL ISSUES TO FIX TOMORROW
+- [ ] **GPS Tracking Issues**: Map not showing real-time position, GPS points not being collected
+- [ ] **Data Persistence Issues**: Runs not being saved to database with GPS route data
+- [ ] **Map Accuracy Issues**: Map doesn't accurately display current GPS position
+- [ ] **Firestore Index Issues**: Need to create composite indexes for proper sorting
 
-### 📋 Immediate Next Steps (This Week)
+### 🚨 TOMORROW'S CRITICAL PRIORITIES (Phase 2.1)
 
-#### 1. Firebase Setup
-- [ ] Create Firebase project in Firebase Console
-- [ ] Enable Authentication (Email/Password, Google, Apple)
-- [ ] Enable Firestore Database
-- [ ] Enable Firebase Storage
-- [ ] Download and add configuration files:
-  - `ios/Runner/GoogleService-Info.plist`
-  - `android/app/google-services.json`
-- [ ] Test Firebase connection
+#### 1. Fix GPS Tracking Issues (2-3 hours)
+- [ ] Debug `ProgressMonitorService._onPositionUpdate()` method
+- [ ] Fix GPS position update logic (currently flawed)
+- [ ] Add extensive logging to GPS data collection
+- [ ] Verify location permissions are working
+- [ ] Test real-time map updates during runs
+
+#### 2. Fix Run Data Persistence (1-2 hours)
+- [ ] Add logging to `RunSessionManager.stopSession()`
+- [ ] Verify `FirestoreService.saveRun()` is being called
+- [ ] Check if run model contains GPS route data
+- [ ] Test run completion and database saving
+
+#### 3. Restore Firestore Indexes (1 hour)
+- [ ] Create required composite indexes in Firebase console
+- [ ] Re-enable `orderBy('startTime', descending: true)` in queries
+- [ ] Test workout list sorting
+
+#### 4. Performance Optimization (1 hour)
+- [ ] Check Firestore query optimization
+- [ ] Verify pagination is working
+- [ ] Test workout screen loading performance
+
+### 📋 Next Steps After GPS Fixes (This Week)
 
 #### 2. Authentication Implementation
 - [ ] Implement email/password authentication

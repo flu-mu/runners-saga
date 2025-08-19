@@ -58,9 +58,9 @@ class _SkeletonLoaderState extends State<SkeletonLoader>
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: [
-                kSurfaceElev.withOpacity(0.3 + (_animation.value * 0.2)),
-                kSurfaceElev.withOpacity(0.5 + (_animation.value * 0.3)),
-                kSurfaceElev.withOpacity(0.3 + (_animation.value * 0.2)),
+                kSurfaceElev.withValues(alpha: 0.3 + (_animation.value * 0.2)),
+                kSurfaceElev.withValues(alpha: 0.5 + (_animation.value * 0.3)),
+                kSurfaceElev.withValues(alpha: 0.3 + (_animation.value * 0.2)),
               ],
             ),
           ),
@@ -93,7 +93,7 @@ class SkeletonCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: kSurfaceBase,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kSurfaceElev.withOpacity(0.3)),
+        border: Border.all(color: kSurfaceElev.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

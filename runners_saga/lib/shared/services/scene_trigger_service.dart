@@ -1,5 +1,5 @@
 import 'dart:async';
-// import 'package:audioplayers/audioplayers.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../services/firebase_storage_service.dart';
@@ -39,6 +39,9 @@ class SceneTriggerService {
   // Scene management
   SceneType? _currentScene;
   bool _isScenePlaying = false;
+  
+  // Audio player
+  final AudioPlayer _audioPlayer = AudioPlayer();
   
   // Callbacks
   Function(SceneType scene)? onSceneStart;
@@ -266,8 +269,8 @@ class SceneTriggerService {
         // On web, prefer a direct URL and fall back to MP3 if WAV has issues
         final url = _toWebAssetUrl(audioFile);
         print('🎵 [WEB] Using URL source: $url');
-              // await _audioPlayer.setSourceUrl(url);
-      // await _audioPlayer.resume();
+        await _audioPlayer.setSourceUrl(url);
+        await _audioPlayer.resume();
       } else {
         // Mobile: Handle Firebase Storage URLs and local files
         final episodeId = _getCurrentEpisodeId();
@@ -289,16 +292,16 @@ class SceneTriggerService {
 
         try {
           // Try to play from local file first
-          // await _audioPlayer.setSource(DeviceFileSource(localFilePath));
-          // await _audioPlayer.resume();
+          await _audioPlayer.setSource(DeviceFileSource(localFilePath));
+          await _audioPlayer.resume();
           print('✅ [MOBILE] Audio started successfully with DeviceFileSource from: $localFilePath');
         } catch (e) {
           print('⚠️ Failed to play from local file ($localFilePath): $e');
           print('🎵 [MOBILE] Falling back to playing from remote URL: $audioFile');
           try {
             // Fallback to remote URL if local file fails
-            // await _audioPlayer.setSourceUrl(audioFile);
-            // await _audioPlayer.resume();
+            await _audioPlayer.setSourceUrl(audioFile);
+            await _audioPlayer.resume();
             print('✅ [MOBILE] Audio started successfully with UrlSource from: $audioFile');
           } catch (urlError) {
             print('❌ Failed to play from remote URL ($audioFile): $urlError');
@@ -307,9 +310,9 @@ class SceneTriggerService {
       }
       
       // Set up completion listener
-      // _audioPlayer.onPlayerComplete.listen((_) {
-      //   _onSceneAudioComplete(sceneType);
-      // });
+      _audioPlayer.onPlayerComplete.listen((_) {
+        _onSceneAudioComplete(sceneType);
+      });
       
       // Fallback timer in case audio doesn't complete properly
       Timer(const Duration(seconds: 10), () {
@@ -355,7 +358,7 @@ class SceneTriggerService {
     if (!_isScenePlaying) return;
     
     try {
-      // await _audioPlayer.stop();
+      await _audioPlayer.stop();
       _isScenePlaying = false;
       _currentScene = null;
     } catch (e) {
@@ -370,7 +373,7 @@ class SceneTriggerService {
     if (!_isScenePlaying) return;
     
     try {
-      // await _audioPlayer.pause();
+      await _audioPlayer.pause();
     } catch (e) {
       if (kDebugMode) {
         print('Error pausing scene audio: $e');
@@ -383,7 +386,7 @@ class SceneTriggerService {
     if (!_isScenePlaying || _currentScene == null) return;
     
     try {
-      // await _audioPlayer.resume();
+      await _audioPlayer.resume();
     } catch (e) {
       if (kDebugMode) {
         print('Error resuming scene audio: $e');

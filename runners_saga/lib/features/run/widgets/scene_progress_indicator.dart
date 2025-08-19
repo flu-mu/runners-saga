@@ -22,12 +22,12 @@ class SceneProgressIndicator extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kSurfaceBase.withOpacity(0.9),
+        color: kSurfaceBase.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kDeepTeal.withOpacity(0.3)),
+        border: Border.all(color: kDeepTeal.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -65,7 +65,7 @@ class SceneProgressIndicator extends ConsumerWidget {
           // Progress bar
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: kSurfaceElev.withOpacity(0.3),
+            backgroundColor: kSurfaceElev.withValues(alpha: 0.3),
             valueColor: AlwaysStoppedAnimation<Color>(kDeepTeal),
             minHeight: 6,
             borderRadius: BorderRadius.circular(3),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../shared/providers/run_providers.dart';
+import '../../../shared/providers/run_session_providers.dart';
+import '../../../shared/models/run_model.dart';
 import '../../../core/constants/app_theme.dart';
 import 'dart:math';
 
@@ -18,22 +20,24 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
 
   @override
   Widget build(BuildContext context) {
-    // Get live GPS position or fallback to Salerno, IT
+    // Get live GPS position from session manager or fallback to Salerno, IT
     const fallbackCenter = LatLng(40.6829, 14.7681);
-    final run = ref.watch(currentRunProvider);
     
-    // Use route position if available, otherwise use fallback
+    // Watch the session manager for real-time route updates
+    final sessionManager = ref.watch(runSessionControllerProvider.notifier);
+    final currentRoute = sessionManager?.getCurrentRoute() ?? <LocationPoint>[];
+    
+    // Use live GPS position if available, otherwise use fallback
     LatLng center;
-    if (run?.route.isNotEmpty == true) {
-      center = LatLng(run!.route.last.latitude, run.route.last.longitude);
+    if (currentRoute.isNotEmpty) {
+      center = LatLng(currentRoute.last.latitude, currentRoute.last.longitude);
     } else {
       center = fallbackCenter;
     }
 
-    final polylinePoints = run?.route
+    final polylinePoints = currentRoute
             .map((p) => LatLng(p.latitude, p.longitude))
-            .toList() ??
-        <LatLng>[];
+            .toList();
 
     // Fit camera to route when we have enough points
     if (polylinePoints.length > 1) {

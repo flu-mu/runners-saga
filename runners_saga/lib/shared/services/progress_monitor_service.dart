@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
-import '../providers/settings_providers.dart';
 
 class ProgressMonitorService {
   // Timer and monitoring state
@@ -31,9 +30,6 @@ class ProgressMonitorService {
   Duration _targetTime = Duration.zero;
   double _targetDistance = 0.0;
   
-  // Tracking mode
-  TrackingMode _trackingMode = TrackingMode.gps;
-  
   // Callbacks
   Function(double distance)? onDistanceUpdate;
   Function(Duration time)? onTimeUpdate;
@@ -56,7 +52,6 @@ class ProgressMonitorService {
   void initialize({
     required Duration targetTime,
     required double targetDistance,
-    TrackingMode trackingMode = TrackingMode.gps,
     Function(double distance)? onDistanceUpdate,
     Function(Duration time)? onTimeUpdate,
     Function(double pace)? onPaceUpdate,
@@ -65,7 +60,6 @@ class ProgressMonitorService {
   }) {
     _targetTime = targetTime;
     _targetDistance = targetDistance;
-    _trackingMode = trackingMode;
     this.onDistanceUpdate = onDistanceUpdate;
     this.onTimeUpdate = onTimeUpdate;
     this.onPaceUpdate = onPaceUpdate;
@@ -107,11 +101,6 @@ class ProgressMonitorService {
       
       // Start progress timer immediately (don't wait for location)
       _startProgressTimer();
-      
-      // Don't add hardcoded fallback coordinates - wait for real GPS
-      if (kDebugMode) {
-        print('📍 ProgressMonitorService: Waiting for real GPS position...');
-      }
       
       // Try to start location tracking (but don't fail if it doesn't work)
       try {
@@ -191,19 +180,9 @@ class ProgressMonitorService {
 
   /// Start location tracking
   void _startLocationTracking() {
-    // Ensure location services are enabled
-    Geolocator.isLocationServiceEnabled().then((enabled) async {
-      if (!enabled) {
-        if (kDebugMode) {
-          print('⚠️ Location services disabled. Prompting user to enable.');
-        }
-        await Geolocator.openLocationSettings();
-      }
-    });
-
     // Get initial position
     Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.best,
+      desiredAccuracy: LocationAccuracy.high,
       timeLimit: const Duration(seconds: 10),
     ).then((position) {
       _lastPosition = position;
@@ -216,17 +195,12 @@ class ProgressMonitorService {
     });
     
     // Start position stream
-    final settings = const LocationSettings(
-      // Highest feasible accuracy for navigation use-case
-      accuracy: LocationAccuracy.bestForNavigation,
-      // Request very frequent updates for reliable tracking
-      distanceFilter: 1,
-    );
-
-    _positionStream = Geolocator.getPositionStream(locationSettings: settings).listen((position) {
-      if (kDebugMode) {
-        print('📍 Position update: lat=${position.latitude}, lon=${position.longitude}, speed=${position.speed} m/s');
-      }
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, // Update every 10 meters
+      ),
+    ).listen((position) {
       _onPositionUpdate(position);
     });
   }
@@ -275,42 +249,6 @@ class ProgressMonitorService {
       // Only proceed if ALL checks pass
       _updateElapsedTime();
       _updateProgress();
-
-      // Web simulation: synthesize tiny movement and distance increments so map and stats progress
-      // Only run simulation when explicitly requested
-      if (kIsWeb && _trackingMode == TrackingMode.simulate) {
-        // 1.4 meters per tick (~3:00 min/km) - more frequent updates for better route visibility
-        const meters = 1.4;
-        final last = _route.isNotEmpty
-            ? _route.last
-            : Position(
-                latitude: 40.6829,
-                longitude: 14.7681,
-                timestamp: DateTime.now(),
-                accuracy: 5,
-                altitude: 0,
-                heading: 0,
-                speed: 2.8,
-                speedAccuracy: 0,
-                altitudeAccuracy: 0,
-                headingAccuracy: 0,
-              );
-        final dLat = (meters / 111000.0);
-        final dLon = dLat / (_cosApprox(last.latitude * 3.1415926535 / 180.0));
-        final next = Position(
-          latitude: last.latitude + dLat,
-          longitude: last.longitude + dLon,
-          timestamp: DateTime.now(),
-          accuracy: last.accuracy,
-          altitude: last.altitude,
-          heading: last.heading,
-          speed: last.speed,
-          speedAccuracy: last.speedAccuracy,
-          altitudeAccuracy: last.altitudeAccuracy,
-          headingAccuracy: last.headingAccuracy ?? 0,
-        );
-        _onPositionUpdate(next);
-      }
       
       if (kDebugMode) {
         print('Simple timer tick: elapsedTime=${_elapsedTime.inSeconds}s, progress=${(_calculateProgress() * 100).toStringAsFixed(1)}%');
@@ -413,16 +351,16 @@ class ProgressMonitorService {
 
   /// Handle position updates
   void _onPositionUpdate(Position position) {
-    if (kDebugMode) {
-      print('📍 ProgressMonitorService: GPS position received: ${position.latitude}, ${position.longitude}, accuracy: ${position.accuracy}m');
+    if (!_isMonitoring) {
+      return; // Don't process if not monitoring
     }
     
-    if (!_isMonitoring || _lastPosition == null) {
+    // Always add the position to the route first
+    _route.add(position);
+    
+    // If this is the first position, just store it and return
+    if (_lastPosition == null) {
       _lastPosition = position;
-      _route.add(position);
-      if (kDebugMode) {
-        print('📍 ProgressMonitorService: First GPS position added to route');
-      }
       onRouteUpdate?.call(_route);
       return;
     }
@@ -453,13 +391,8 @@ class ProgressMonitorService {
       }
     }
     
-    // Update last position and route
+    // Update last position
     _lastPosition = position;
-    _route.add(position);
-    
-    if (kDebugMode) {
-      print('📍 ProgressMonitorService: Position added to route. Total points: ${_route.length}');
-    }
     
     // Notify listeners
     onDistanceUpdate?.call(_currentDistance);
@@ -571,16 +504,35 @@ class ProgressMonitorService {
     onTimeUpdate?.call(_elapsedTime);
     _updateProgress();
   }
+  
+  /// Manually update GPS route (for testing or external tracking)
+  void updateRoute(List<Position> newRoute) {
+    _route.clear();
+    _route.addAll(newRoute);
+    
+    if (_route.isNotEmpty) {
+      _lastPosition = _route.last;
+      
+      // Calculate total distance from route
+      _currentDistance = 0.0;
+      for (int i = 1; i < _route.length; i++) {
+        final distance = Geolocator.distanceBetween(
+          _route[i - 1].latitude,
+          _route[i - 1].longitude,
+          _route[i].latitude,
+          _route[i].longitude,
+        ) / 1000; // Convert to kilometers
+        _currentDistance += distance;
+      }
+      
+      // Notify listeners
+      onDistanceUpdate?.call(_currentDistance);
+      onRouteUpdate?.call(_route);
+    }
+  }
 
   /// Dispose resources
   void dispose() {
     stop();
   }
-}
-
-double _cosApprox(double x) {
-  final x2 = x * x;
-  final x4 = x2 * x2;
-  final x6 = x4 * x2;
-  return 1 - (x2 / 2) + (x4 / 24) - (x6 / 720);
 }

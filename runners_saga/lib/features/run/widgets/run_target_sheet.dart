@@ -43,7 +43,7 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: kTextMid.withOpacity(0.3),
+                  color: kTextMid.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -112,7 +112,7 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
                       selectedColor: kElectricAqua,
                       backgroundColor: kSurfaceElev,
                       side: BorderSide(
-                        color: _selected?.id == t.id ? kElectricAqua : kTextMid.withOpacity(0.3),
+                        color: _selected?.id == t.id ? kElectricAqua : kTextMid.withValues(alpha: 0.3),
                       ),
                       onSelected: (_) => setState(() => _selected = t),
                     ),
