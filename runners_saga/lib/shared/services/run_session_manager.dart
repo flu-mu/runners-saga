@@ -498,7 +498,7 @@ class RunSessionManager {
   }
 
   /// Create run model from current session
-  RunModel _createRunModel() {
+  RunModel createRunModel() {
     print('🔍 RunSessionManager: Creating run model...');
     
     final stats = _progressMonitor.getRunStats();

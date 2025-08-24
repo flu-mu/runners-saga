@@ -1323,59 +1323,26 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       // Get the current run data directly from the run session manager
       final runSessionManager = ref.read(runSessionControllerProvider.notifier);
       
-      // Get route data directly using public methods
-      final route = runSessionManager.getCurrentRoute();
-      final stats = runSessionManager.getCurrentStats();
+      // USE THE BUILT-IN createRunModel() METHOD INSTEAD OF MANUAL DATA EXTRACTION
+      print('💾 RunScreen: Using createRunModel() method for data capture...');
       
-      print('💾 RunScreen: Direct route access - ${route.length} GPS points');
-      print('💾 RunScreen: Direct stats - ${stats?.distance ?? 0}km, ${stats?.elapsedTime ?? Duration.zero}');
+      // Create the run model using the service's built-in method
+      // Access the underlying RunSessionManager through the controller's state
+      final runModel = runSessionManager.state.createRunModel();
+      
+      print('💾 RunScreen: Run model created with ${runModel.route.length} GPS points');
+      print('💾 RunScreen: Distance: ${runModel.totalDistance}km, Time: ${runModel.totalTime}');
       
       // SAVE THE RUN TO DATABASE FIRST - SIMPLE AND DIRECT
-      if (route.isNotEmpty && stats != null) {
+      if (runModel.route.isNotEmpty) {
         print('💾 RunScreen: Saving run to database...');
         try {
-          // Create the run model
-          final currentUser = ref.read(currentUserProvider).value;
-          final currentEpisode = ref.read(currentEpisodeProvider);
-          
-          if (currentUser != null && currentEpisode != null) {
-            final runModel = RunModel(
-              userId: currentUser.uid,
-              startTime: DateTime.now().subtract(stats!.elapsedTime), // Estimate start time
-              endTime: DateTime.now(),
-              route: route,
-              totalDistance: stats!.distance,
-              totalTime: stats!.elapsedTime,
-              averagePace: stats!.averagePace,
-              maxPace: stats!.maxPace,
-              minPace: stats!.minPace,
-              seasonId: currentEpisode.seasonId,
-              missionId: currentEpisode.id,
-              status: RunStatus.completed,
-              runTarget: RunTarget(
-                id: 'episode_${currentEpisode.id}',
-                type: RunTargetType.distance,
-                value: currentEpisode.targetDistance,
-                displayName: '${currentEpisode.targetDistance} km',
-                description: 'Episode target distance',
-                createdAt: DateTime.now(),
-                isCustom: false,
-              ),
-              metadata: {
-                'playedScenes': [], // Could be populated if needed
-                'totalPausedTime': 0,
-              },
-            );
-            
-            // Save to database directly
-            final firestore = FirestoreService();
-            final runId = await firestore.saveRun(runModel);
-            await firestore.completeRun(runId, runModel);
-            print('✅ RunScreen: Run saved to database with ID: $runId');
-            print('✅ RunScreen: ${route.length} GPS points saved');
-          } else {
-            print('❌ RunScreen: User or episode not available for saving');
-          }
+          // Save to database directly
+          final firestore = FirestoreService();
+          final runId = await firestore.saveRun(runModel);
+          await firestore.completeRun(runId, runModel);
+          print('✅ RunScreen: Run saved to database with ID: $runId');
+          print('✅ RunScreen: ${runModel.route.length} GPS points saved');
         } catch (e) {
           print('❌ RunScreen: Error saving run to database: $e');
         }
