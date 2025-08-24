@@ -9,6 +9,7 @@ class ProgressMonitorService {
   bool _timersStopped = false; // Flag to prevent timer restart
   bool _globallyStopped = false; // Global flag to prevent any restart
   bool _forceStopped = false; // Additional force stop flag
+
   DateTime? _startTime;
   DateTime? _pauseTime;
   Duration _totalPausedTime = Duration.zero;
@@ -330,6 +331,8 @@ class ProgressMonitorService {
     print('🛑 ProgressMonitorService: _isMonitoring set to false - route data preserved');
   }
   
+
+
   /// Nuclear option: completely kill all timers
   void nuclearStop() {
     _isMonitoring = false; // Just stop monitoring, don't set aggressive flags

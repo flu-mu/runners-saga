@@ -26,6 +26,8 @@ RunSessionManager runSessionManager(RunSessionManagerRef ref) {
   return manager;
 }
 
+
+
 /// Provider for the current run session state
 @riverpod
 class CurrentRunSession extends _$CurrentRunSession {
@@ -233,9 +235,9 @@ class RunSessionController extends _$RunSessionController {
   }
   
   /// Stop the current session
-  Future<void> stopSession() async {
+  void stopSession() {
     try {
-      await state.stopSession();
+      state.stopSession();
     } catch (e) {
       rethrow;
     }
@@ -276,6 +278,7 @@ class RunSessionController extends _$RunSessionController {
       ref.read(currentRunEpisodeProvider.notifier).clearEpisode();
       
     } catch (e) {
+      // Handle error
       rethrow;
     }
   }
