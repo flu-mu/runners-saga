@@ -260,6 +260,25 @@ class RunSessionController extends _$RunSessionController {
       rethrow;
     }
   }
+
+  /// Manually complete session when user finishes run (preserves GPS data)
+  Future<void> manuallyCompleteSession() async {
+    try {
+      await state.manuallyCompleteSession();
+      
+      // Get the completed run
+      final completedRun = state.currentRun;
+      if (completedRun != null) {
+        ref.read(completedRunProvider.notifier).setCompletedRun(completedRun);
+      }
+      
+      // Clear current episode
+      ref.read(currentRunEpisodeProvider.notifier).clearEpisode();
+      
+    } catch (e) {
+      rethrow;
+    }
+  }
   
   /// Stop the progress timer directly
   void stopProgressTimer() {

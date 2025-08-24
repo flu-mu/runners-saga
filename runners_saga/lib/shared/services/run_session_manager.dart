@@ -238,8 +238,11 @@ class RunSessionManager {
     if (!_isSessionActive && !_isPaused) return;
     
     try {
-      // Ensure all scenes have played
-      await _ensureAllScenesPlayed();
+      // Don't automatically complete session when scenes finish
+      // Let the user manually finish the run to preserve GPS data
+      if (kDebugMode) {
+        print('🎯 Session completion requested - waiting for user to finish run');
+      }
       
       // Stop the session
       await stopSession();
@@ -273,6 +276,33 @@ class RunSessionManager {
     // Wait for all scenes to complete
     while (_sceneTrigger.isScenePlaying) {
       await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  /// Manually complete session when user finishes run (preserves GPS data)
+  Future<void> manuallyCompleteSession() async {
+    if (!_isSessionActive && !_isPaused) return;
+    
+    try {
+      if (kDebugMode) {
+        print('🎯 Manual session completion - user finished run, preserving GPS data');
+      }
+      
+      // Stop the session
+      await stopSession();
+      
+      // Mark episode as completed
+      if (_currentEpisode != null) {
+        if (kDebugMode) {
+          print('Episode ${_currentEpisode!.id} manually completed');
+        }
+      }
+      
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error manually completing session: $e');
+      }
+      rethrow;
     }
   }
 

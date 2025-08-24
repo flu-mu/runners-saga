@@ -25,8 +25,10 @@ import '../widgets/scene_hud.dart';
 import '../widgets/scene_progress_indicator.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/services/firestore_service.dart';
+import '../../../shared/services/run_completion_service.dart';
 import '../../../shared/models/run_model.dart';
 import '../../../shared/models/run_target_model.dart';
+import '../screens/run_summary_screen.dart';
 
 
 class RunScreen extends ConsumerStatefulWidget {
@@ -277,7 +279,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
           ),
           const SizedBox(width: 16),
           ElevatedButton.icon(
-            onPressed: _finishRun,
+            onPressed: _directSaveRun,
             icon: const Icon(Icons.flag),
             label: const Text('Finish Run'),
             style: ElevatedButton.styleFrom(
@@ -307,7 +309,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: _finishRun,
+              onPressed: _directSaveRun,
               icon: const Icon(Icons.flag),
               label: const Text('Finish Run'),
               style: ElevatedButton.styleFrom(
@@ -322,6 +324,100 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     }
   }
   
+  /// Direct save method that captures GPS data while session is still active
+  Future<void> _directSaveRun() async {
+    try {
+      print('💾 RunScreen: Direct save method called - capturing GPS data BEFORE stopping session');
+      
+      // STEP 1: Get the RunSessionManager instance from the provider
+      final runSessionManagerState = ref.read(runSessionControllerProvider);
+      
+      // STEP 2: Capture GPS data while session is still active using public methods
+      final route = runSessionManagerState.getCurrentRoute();
+      final stats = runSessionManagerState.getCurrentStats();
+      
+      print('💾 RunScreen: Captured ${route.length} GPS points while session active');
+      print('💾 RunScreen: Stats - Distance: ${stats.distance}, Time: ${stats.elapsedTime}');
+      
+      if (route.isEmpty) {
+        print('❌ RunScreen: No GPS data captured - cannot save run');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No GPS data to save'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+      
+      // STEP 3: Get current episode and user data
+      final currentEpisode = ref.read(currentEpisodeProvider);
+      final currentUser = ref.read(currentUserProvider).value;
+      
+      if (currentUser == null || currentEpisode == null) {
+        print('❌ RunScreen: Missing user or episode data');
+        return;
+      }
+      
+      // STEP 4: Create run model directly with captured data
+      final runModel = RunModel(
+        userId: currentUser.uid,
+        startTime: DateTime.now().subtract(stats.elapsedTime),
+        endTime: DateTime.now(),
+        totalTime: stats.elapsedTime,
+        totalDistance: stats.distance,
+        averagePace: stats.averagePace,
+        maxPace: stats.maxPace,
+        minPace: stats.minPace,
+        route: route, // Already converted to LocationPoint list
+        seasonId: currentEpisode.seasonId,
+        missionId: currentEpisode.id, // Using episode ID as mission ID for now
+        status: RunStatus.completed,
+        runTarget: RunTarget(
+          id: 'quick_15',
+          type: RunTargetType.time,
+          value: 15.0, // We'll improve this later
+          displayName: '15 minutes',
+          description: 'Quick run',
+          createdAt: DateTime.now(),
+          isCustom: false,
+        ),
+      );
+      
+      print('💾 RunScreen: Created run model with ${runModel.route.length} GPS points');
+      
+      // STEP 5: Save to database using FirestoreService directly
+      final firestoreService = FirestoreService();
+      final runId = await firestoreService.saveRun(runModel);
+      
+      print('✅ RunScreen: Run saved successfully with ID: $runId');
+      
+      // STEP 6: Manually complete the session AFTER saving (preserves GPS data)
+      final runSessionController = ref.read(runSessionControllerProvider.notifier);
+      await runSessionController.manuallyCompleteSession();
+      
+      // STEP 7: Navigate back instead of using pushReplacement to avoid routing issues
+      if (mounted) {
+        Navigator.of(context).pop(); // Go back to previous screen
+      }
+      
+    } catch (e) {
+      print('❌ RunScreen: Error in direct save: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving run: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
   Future<bool> _ensureLocationPermission() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
