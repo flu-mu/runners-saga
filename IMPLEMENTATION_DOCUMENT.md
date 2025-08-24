@@ -164,6 +164,127 @@ RunModel {
 2. **Data Analytics**: Provide insights on running patterns and progress
 3. **Export Functionality**: Allow users to export run data
 
+## Enhanced Data Collection Features (Planned)
+
+### Physical Performance Data
+To provide a more comprehensive view of the runner's effort and progress, the following data points will be collected and analyzed:
+
+#### **Heart Rate Monitoring**
+- **Metric**: Heart rate in BPM (beats per minute)
+- **Purpose**: Understanding exertion level and training zones (aerobic vs. anaerobic)
+- **Implementation**: Bluetooth or ANT+ heart rate monitor integration
+- **Benefits**: 
+  - Training zone optimization
+  - Performance tracking over time
+  - Recovery monitoring
+
+#### **Running Form Metrics**
+- **Cadence**: Steps per minute (SPM) - key indicator of running form
+  - **Implementation**: Phone's accelerometer and gyroscope sensors
+  - **Target**: 160-180 SPM for optimal efficiency
+  - **Benefits**: Reduced impact and injury risk
+
+- **Vertical Oscillation**: Vertical bounce measurement per step
+  - **Implementation**: Phone's accelerometer sensors
+  - **Target**: Lower values indicate more efficient running
+  - **Benefits**: Improved running economy
+
+- **Ground Contact Time**: Time each foot spends on ground
+  - **Implementation**: Phone's sensor data analysis
+  - **Target**: Shorter contact time for efficiency
+  - **Benefits**: Better running form and speed
+
+### Environmental & Route Data
+
+#### **Enhanced Pace Metrics**
+- **Current Pace**: Real-time minutes per mile/kilometer
+- **Average Pace**: Overall run pace calculation
+- **Pace Zones**: Categorization of effort levels
+- **Implementation**: Enhanced GPS and timer integration
+
+#### **Advanced Distance Tracking**
+- **Total Distance**: Sum of GPS segment distances
+- **Lap Distance**: Configurable lap tracking
+- **Segment Analysis**: Performance on specific route sections
+- **Implementation**: Improved GPS coordinate processing
+
+#### **Elevation Analysis**
+- **Total Elevation Gain**: Cumulative uphill elevation
+- **Total Elevation Loss**: Cumulative downhill elevation
+- **Course Incline/Grade**: Terrain steepness percentage
+- **Implementation**: 
+  - Enhanced altitude data processing
+  - Elevation change calculations
+  - Grade percentage calculations
+
+#### **Weather Integration**
+- **Temperature**: Current and average during run
+- **Humidity**: Environmental moisture levels
+- **Wind Speed**: Wind resistance impact
+- **Implementation**: Weather API integration
+- **Benefits**: Understanding environmental performance factors
+
+### Data Storage Schema Updates
+```dart
+EnhancedRunModel {
+  // Existing fields...
+  
+  // Physical Performance
+  heartRate: {
+    current: int,           // Current BPM
+    average: int,           // Average BPM
+    max: int,               // Peak BPM
+    zones: Map<String, int> // Time in each training zone
+  },
+  
+  runningForm: {
+    cadence: {
+      current: double,       // Current SPM
+      average: double,       // Average SPM
+      target: double         // Target SPM (160-180)
+    },
+    verticalOscillation: {
+      current: double,       // Current vertical movement
+      average: double        // Average vertical movement
+    },
+    groundContactTime: {
+      current: double,       // Current contact time
+      average: double        // Average contact time
+    }
+  },
+  
+  // Environmental Data
+  weather: {
+    temperature: double,     // Temperature in Celsius
+    humidity: double,        // Humidity percentage
+    windSpeed: double,       // Wind speed in km/h
+    conditions: String       // Weather description
+  },
+  
+  elevation: {
+    totalGain: double,       // Total uphill elevation
+    totalLoss: double,       // Total downhill elevation
+    currentGrade: double,    // Current incline percentage
+    maxGrade: double,        // Steepest section grade
+    segments: List<ElevationSegment> // Detailed elevation data
+  }
+}
+```
+
+### Implementation Priority
+1. **Phase 1**: Enhanced pace and distance calculations
+2. **Phase 2**: Elevation analysis and grade calculations
+3. **Phase 3**: Running form metrics (cadence, vertical oscillation)
+4. **Phase 4**: Heart rate monitoring integration
+5. **Phase 5**: Weather API integration
+
+### Technical Requirements
+- **Sensor Access**: Accelerometer, gyroscope, GPS, altitude
+- **Bluetooth Integration**: Heart rate monitor support
+- **Weather API**: OpenWeatherMap or similar service
+- **Data Processing**: Real-time calculations and filtering
+- **Storage**: Efficient database schema for enhanced metrics
+
 ## Code Quality Improvements Made
 - Simplified complex conditional logic in session management
 - Fixed provider instance consistency across methods
@@ -251,6 +372,13 @@ Instead of trying to extract data during cleanup, implement this approach:
 - [ ] GPS route data is accurate and complete
 - [ ] End-to-end user experience is smooth
 - [ ] Error handling works for edge cases
+
+## Enhanced Features Roadmap
+- [ ] **Phase 1**: Enhanced pace and distance calculations (builds on current GPS tracking)
+- [ ] **Phase 2**: Elevation analysis and grade calculations (requires altitude data processing)
+- [ ] **Phase 3**: Running form metrics (requires sensor access and processing)
+- [ ] **Phase 4**: Heart rate monitoring (requires Bluetooth integration)
+- [ ] **Phase 5**: Weather integration (requires API service)
 
 ---
 *Document prepared on: [Current Date]*
