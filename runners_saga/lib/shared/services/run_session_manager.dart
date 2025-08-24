@@ -2,11 +2,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:audioplayers/audioplayers.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'progress_monitor_service.dart';
 import 'scene_trigger_service.dart';
 import 'audio_manager.dart';
 import 'firestore_service.dart';
+import 'download_service.dart';
+import 'firebase_storage_service.dart';
 import '../models/episode_model.dart';
 import '../models/run_model.dart';
 import '../models/run_target_model.dart';
@@ -59,7 +61,7 @@ class RunSessionManager {
 
   /// Check if a new session can be started
   bool canStartSession() {
-    return !_isSessionActive && !_progressMonitor.isStopped && !_globallyStopped;
+    return !_isSessionActive; // Only check if session is not already active
   }
   
   /// Start a new run session
@@ -73,11 +75,7 @@ class RunSessionManager {
       throw Exception('Session already active');
     }
     
-    // Check if progress monitor is stopped
-    if (_progressMonitor.isStopped) {
-      print('🛑 RunSessionManager: Cannot start session - progress monitor is stopped');
-      throw Exception('Progress monitor is stopped and cannot be restarted');
-    }
+    // Progress monitor can always be started
     
     try {
       _currentEpisode = episode;
@@ -141,6 +139,7 @@ class RunSessionManager {
       print('✅ Scene trigger system started');
       
       // Notify state change
+      print('🔄 RunSessionManager: Notifying session state change to: ${sessionState.name}');
       onSessionStateChanged?.call(sessionState);
       
       // State change notification completed
@@ -189,16 +188,37 @@ class RunSessionManager {
     onSessionStateChanged?.call(sessionState);
   }
 
-  /// Stop the current session
+  /// Stop the current run session and save data
   Future<void> stopSession() async {
-    if (!_isSessionActive && !_isPaused) return;
+    print('🛑 RunSessionManager: stopSession() called from: ${StackTrace.current}');
+    if (!_isSessionActive && !_isPaused) {
+      print('🛑 RunSessionManager: Session is not active, cannot stop it');
+      return;
+    }
     
+    print('🛑 RunSessionManager: Stopping session...');
+    print('🛑 RunSessionManager: Session active: $_isSessionActive');
+    print('🛑 RunSessionManager: Session paused: $_isPaused');
+    
+    // Check authentication state
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      print('❌ RunSessionManager: User not authenticated, cannot save run');
+      return;
+    }
+    
+    print('🛑 RunSessionManager: User authenticated: ${currentUser.uid}');
+    
+    print('🔄 RunSessionManager: Setting _isSessionActive = false in stopSession()');
     _isSessionActive = false;
+    print('🔄 RunSessionManager: Setting _isPaused = false in stopSession()');
     _isPaused = false;
+    print('🔄 RunSessionManager: Setting _globallyStopped = true in stopSession()');
     _globallyStopped = true; // Set global stop flag
     _currentEpisode = null;
     
-    // Force stop the progress monitor first
+    // Stop the progress monitor
+    print('🛑 RunSessionManager: Stopping progress monitor...');
     _progressMonitor.forceStopMonitoring();
     
     // Stop all other services
@@ -206,26 +226,11 @@ class RunSessionManager {
     _sceneTrigger.stop();
     await _audioManager.stopAll();
     
-    // Create run model with GPS data
-    _currentRun = _createRunModel();
-    
-    // Save the run to database with GPS route
-    if (_currentRun != null) {
-      try {
-        final firestore = FirestoreService();
-        final runId = await firestore.saveRun(_currentRun!);
-        await firestore.completeRun(runId, _currentRun!);
-        
-        print('💾 RunSessionManager: Run saved to database with ${_currentRun!.route.length} GPS points');
-      } catch (e) {
-        print('⚠️ RunSessionManager: Failed to save run to database: $e');
-      }
-    }
+    // Note: Run data is now saved directly in _finishRun before calling this method
+    print('🛑 RunSessionManager: Session stopped - all services stopped');
     
     // Notify state change
     onSessionStateChanged?.call(sessionState);
-    
-    print('🛑 RunSessionManager: Session stopped - all services stopped');
   }
 
   /// Complete the current session
@@ -279,6 +284,7 @@ class RunSessionManager {
     if (_globallyStopped || (!_isSessionActive && _isPaused == false)) {
       if (kDebugMode) {
         print('📊 Progress update ignored - session stopped or globally stopped');
+        print('📊 _globallyStopped: $_globallyStopped, _isSessionActive: $_isSessionActive, _isPaused: $_isPaused');
       }
       return;
     }
@@ -367,43 +373,69 @@ class RunSessionManager {
       print('🎬 onSceneStarted callback completed');
     }
     
-    // Load and play the first available audio file
-    final audioFile = SceneTriggerService.getFirstSceneAudioFile();
-    if (audioFile.isNotEmpty) {
+    // Check if episode is downloaded and play from local files
+    if (_currentEpisode != null) {
+      final downloadService = DownloadService();
+      final episodeId = _currentEpisode!.id;
+      
       if (kDebugMode) {
-        print('🎵 Loading first audio file: $audioFile');
-        print('📋 All available files: ${SceneTriggerService.getAvailableAudioFiles()}');
-        print('🎵 Starting audio immediately...');
+        print('🎵 Checking if episode $episodeId is downloaded...');
       }
       
-      // Try using URL source instead of AssetSource
       try {
-        // Use URL source pointing directly to the web server
-        // The audioFile already contains the full path from the database
-        final url = 'http://localhost:8080/assets/$audioFile';
+        final isDownloaded = await downloadService.isEpisodeDownloaded(episodeId);
         
-        // Create a local player variable to handle completion
-        // final player = AudioPlayer();
-        
-        // Set up completion listener
-        // player.onPlayerComplete.listen((_) {
-        //   if (kDebugMode) {
-        //     print('🎵 Audio completed: $audioFile');
-        //   }
-        //   // Notify scene completion
-        //   onSceneCompleted?.call(scene);
-        //   player.dispose();
-        // });
-        
-        // await player.setSourceUrl(url);
-        // await player.resume();
-        
-        if (kDebugMode) {
-          print('🎵 Audio loaded with URL: $url');
+        if (isDownloaded) {
+          // Get local files and find the correct scene file
+          final localFiles = await downloadService.getLocalEpisodeFiles(episodeId);
+          if (localFiles.isNotEmpty) {
+            // Find the file for the specific scene
+            final sceneAudioFile = SceneTriggerService.getSceneAudioFile(scene);
+            final fileName = FirebaseStorageService.getFileNameFromUrl(sceneAudioFile);
+            final sceneLocalFile = localFiles.firstWhere(
+              (file) => file.endsWith(fileName),
+              orElse: () => localFiles.first, // Fallback to first file if scene not found
+            );
+            
+            if (kDebugMode) {
+              print('🎵 Scene: ${SceneTriggerService.getSceneTitle(scene)}');
+              print('🎵 Target file: $fileName');
+              print('🎵 Playing from local file: $sceneLocalFile');
+            }
+            
+            // Create a local player variable to handle completion
+            final player = AudioPlayer();
+            
+            // Set up completion listener
+            player.onPlayerComplete.listen((_) {
+              if (kDebugMode) {
+                print('🎵 Audio completed: $sceneLocalFile');
+              }
+              // Notify scene completion
+              onSceneCompleted?.call(scene);
+              player.dispose();
+            });
+            
+            await player.setSourceDeviceFile(sceneLocalFile);
+            await player.resume();
+            
+            if (kDebugMode) {
+              print('✅ Audio playing from local file: $sceneLocalFile');
+            }
+          } else {
+            if (kDebugMode) {
+              print('⚠️ Episode marked as downloaded but no local files found');
+            }
+          }
+        } else {
+          if (kDebugMode) {
+            print('⚠️ Episode not downloaded - user needs to download first');
+            print('💡 User should download episode from episode detail screen');
+          }
         }
       } catch (e) {
         if (kDebugMode) {
-          print('❌ Error loading audio: $e');
+          print('❌ Error checking/playing local audio: $e');
         }
       }
     }
@@ -444,6 +476,7 @@ class RunSessionManager {
   /// Get current session state
   RunSessionState _getSessionState() {
     print('🎯 _getSessionState: _isPaused=$_isPaused, _isSessionActive=$_isSessionActive, _sceneTrigger.isScenePlaying=${_sceneTrigger.isScenePlaying}');
+    print('🎯 _getSessionState: _globallyStopped=$_globallyStopped, _timersStopped=$_timersStopped');
     
     if (_isPaused) {
       print('🎯 Returning paused state');
@@ -466,16 +499,93 @@ class RunSessionManager {
 
   /// Create run model from current session
   RunModel _createRunModel() {
+    print('🔍 RunSessionManager: Creating run model...');
+    
     final stats = _progressMonitor.getRunStats();
+    print('🔍 RunSessionManager: Progress monitor stats: $stats');
     
     // Get the current user ID from Firebase Auth
     final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user';
+    print('🔍 RunSessionManager: Current user ID: $currentUserId');
+    
+    // Check if we have session start time
+    if (_sessionStartTime == null) {
+      print('❌ RunSessionManager: _sessionStartTime is null! Using current time as fallback.');
+      _sessionStartTime = DateTime.now().subtract(const Duration(minutes: 30)); // Use a reasonable fallback
+    }
+    
+    // Check route data
+    final route = _progressMonitor.route;
+    print('🔍 RunSessionManager: Route has ${route.length} GPS points');
+    if (route.isNotEmpty) {
+      print('🔍 RunSessionManager: First point: ${route.first.latitude}, ${route.first.longitude}');
+      print('🔍 RunSessionManager: Last point: ${route.last.latitude}, ${route.last.longitude}');
+    }
     
     return RunModel(
       userId: currentUserId,
       startTime: _sessionStartTime!,
       endTime: DateTime.now(),
-      route: _progressMonitor.route
+      route: route
+          .map((pos) => LocationPoint(
+                latitude: pos.latitude,
+                longitude: pos.longitude,
+                accuracy: pos.accuracy,
+                altitude: pos.altitude,
+                speed: pos.speed,
+                timestamp: pos.timestamp,
+                heading: pos.heading,
+              ))
+          .toList(),
+      totalDistance: stats['distance'] as double,
+      totalTime: stats['elapsedTime'] as Duration,
+      averagePace: stats['averagePace'] as double,
+      maxPace: stats['maxPace'] as double,
+      minPace: stats['minPace'] as double,
+      seasonId: _currentEpisode?.seasonId ?? '',
+      missionId: _currentEpisode?.id ?? '',
+      status: RunStatus.completed,
+      runTarget: RunTarget(
+        id: 'episode_${_currentEpisode?.id ?? "unknown"}',
+        type: RunTargetType.distance,
+        value: _currentEpisode?.targetDistance ?? 0.0,
+        displayName: '${_currentEpisode?.targetDistance ?? 0.0} km',
+        description: 'Episode target distance',
+        createdAt: DateTime.now(),
+        isCustom: false,
+      ),
+      metadata: {
+        'playedScenes': _sceneTrigger.playedScenes.map((s) => s.name).toList(),
+        'totalPausedTime': _totalPausedTime.inMilliseconds,
+      },
+    );
+  }
+
+  /// Create run model from captured session data
+  RunModel _createRunModelFromCapturedData(List<LocationPoint> route, Map<String, dynamic> stats) {
+    print('🔍 RunSessionManager: Creating run model from captured session data...');
+    
+    // Get the current user ID from Firebase Auth
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user';
+    print('🔍 RunSessionManager: Current user ID: $currentUserId');
+    
+    // Check if we have session start time
+    if (_sessionStartTime == null) {
+      print('❌ RunSessionManager: _sessionStartTime is null! Using current time as fallback.');
+      _sessionStartTime = DateTime.now().subtract(const Duration(minutes: 30)); // Use a reasonable fallback
+    }
+    
+    print('🔍 RunSessionManager: Captured route has ${route.length} GPS points');
+    if (route.isNotEmpty) {
+      print('🔍 RunSessionManager: First point: ${route.first.latitude}, ${route.first.longitude}');
+      print('🔍 RunSessionManager: Last point: ${route.last.latitude}, ${route.last.longitude}');
+    }
+    
+    return RunModel(
+      userId: currentUserId,
+      startTime: _sessionStartTime!,
+      endTime: DateTime.now(),
+      route: route
           .map((pos) => LocationPoint(
                 latitude: pos.latitude,
                 longitude: pos.longitude,
@@ -512,6 +622,9 @@ class RunSessionManager {
 
   /// Get current session statistics
   RunStats getCurrentStats() {
+    print('🔍 RunSessionManager: getCurrentStats() called');
+    print('🔍 RunSessionManager: Progress monitor - distance: ${_progressMonitor.currentDistance}, elapsedTime: ${_progressMonitor.elapsedTime}');
+    print('🔍 RunSessionManager: Progress monitor - isMonitoring: ${_progressMonitor.isMonitoring}');
     return RunStats(
       distance: _progressMonitor.currentDistance,
       elapsedTime: _progressMonitor.elapsedTime,
@@ -528,7 +641,10 @@ class RunSessionManager {
   
   /// Get current GPS route from progress monitor
   List<LocationPoint> getCurrentRoute() {
-    return _progressMonitor.route
+    final route = _progressMonitor.route;
+    print('🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has ${route.length} points');
+    print('🔍 RunSessionManager: _isSessionActive: $_isSessionActive, _isPaused: $_isPaused');
+    return route
         .map((pos) => LocationPoint(
               latitude: pos.latitude,
               longitude: pos.longitude,
@@ -595,7 +711,9 @@ class RunSessionManager {
   
   /// Dispose resources
   void dispose() {
+    print('🔄 RunSessionManager: Setting _isSessionActive = false in dispose()');
     _isSessionActive = false;
+    print('🔄 RunSessionManager: Setting _isPaused = false in dispose()');
     _isPaused = false;
     _progressMonitor.dispose();
     _sceneTrigger.dispose();

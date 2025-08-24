@@ -56,6 +56,25 @@ class RunHistoryScreen extends ConsumerWidget {
           ),
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: kSurfaceBase,
+        selectedItemColor: kElectricAqua,
+        unselectedItemColor: Colors.white70,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Workouts'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+        ],
+        currentIndex: 1, // Set to Workouts since this is the run history screen
+        onTap: (index) {
+          if (index == 0) {
+            context.go('/home');
+          } else if (index == 2) {
+            context.go('/settings');
+          }
+        },
+      ),
     );
   }
 
@@ -96,6 +115,9 @@ class RunHistoryScreen extends ConsumerWidget {
       );
     }
 
+    // Ensure consistent ordering: most recent first
+    final sortedRuns = [...runs]..sort((a, b) => b.startTime.compareTo(a.startTime));
+
     return Column(
       children: [
         // Statistics summary
@@ -105,9 +127,9 @@ class RunHistoryScreen extends ConsumerWidget {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: runs.length,
+            itemCount: sortedRuns.length,
             itemBuilder: (context, index) {
-              final run = runs[index];
+              final run = sortedRuns[index];
               return _buildRunCard(context, run);
             },
           ),

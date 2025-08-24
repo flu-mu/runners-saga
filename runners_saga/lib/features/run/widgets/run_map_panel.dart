@@ -7,6 +7,7 @@ import '../../../shared/providers/run_session_providers.dart';
 import '../../../shared/models/run_model.dart';
 import '../../../core/constants/app_theme.dart';
 import 'dart:math';
+import 'package:geolocator/geolocator.dart';
 
 class RunMapPanel extends ConsumerStatefulWidget {
   const RunMapPanel({super.key});
@@ -17,22 +18,32 @@ class RunMapPanel extends ConsumerStatefulWidget {
 
 class _RunMapPanelState extends ConsumerState<RunMapPanel> {
   final MapController _mapController = MapController();
+  LatLng? _liveCenter; // first GPS fix when route is not yet populated
 
   @override
   Widget build(BuildContext context) {
-    // Get live GPS position from session manager or fallback to Salerno, IT
-    const fallbackCenter = LatLng(40.6829, 14.7681);
-    
     // Watch the session manager for real-time route updates
     final sessionManager = ref.watch(runSessionControllerProvider.notifier);
     final currentRoute = sessionManager?.getCurrentRoute() ?? <LocationPoint>[];
     
-    // Use live GPS position if available, otherwise use fallback
-    LatLng center;
-    if (currentRoute.isNotEmpty) {
-      center = LatLng(currentRoute.last.latitude, currentRoute.last.longitude);
-    } else {
-      center = fallbackCenter;
+    // No fallback location: world view until GPS arrives
+    final bool hasRouteGps = currentRoute.isNotEmpty;
+    final LatLng? centerCandidate = hasRouteGps
+        ? LatLng(currentRoute.last.latitude, currentRoute.last.longitude)
+        : _liveCenter;
+
+    // If we have neither route GPS nor live GPS yet, fetch immediately
+    if (!hasRouteGps && _liveCenter == null) {
+      // fire and forget; setState when available
+      Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high).then((pos) {
+        if (mounted) {
+          setState(() {
+            _liveCenter = LatLng(pos.latitude, pos.longitude);
+            // also move map if it's already built
+            _mapController.move(_liveCenter!, 15);
+          });
+        }
+      }).catchError((_) {});
     }
 
     final polylinePoints = currentRoute
@@ -75,14 +86,14 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
             FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: center,
-                initialZoom: 15,
+                initialCenter: centerCandidate ?? const LatLng(0, 0),
+                initialZoom: (centerCandidate != null) ? 15 : 2.5,
                 maxZoom: 18,
-                minZoom: 10,
+                minZoom: 1,
                 // Prevent map from being too zoomed out
                 onMapReady: () {
-                  if (polylinePoints.isEmpty) {
-                    _mapController.move(center, 15);
+                  if (centerCandidate != null) {
+                    _mapController.move(centerCandidate, 15);
                   }
                 },
               ),
@@ -105,35 +116,36 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                       ),
                     ],
                   ),
-                // Current position marker - always show live GPS position
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: center, // Use the current center (live GPS or fallback)
-                      width: 24,
-                      height: 24,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: kElectricAqua,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: kElectricAqua.withValues(alpha: 0.5),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.my_location,
-                          color: Colors.white,
-                          size: 14,
+                // Current position marker - only when we have a GPS center
+                if (centerCandidate != null)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: centerCandidate,
+                        width: 24,
+                        height: 24,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: kElectricAqua,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: kElectricAqua.withValues(alpha: 0.5),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.my_location,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
             // Map controls overlay

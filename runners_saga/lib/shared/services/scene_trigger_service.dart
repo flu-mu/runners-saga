@@ -24,7 +24,7 @@ class SceneTriggerService {
   // Dynamic array of available audio files for the current episode
   static List<String> _availableAudioFiles = [];
 
-  // final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   final Set<SceneType> _playedScenes = <SceneType>{};
   
   bool _isRunning = false;
@@ -39,9 +39,6 @@ class SceneTriggerService {
   // Scene management
   SceneType? _currentScene;
   bool _isScenePlaying = false;
-  
-  // Audio player
-  final AudioPlayer _audioPlayer = AudioPlayer();
   
   // Callbacks
   Function(SceneType scene)? onSceneStart;
@@ -75,8 +72,13 @@ class SceneTriggerService {
     this.onProgressUpdate = onProgressUpdate;
     
     // Initialize the audio player
-    // _audioPlayer.setReleaseMode(ReleaseMode.stop);
-    // _audioPlayer.setVolume(1.0);
+    _audioPlayer.setReleaseMode(ReleaseMode.stop);
+    _audioPlayer.setVolume(1.0);
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (_currentScene != null) {
+        _onSceneAudioComplete(_currentScene!);
+      }
+    });
     
     _resetState();
   }
@@ -100,8 +102,8 @@ class SceneTriggerService {
     // Notify listeners immediately for the first scene
     onSceneStart?.call(SceneType.missionBriefing);
     
-    // Play audio for first scene
-    _playSceneAudio(SceneType.missionBriefing);
+    // Audio is handled by run_session_manager.dart via onSceneStarted callback
+    print('🎵 Audio will be handled by run_session_manager via callback');
   }
 
   /// Stop the scene trigger system
@@ -264,55 +266,46 @@ class SceneTriggerService {
       // Add a small delay for smooth scene transition
       await Future.delayed(const Duration(milliseconds: 300));
       
-      // Play the actual audio file
-      if (kIsWeb) {
-        // On web, prefer a direct URL and fall back to MP3 if WAV has issues
-        final url = _toWebAssetUrl(audioFile);
-        print('🎵 [WEB] Using URL source: $url');
-        await _audioPlayer.setSourceUrl(url);
-        await _audioPlayer.resume();
-      } else {
-        // Mobile: Handle Firebase Storage URLs and local files
-        final episodeId = _getCurrentEpisodeId();
-        if (episodeId.isEmpty) {
-          print('⚠️ Cannot play scene audio: Episode ID not set.');
-          return;
-        }
+      // Ensure any previous audio is stopped before starting new
+      try {
+        await _audioPlayer.stop();
+      } catch (_) {}
 
-        final fileName = FirebaseStorageService.getFileNameFromUrl(audioFile); // Get just the filename
-        if (fileName.isEmpty) {
-          print('⚠️ Could not extract filename from URL: $audioFile');
-          return;
-        }
-
-        final documentsDir = await getApplicationDocumentsDirectory();
-        final localFilePath = '${documentsDir.path}/episodes/$episodeId/$fileName';
-
-        print('🎵 [MOBILE] Attempting to play audio from local path: $localFilePath');
-
+      // Play the actual audio file - TRY BUNDLED ASSETS FIRST
+      final episodeId = _getCurrentEpisodeId();
+      if (episodeId.isNotEmpty) {
+        final fileName = FirebaseStorageService.getFileNameFromUrl(audioFile);
+        final assetPath = 'audio/episodes/$episodeId/$fileName';
+        print('🎵 Trying bundled asset first: $assetPath');
+        print('🎵 Episode ID: $episodeId, File name: $fileName');
+        
         try {
-          // Try to play from local file first
-          await _audioPlayer.setSource(DeviceFileSource(localFilePath));
+          await _audioPlayer.setSource(AssetSource(assetPath));
           await _audioPlayer.resume();
-          print('✅ [MOBILE] Audio started successfully with DeviceFileSource from: $localFilePath');
-        } catch (e) {
-          print('⚠️ Failed to play from local file ($localFilePath): $e');
-          print('🎵 [MOBILE] Falling back to playing from remote URL: $audioFile');
+          print('✅ Audio playing from bundled asset: $assetPath');
+        } catch (assetError) {
+          print('⚠️ Bundled asset failed ($assetPath): $assetError');
+          print('🎵 Falling back to remote URL: $audioFile');
           try {
-            // Fallback to remote URL if local file fails
             await _audioPlayer.setSourceUrl(audioFile);
             await _audioPlayer.resume();
-            print('✅ [MOBILE] Audio started successfully with UrlSource from: $audioFile');
+            print('✅ Audio playing from remote URL: $audioFile');
           } catch (urlError) {
-            print('❌ Failed to play from remote URL ($audioFile): $urlError');
+            print('❌ Both asset and URL failed. Asset error: $assetError, URL error: $urlError');
           }
+        }
+      } else {
+        print('⚠️ No episode ID available, trying direct URL: $audioFile');
+        try {
+          await _audioPlayer.setSourceUrl(audioFile);
+          await _audioPlayer.resume();
+          print('✅ Audio playing from direct URL: $audioFile');
+        } catch (urlError) {
+          print('❌ Direct URL failed: $urlError');
         }
       }
       
-      // Set up completion listener
-      _audioPlayer.onPlayerComplete.listen((_) {
-        _onSceneAudioComplete(sceneType);
-      });
+      // Completion handled by onPlayerComplete set in initialize()
       
       // Fallback timer in case audio doesn't complete properly
       Timer(const Duration(seconds: 10), () {
@@ -345,6 +338,30 @@ class SceneTriggerService {
     return p;
   }
 
+  /// Return true if the provided path looks like a remote URL
+  bool _looksLikeUrl(String path) {
+    final lower = path.toLowerCase();
+    return lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('gs://');
+  }
+
+  /// Return true if the provided path looks like an asset path
+  bool _looksLikeAssetPath(String path) {
+    return path.startsWith('assets/') || path.startsWith('audio/');
+  }
+
+  /// Remove leading 'assets/' from a path for use with AssetSource
+  String _stripAssetsPrefix(String path) {
+    return path.startsWith('assets/') ? path.substring(7) : path;
+  }
+
+  /// Normalize a possibly relative asset path to include 'assets/' prefix for web URL usage
+  String _normalizeToAssetPath(String path) {
+    if (_looksLikeUrl(path)) return path;
+    if (path.startsWith('assets/')) return path;
+    if (path.startsWith('audio/')) return 'assets/$path';
+    return 'assets/$path';
+  }
+
   /// Handle scene audio completion
   void _onSceneAudioComplete(SceneType sceneType) {
     _isScenePlaying = false;
@@ -358,7 +375,7 @@ class SceneTriggerService {
     if (!_isScenePlaying) return;
     
     try {
-      await _audioPlayer.stop();
+      // await _audioPlayer.stop();
       _isScenePlaying = false;
       _currentScene = null;
     } catch (e) {
@@ -373,7 +390,7 @@ class SceneTriggerService {
     if (!_isScenePlaying) return;
     
     try {
-      await _audioPlayer.pause();
+      // await _audioPlayer.pause();
     } catch (e) {
       if (kDebugMode) {
         print('Error pausing scene audio: $e');
@@ -386,7 +403,7 @@ class SceneTriggerService {
     if (!_isScenePlaying || _currentScene == null) return;
     
     try {
-      await _audioPlayer.resume();
+      // await _audioPlayer.resume();
     } catch (e) {
       if (kDebugMode) {
         print('Error resuming scene audio: $e');

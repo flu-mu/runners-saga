@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/run_model.dart';
-import '../models/episode_model.dart';
-import '../providers/run_providers.dart';
-import 'firestore_service.dart';
-import '../providers/run_session_providers.dart';
-import '../providers/settings_providers.dart';
-import '../models/run_target_model.dart';
-import '../../main.dart'; // Import to access isFirebaseReady
+import 'package:runners_saga/shared/models/episode_model.dart';
+import 'package:runners_saga/shared/models/run_model.dart';
+import 'package:runners_saga/shared/models/run_target_model.dart';
+import 'package:runners_saga/shared/providers/run_session_providers.dart';
+import 'package:runners_saga/shared/providers/run_providers.dart';
+import 'package:runners_saga/shared/providers/story_providers.dart';
+import 'package:runners_saga/shared/providers/auth_providers.dart';
 
 /// Service to handle run completion and prepare data for summary screen
 class RunCompletionService {
@@ -14,65 +13,50 @@ class RunCompletionService {
   
   RunCompletionService(this._container);
   
-  /// Complete the current run and prepare summary data
+  /// Complete a run and prepare summary data
   Future<RunSummaryData> completeRun() async {
     try {
-      // Prefer live stats from session
-      final stats = _container.read(currentRunStatsProvider);
-      final episode = _container.read(currentRunEpisodeProvider);
-      final weightKg = _container.read(userWeightKgProvider);
-
-      Duration totalTime;
-      double totalDistance;
-      double averagePace;
-      List<LocationPoint> route = [];
-      DateTime startTime = DateTime.now();
+      print('🏁 RunCompletionService: Starting run completion...');
       
-      if (stats != null && (stats.elapsedTime > Duration.zero || stats.distance > 0)) {
-        totalTime = stats.elapsedTime;
-        totalDistance = stats.distance;
-        averagePace = stats.averagePace > 0
-            ? stats.averagePace
-            : (totalDistance > 0 ? (totalTime.inSeconds / 60) / totalDistance : 0);
-        
-        // Get route from RunSessionManager stats (includes GPS route)
-        final runSessionManager = _container.read(runSessionControllerProvider.notifier);
-        if (runSessionManager != null) {
-          final stats = runSessionManager.getCurrentStats();
-          if (stats != null) {
-            route = stats.route;
-            startTime = DateTime.now().subtract(totalTime); // Calculate start time from duration
-            
-            print('📍 RunCompletionService: Got route from RunSessionManager stats with ${route.length} GPS points');
-          }
-        }
-        
-        // Fallback to currentRunProvider if no route from session manager
-        if (route.isEmpty) {
-          final run = _container.read(currentRunProvider);
-          if (run != null) {
-            route = run.route;
-            startTime = run.startTime;
-            print('📍 RunCompletionService: Fallback to currentRunProvider with ${route.length} GPS points');
-          }
-        }
-      } else {
-        // Fallback to run provider data
-        final run = _container.read(currentRunProvider);
-        if (run != null) {
-          totalTime = run.totalTime;
-          totalDistance = run.totalDistance;
-          averagePace = run.averagePace;
-          route = run.route;
-          startTime = run.startTime;
-        } else {
-          // As a last resort, use defaults
-          totalTime = const Duration(minutes: 15);
-          totalDistance = 2.5;
-          averagePace = 6.0;
+      // Get the current run session manager
+      final runSessionManager = _container.read(runSessionControllerProvider.notifier);
+      
+      // Get GPS data from RunSessionManager stats
+      final stats = runSessionManager.getCurrentStats();
+      if (stats == null) {
+        print('❌ RunCompletionService: No stats available from RunSessionManager');
+        return await _createFallbackSummary(null);
+      }
+      
+      final route = stats.route;
+      print('📍 RunCompletionService: Got route from RunSessionManager stats with ${route.length} GPS points');
+      
+      if (route.isEmpty) {
+        print('⚠️ RunCompletionService: No GPS data available from RunSessionManager');
+        // Try to get route from current run provider as fallback
+        final currentRun = _container.read(currentRunProvider);
+        if (currentRun != null && currentRun.route.isNotEmpty) {
+          print('📍 RunCompletionService: Fallback - Got route from currentRunProvider with ${currentRun.route.length} GPS points');
         }
       }
-
+      
+      // Get the current episode from the provider
+      final episode = _container.read(currentEpisodeProvider);
+      print('🎬 RunCompletionService: Current episode: ${episode?.id}');
+      
+      // Get run statistics from the stats we already have
+      final totalTime = stats.elapsedTime;
+      final totalDistance = stats.distance;
+      final startTime = DateTime.now().subtract(totalTime); // Calculate start time from duration
+      
+      // Calculate average pace (minutes per kilometer)
+      final averagePace = totalDistance > 0 ? totalTime.inMinutes / totalDistance : 0.0;
+      
+      print('📊 RunCompletionService: Run stats - Time: $totalTime, Distance: $totalDistance, Start: $startTime, Pace: ${averagePace.toStringAsFixed(2)} min/km');
+      
+      // Get user weight for calorie calculation (default to 70kg if not available)
+      final weightKg = 70.0; // Default weight for calorie calculation
+      
       // Don't stop the run session here - it's already stopped by the calling code
       // await _container.read(runSessionControllerProvider.notifier).stopSession();
 
@@ -115,7 +99,7 @@ class RunCompletionService {
       );
       
       // Don't save run to history here - RunSessionManager already creates the run with GPS data
-      // await _saveRunToHistory(summaryData);
+      await _saveRunToHistory(summaryData);
       
       // Debug: Log route information
       print('📍 RunCompletionService: Final route has ${summaryData.route.length} GPS points');
@@ -258,11 +242,56 @@ class RunCompletionService {
     return achievements;
   }
   
-  /// Save run to user's history - NO LONGER NEEDED
-  /// RunSessionManager now handles saving runs with GPS data
+  /// Save run to user's history
   Future<void> _saveRunToHistory(RunSummaryData summaryData) async {
-    // This method is no longer used - RunSessionManager saves the run
-    print('ℹ️ RunCompletionService: _saveRunToHistory called but no longer needed');
+    try {
+      print('💾 RunCompletionService: Starting to save run to database...');
+      
+      // Get the current user ID
+      final user = _container.read(currentUserProvider).value;
+      if (user == null) {
+        print('❌ RunCompletionService: No user found, cannot save run');
+        return;
+      }
+      
+      // Create a RunModel from the summary data
+      final runModel = RunModel(
+        userId: user.uid,
+        startTime: summaryData.startTime,
+        endTime: summaryData.endTime,
+        totalDistance: summaryData.totalDistance,
+        totalTime: summaryData.totalTime,
+        route: summaryData.route,
+        averagePace: summaryData.averagePace,
+        maxPace: summaryData.averagePace, // Use average as max for now
+        minPace: summaryData.averagePace, // Use average as min for now
+        status: RunStatus.completed,
+        seasonId: summaryData.episode?.id ?? 'S01E01',
+        missionId: summaryData.episode?.id ?? 'S01E01',
+        runTarget: RunTarget(
+          id: 'completed_time_${summaryData.totalTime.inMinutes}',
+          type: RunTargetType.time,
+          value: summaryData.totalTime.inMinutes.toDouble(),
+          displayName: '${summaryData.totalTime.inMinutes} minutes',
+          description: 'Completed time target',
+          createdAt: DateTime.now(),
+          isCustom: true,
+        ),
+      );
+      
+      print('💾 RunCompletionService: Created run model with ${runModel.route.length} GPS points');
+      
+      // Save the run to Firestore
+      final firestoreService = _container.read(firestoreServiceProvider);
+      final runId = await firestoreService.saveRun(runModel);
+      
+      print('✅ RunCompletionService: Run saved successfully with ID: $runId');
+      print('💾 RunCompletionService: Run saved with ${runModel.route.length} GPS points');
+      
+    } catch (e, stackTrace) {
+      print('❌ RunCompletionService: Error saving run to database: $e');
+      print('❌ RunCompletionService: Stack trace: $stackTrace');
+    }
   }
 }
 

@@ -25,6 +25,7 @@ class ProgressMonitorService {
   Position? _lastPosition;
   List<Position> _route = [];
   StreamSubscription<Position>? _positionStream;
+  Timer? _gpsBackupTimer;
   
   // Targets
   Duration _targetTime = Duration.zero;
@@ -73,23 +74,8 @@ class ProgressMonitorService {
   Future<void> start() async {
     if (_isMonitoring) return;
     
-    // Don't start if globally stopped
-    if (_globallyStopped) {
-      print('🛑 ProgressMonitorService: Cannot start - globally stopped');
-      return;
-    }
-    
-    // Don't start if timers were explicitly stopped
-    if (_timersStopped) {
-      print('🛑 ProgressMonitorService: Cannot start - timers stopped');
-      return;
-    }
-    
-    // Double-check: if we're globally stopped, don't start
-    if (_globallyStopped || _timersStopped) {
-      print('🛑 ProgressMonitorService: Cannot start - stop flags are set (_globallyStopped=$_globallyStopped, _timersStopped=$_timersStopped)');
-      return;
-    }
+    // Simple check - only start if not already monitoring
+    print('🚀 ProgressMonitorService: Starting progress monitor...');
     
     try {
       _startTime = DateTime.now();
@@ -143,12 +129,8 @@ class ProgressMonitorService {
     _stopLocationTracking();
     _stopProgressTimer();
     
-    // Don't reset state if we're globally stopped - this prevents restart
-    if (!_globallyStopped) {
-      _resetState();
-    }
-    
-    print('🛑 ProgressMonitorService: stop() called - _isMonitoring set to false');
+    // DON'T reset state - keep the route data!
+    print('🛑 ProgressMonitorService: stop() called - _isMonitoring set to false - route data preserved');
   }
 
   /// Pause monitoring progress
@@ -165,8 +147,7 @@ class ProgressMonitorService {
   void resume() {
     if (_isMonitoring) return;
     
-    // Don't resume if timers were explicitly stopped
-    if (_timersStopped) return;
+    // Simple check - only resume if not already monitoring
     
     if (_pauseTime != null) {
       _totalPausedTime += DateTime.now().difference(_pauseTime!);
@@ -180,6 +161,8 @@ class ProgressMonitorService {
 
   /// Start location tracking
   void _startLocationTracking() {
+    print('📍 ProgressMonitorService: Starting GPS location tracking...');
+    
     // Get initial position
     Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
@@ -187,6 +170,7 @@ class ProgressMonitorService {
     ).then((position) {
       _lastPosition = position;
       _route.add(position);
+      print('📍 ProgressMonitorService: Initial position captured: (${position.latitude}, ${position.longitude})');
       onRouteUpdate?.call(_route);
     }).catchError((e) {
       if (kDebugMode) {
@@ -194,26 +178,63 @@ class ProgressMonitorService {
       }
     });
     
-    // Start position stream
+    // Start position stream with minimal distance filter for continuous tracking
     _positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // Update every 10 meters
+        distanceFilter: 0, // Capture ALL positions, even stationary
       ),
     ).listen((position) {
       _onPositionUpdate(position);
     });
+    
+    // Start backup timer to ensure we get positions even when stationary
+    _startGpsBackupTimer();
   }
 
   /// Stop location tracking
   void _stopLocationTracking() {
+    print('📍 ProgressMonitorService: Stopping GPS location tracking...');
+    print('📍 ProgressMonitorService: Route contains ${_route.length} GPS points before stopping');
     _positionStream?.cancel();
     _positionStream = null;
+    _stopGpsBackupTimer();
+  }
+  
+  /// Start backup GPS timer to ensure regular position capture
+  void _startGpsBackupTimer() {
+    _gpsBackupTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+      if (!_isMonitoring) {
+        return;
+      }
+      
+      try {
+        // Get current position manually as backup
+        final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 5),
+        );
+        
+        // Add with timestamp and logging
+        print('📍 GPS Backup Timer: Adding position (${position.latitude}, ${position.longitude})');
+        _onPositionUpdate(position);
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ GPS Backup Timer: Failed to get position: $e');
+        }
+      }
+    });
+  }
+  
+  /// Stop backup GPS timer
+  void _stopGpsBackupTimer() {
+    _gpsBackupTimer?.cancel();
+    _gpsBackupTimer = null;
   }
 
   /// Start progress timer
   void _startProgressTimer() {
-    if (_timersStopped || _globallyStopped || _forceStopped) return; // Don't restart if timers were stopped
+    if (!_isMonitoring) return; // Don't start if not monitoring
     
     if (kDebugMode) {
       print('Starting progress timer');
@@ -227,18 +248,17 @@ class ProgressMonitorService {
   
   /// Start a simple timer that's easier to control
   void _startSimpleTimer() {
-    if (_forceStopped || _globallyStopped || _timersStopped) return;
+    if (!_isMonitoring) return; // Only check if monitoring is active
     
     // Use a completely different approach - no recursive timers
     _progressTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      // IMMEDIATE stop check - if any flag is set, cancel and return
-      if (_forceStopped || _globallyStopped || _timersStopped || !_isMonitoring) {
+      // Simple stop check - only check if monitoring is active
+      if (!_isMonitoring) {
         if (kDebugMode) {
-          print('☢️ Timer tick but stopped - IMMEDIATE CANCELLATION');
-          print('☢️ _forceStopped=$_forceStopped, _globallyStopped=$_globallyStopped, _timersStopped=$_timersStopped, _isMonitoring=$_isMonitoring');
+          print('🛑 Timer tick but monitoring stopped - cancelling timer');
         }
         
-        // Force cancel the timer
+        // Cancel the timer
         timer.cancel();
         _progressTimer = null;
         
@@ -246,7 +266,7 @@ class ProgressMonitorService {
         return;
       }
       
-      // Only proceed if ALL checks pass
+      // Only proceed if monitoring is active
       _updateElapsedTime();
       _updateProgress();
       
@@ -282,28 +302,21 @@ class ProgressMonitorService {
       _progressTimer = null;
     }
     
-    // Set all stop flags to prevent any timer from running
-    _isMonitoring = false;
-    _globallyStopped = true;
-    _timersStopped = true;
-    
-    print('🛑 ProgressMonitorService: All stop flags set to prevent timer restart');
+    // Don't set stop flags - just stop the timer
+    print('🛑 ProgressMonitorService: Timer stopped without setting stop flags');
   }
   
   /// Public method to stop the progress timer
   void stopTimer() {
-    _timersStopped = true; // Prevent timer from being restarted
     _stopProgressTimer();
   }
   
   /// Public method to force stop monitoring
   void forceStopMonitoring() {
-    _forceStopped = true; // Set force stop flag
-    _globallyStopped = true; // Set global flag to prevent any restart
-    _isMonitoring = false;
-    _timersStopped = true; // Also set timers stopped flag
+    print('🛑 ProgressMonitorService: forceStopMonitoring() called - Route had ${_route.length} GPS points');
+    _isMonitoring = false; // Just stop monitoring, don't set aggressive flags
     
-    // Use aggressive timer stopping
+    // Use simple timer stopping
     _forceStopProgressTimer();
     
     // Clear all callbacks to prevent further updates
@@ -313,28 +326,22 @@ class ProgressMonitorService {
     onProgressUpdate = null;
     onRouteUpdate = null;
     
-    // Reset all state
-    _resetState();
-    
-    print('🛑 ProgressMonitorService: _isMonitoring forced to false');
-    print('🛑 ProgressMonitorService: _globallyStopped set to true');
-    print('🛑 ProgressMonitorService: _timersStopped set to true');
-    print('🛑 ProgressMonitorService: _forceStopped set to true');
-    print('🛑 ProgressMonitorService: All callbacks cleared and state reset');
+    // DON'T reset state - keep the route data!
+    print('🛑 ProgressMonitorService: _isMonitoring set to false - route data preserved');
   }
   
   /// Nuclear option: completely kill all timers
   void nuclearStop() {
-    _forceStopped = true;
-    _globallyStopped = true;
-    _isMonitoring = false;
-    _timersStopped = true;
+    _isMonitoring = false; // Just stop monitoring, don't set aggressive flags
     
     // Cancel any existing timer
     if (_progressTimer != null) {
       _progressTimer!.cancel();
       _progressTimer = null;
     }
+    
+    // Stop GPS tracking and backup timer
+    _stopLocationTracking();
     
     // Clear all callbacks
     onDistanceUpdate = null;
@@ -343,10 +350,8 @@ class ProgressMonitorService {
     onProgressUpdate = null;
     onRouteUpdate = null;
     
-    // Reset state
-    _resetState();
-    
-    print('☢️ ProgressMonitorService: NUCLEAR STOP - All timers killed');
+    // DON'T reset state - keep the route data!
+    print('☢️ ProgressMonitorService: NUCLEAR STOP - All timers killed - route data preserved');
   }
 
   /// Handle position updates
@@ -355,8 +360,13 @@ class ProgressMonitorService {
       return; // Don't process if not monitoring
     }
     
-    // Always add the position to the route first
+    // Always add the position to route first
     _route.add(position);
+    
+    if (kDebugMode) {
+      print('📍 Position added to route: (${position.latitude}, ${position.longitude}) - Total points: ${_route.length}');
+      print('📍 Route now contains ${_route.length} GPS points');
+    }
     
     // If this is the first position, just store it and return
     if (_lastPosition == null) {
@@ -403,10 +413,9 @@ class ProgressMonitorService {
   /// Update elapsed time
   void _updateElapsedTime() {
     // Don't update if monitoring is stopped
-    if (!_isMonitoring || _globallyStopped || _timersStopped || _forceStopped) {
+    if (!_isMonitoring) {
       if (kDebugMode) {
         print('🛑 _updateElapsedTime: Skipping update - monitoring stopped');
-        print('🛑 _isMonitoring=$_isMonitoring, _globallyStopped=$_globallyStopped, _timersStopped=$_timersStopped, _forceStopped=$_forceStopped');
       }
       return;
     }
@@ -434,10 +443,9 @@ class ProgressMonitorService {
   /// Update progress
   void _updateProgress() {
     // Don't update if monitoring is stopped
-    if (!_isMonitoring || _globallyStopped || _timersStopped || _forceStopped) {
+    if (!_isMonitoring) {
       if (kDebugMode) {
         print('🛑 _updateProgress: Skipping update - monitoring stopped');
-        print('🛑 _isMonitoring=$_isMonitoring, _globallyStopped=$_globallyStopped, _timersStopped=$_timersStopped, _forceStopped=$_forceStopped');
       }
       return;
     }
@@ -459,20 +467,7 @@ class ProgressMonitorService {
     return (timeProgress > distanceProgress ? timeProgress : distanceProgress).clamp(0.0, 1.0);
   }
 
-  /// Reset the service state
-  void _resetState() {
-    _currentDistance = 0.0;
-    _elapsedTime = Duration.zero;
-    _currentPace = 0.0;
-    _averagePace = 0.0;
-    _maxPace = 0.0;
-    _minPace = double.infinity;
-    _route.clear();
-    _lastPosition = null;
-    _startTime = null;
-    _pauseTime = null;
-    _totalPausedTime = Duration.zero;
-  }
+  // _resetState() method removed - we don't want to clear route data
 
   /// Get current run statistics
   Map<String, dynamic> getRunStats() {
@@ -489,7 +484,7 @@ class ProgressMonitorService {
   }
   
   /// Check if monitoring is stopped
-  bool get isStopped => _globallyStopped || _timersStopped;
+  bool get isStopped => !_isMonitoring;
 
   /// Manually update distance (for testing or external tracking)
   void updateDistance(double distance) {
@@ -505,31 +500,7 @@ class ProgressMonitorService {
     _updateProgress();
   }
   
-  /// Manually update GPS route (for testing or external tracking)
-  void updateRoute(List<Position> newRoute) {
-    _route.clear();
-    _route.addAll(newRoute);
-    
-    if (_route.isNotEmpty) {
-      _lastPosition = _route.last;
-      
-      // Calculate total distance from route
-      _currentDistance = 0.0;
-      for (int i = 1; i < _route.length; i++) {
-        final distance = Geolocator.distanceBetween(
-          _route[i - 1].latitude,
-          _route[i - 1].longitude,
-          _route[i].latitude,
-          _route[i].longitude,
-        ) / 1000; // Convert to kilometers
-        _currentDistance += distance;
-      }
-      
-      // Notify listeners
-      onDistanceUpdate?.call(_currentDistance);
-      onRouteUpdate?.call(_route);
-    }
-  }
+  // updateRoute method removed - it was clearing the real GPS data unnecessarily
 
   /// Dispose resources
   void dispose() {

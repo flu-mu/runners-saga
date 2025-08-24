@@ -19,6 +19,7 @@ class RunModel with _$RunModel {
     DateTime? endTime,
     required List<LocationPoint> route,
     required double totalDistance, // in kilometers
+    @JsonKey(fromJson: _durationFromJson, toJson: _durationToJson)
     required Duration totalTime,
     required double averagePace, // minutes per kilometer
     required double maxPace, // fastest pace achieved
@@ -104,4 +105,26 @@ DateTime _timestampToDateTime(dynamic timestamp) {
 Timestamp _dateTimeToTimestamp(DateTime? dateTime) {
   if (dateTime == null) return Timestamp.now();
   return Timestamp.fromDate(dateTime);
+}
+
+// Helper methods for Duration serialization
+Duration _durationFromJson(dynamic duration) {
+  if (duration == null) return Duration.zero;
+  if (duration is int) {
+    return Duration(milliseconds: duration);
+  }
+  if (duration is String) {
+    final parts = duration.split(':');
+    if (parts.length == 3) {
+      final hours = int.tryParse(parts[0]) ?? 0;
+      final minutes = int.tryParse(parts[1]) ?? 0;
+      final seconds = int.tryParse(parts[2]) ?? 0;
+      return Duration(hours: hours, minutes: minutes, seconds: seconds);
+    }
+  }
+  return Duration.zero;
+}
+
+int _durationToJson(Duration duration) {
+  return duration.inMilliseconds;
 }

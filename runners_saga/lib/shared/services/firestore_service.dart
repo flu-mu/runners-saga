@@ -12,18 +12,24 @@ class FirestoreService {
   
   // Lazy initialization to ensure Firebase is ready
   FirebaseFirestore get _firestoreInstance {
+    print('🔧 FirestoreService: Checking isFirebaseReady: $isFirebaseReady');
     if (!isFirebaseReady) {
+      print('❌ FirestoreService: Firebase not initialized yet. Please wait for app startup to complete.');
       throw Exception('Firebase not initialized yet. Please wait for app startup to complete.');
     }
     _firestore ??= FirebaseFirestore.instance;
+    print('✅ FirestoreService: Firestore instance ready');
     return _firestore!;
   }
   
   FirebaseAuth get _authInstance {
+    print('🔧 FirestoreService: Checking isFirebaseReady: $isFirebaseReady');
     if (!isFirebaseReady) {
+      print('❌ FirestoreService: Firebase not initialized yet. Please wait for app startup to complete.');
       throw Exception('Firebase not initialized yet. Please wait for app startup to complete.');
     }
     _auth ??= FirebaseAuth.instance;
+    print('✅ FirestoreService: Firebase Auth instance ready');
     return _auth!;
   }
   
@@ -38,13 +44,35 @@ class FirestoreService {
   // Save a new run to Firestore
   Future<String> saveRun(RunModel run) async {
     try {
+      print('💾 FirestoreService.saveRun: Starting save process...');
+      
+      // Check Firebase Auth instance
+      print('💾 FirestoreService.saveRun: Firebase Auth instance: ${_authInstance}');
+      print('💾 FirestoreService.saveRun: Firebase Auth app: ${_authInstance.app}');
+      
       final userId = currentUserId;
+      print('💾 FirestoreService.saveRun: currentUserId = $userId');
+      
+      // Additional authentication debugging
+      try {
+        final currentUser = _authInstance.currentUser;
+        print('💾 FirestoreService.saveRun: _authInstance.currentUser: ${currentUser?.uid}');
+        print('💾 FirestoreService.saveRun: User authenticated: ${currentUser != null}');
+        print('💾 FirestoreService.saveRun: User email: ${currentUser?.email}');
+        print('💾 FirestoreService.saveRun: User display name: ${currentUser?.displayName}');
+      } catch (e) {
+        print('❌ FirestoreService.saveRun: Error accessing currentUser: $e');
+      }
+      
       if (userId == null) {
+        print('❌ FirestoreService.saveRun: User not authenticated');
         throw Exception('User not authenticated');
       }
       
       // Convert run to JSON
+      print('💾 FirestoreService.saveRun: Converting run to JSON...');
       final runData = run.toJson();
+      print('💾 FirestoreService.saveRun: JSON conversion successful, ${runData.keys.length} keys');
       
       // Add metadata
       runData['createdAt'] = FieldValue.serverTimestamp();
@@ -52,20 +80,27 @@ class FirestoreService {
       runData['userId'] = userId; // Ensure userId is included
       
       // Save to Firestore - using top-level runs collection for easier querying
+      print('💾 FirestoreService.saveRun: Saving to main runs collection...');
       final docRef = await _firestoreInstance
           .collection(_runsCollection)
           .add(runData);
+      print('✅ FirestoreService.saveRun: Saved to main collection with ID: ${docRef.id}');
       
       // Also save to user's subcollection for user-specific queries
+      print('💾 FirestoreService.saveRun: Saving to user subcollection...');
       await _firestoreInstance
           .collection(_usersCollection)
           .doc(userId)
           .collection(_runsCollection)
           .doc(docRef.id)
           .set(runData);
+      print('✅ FirestoreService.saveRun: Saved to user subcollection');
       
       return docRef.id;
     } catch (e) {
+      print('❌ FirestoreService.saveRun: Error occurred: $e');
+      print('❌ FirestoreService.saveRun: Error type: ${e.runtimeType}');
+      print('❌ FirestoreService.saveRun: Stack trace: ${StackTrace.current}');
       throw Exception('Failed to save run: $e');
     }
   }

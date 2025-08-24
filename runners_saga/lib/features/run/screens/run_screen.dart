@@ -14,6 +14,8 @@ import '../../../shared/providers/audio_providers.dart';
 import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/services/scene_trigger_service.dart';
 import '../../../shared/services/run_session_manager.dart';
+import '../../../shared/services/audio_manager.dart';
+import '../../../shared/services/download_service.dart';
 import '../../../shared/models/episode_model.dart';
 import '../../../core/constants/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +24,9 @@ import '../widgets/run_map_panel.dart';
 import '../widgets/scene_hud.dart';
 import '../widgets/scene_progress_indicator.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
+import '../../../shared/services/firestore_service.dart';
+import '../../../shared/models/run_model.dart';
+import '../../../shared/models/run_target_model.dart';
 
 
 class RunScreen extends ConsumerStatefulWidget {
@@ -249,72 +254,14 @@ class _RunScreenState extends ConsumerState<RunScreen> {
   }
   
   String _getTimerDisplayText() {
-    if (_timerStopped) return 'Run Completed!';
     if (_isPaused) return 'Timer Paused';
     return 'Simple Timer';
   }
   
   /// Build the control buttons based on timer state
   Widget _buildControlButtons() {
-    if (_timerStopped) {
-      // Timer completely stopped - show restart button
-      return Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade400,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.stop_circle, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Run Completed!',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _resetTimer,
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Restart'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _finishRun,
-                  icon: const Icon(Icons.assessment),
-                  label: const Text('View Summary'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kElectricAqua,
-                    foregroundColor: kMidnightNavy,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
-    } else if (_isPaused) {
-      // Timer paused - show resume and stop buttons
+    if (_isPaused) {
+      // Timer paused - show resume and finish buttons
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -330,20 +277,9 @@ class _RunScreenState extends ConsumerState<RunScreen> {
           ),
           const SizedBox(width: 16),
           ElevatedButton.icon(
-            onPressed: _completeRun,
+            onPressed: _finishRun,
             icon: const Icon(Icons.flag),
-            label: const Text('Complete'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            ),
-          ),
-          const SizedBox(width: 16),
-          ElevatedButton.icon(
-            onPressed: () => context.go('/run/summary'),
-            icon: const Icon(Icons.assessment),
-            label: const Text('Finish'),
+            label: const Text('Finish Run'),
             style: ElevatedButton.styleFrom(
               backgroundColor: kElectricAqua,
               foregroundColor: kMidnightNavy,
@@ -556,9 +492,12 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       print('🎯 RunScreen: Using targetDistance: $targetDistance');
       
       // Only start if user has selected a target AND timer wasn't stopped
+      print('🎯 RunScreen: Target check: targetTime=$targetTime, targetDistance=$targetDistance, _timerStopped=$_timerStopped');
       if ((targetTime != null || targetDistance != null) && !_timerStopped) {
         // Check if the run session manager can start a session
+        print('🎯 RunScreen: Checking if session can start...');
         final canStart = ref.read(runSessionControllerProvider.notifier).canStartSession();
+        print('🎯 RunScreen: canStartSession() returned: $canStart');
         if (canStart) {
           final trackingMode = ref.read(trackingModeProvider);
           // Force debug logging for testing
@@ -566,12 +505,16 @@ class _RunScreenState extends ConsumerState<RunScreen> {
           print('🎯 RunScreen: Episode audio files: ${currentEpisode!.audioFiles}');
           print('🎯 RunScreen: Audio files count: ${currentEpisode!.audioFiles.length}');
           
-          ref.read(runSessionControllerProvider.notifier).startSession(
+          print('🎯 RunScreen: About to start session...');
+          await ref.read(runSessionControllerProvider.notifier).startSession(
             currentEpisode!,
             userTargetTime: targetTime ?? const Duration(minutes: 30),
             userTargetDistance: targetDistance ?? 5.0,
             trackingMode: trackingMode,
           );
+          print('🎯 RunScreen: Session start completed');
+          print('🎯 RunScreen: Session active: ${ref.read(runSessionControllerProvider.notifier).isSessionActive}');
+          
           // Hook route updates to force map refresh via provider changes
           ref.read(runSessionControllerProvider.notifier).state.onRouteUpdated = (route) {
             setState(() {});
@@ -611,44 +554,20 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     }
   }
   
-  // Simple timer that checks pause state
-  // void _startSimpleTimer() { // Removed as per edit hint
-  //   print('🚀 _startSimpleTimer: Method called');
-  //   print('🚀 _startSimpleTimer: Current _localTimer: $_localTimer');
-    
-  //   _localTimer?.cancel();
-  //   print('🚀 _startSimpleTimer: Previous timer cancelled');
-    
-  //   _localTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-  //     print('🚀 Timer callback: Tick! _isPaused: $_isPaused');
-  //     if (!_isPaused) {
-  //       // Timer is not paused - continue running
-  //       setState(() {
-  //         _elapsedSeconds++;
-  //       });
-  //       print('⏱️ Timer tick: $_elapsedSeconds seconds (not paused)');
-  //     } else {
-  //       // Timer is paused - don't update
-  //       print('⏸️ Timer paused at: $_elapsedSeconds seconds');
-  //     }
-  //   });
-    
-  //   print('🚀 _startSimpleTimer: New timer created: $_localTimer');
-  //   print('🚀 Simple timer started - will check pause state every second');
-  // }
+
   
   // Simple function to toggle pause state
-  // void _togglePause() { // Removed as per edit hint
-  //   setState(() {
-  //     _isPaused = !_isPaused; // Toggle pause state
-  //   });
+  void _togglePause() {
+    setState(() {
+      _isPaused = !_isPaused; // Toggle pause state
+    });
     
-  //   if (_isPaused) {
-  //     print('⏸️ RunScreen: Timer PAUSED at $_elapsedSeconds seconds');
-  //   } else {
-  //     print('▶️ RunScreen: Timer RESUMED from $_elapsedSeconds seconds');
-  //   }
-  // }
+    if (_isPaused) {
+      print('⏸️ RunScreen: Timer PAUSED at ${_elapsedTime.inSeconds} seconds');
+    } else {
+      print('▶️ RunScreen: Timer RESUMED from ${_elapsedTime.inSeconds} seconds');
+    }
+  }
 
     // Function to pause the timer
   void _pauseTimer() {
@@ -687,72 +606,6 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     }
   }
   
-  // Function to complete the run and save progress
-  void _completeRun() async {
-    print('🏁 RunScreen: Completing run and saving progress');
-    
-    try {
-      // Set flag to prevent timer from being restarted
-      _timerStopped = true;
-      print('🏁 RunScreen: _timerStopped set to true');
-      
-      // Stop our simple timer completely (this we can control)
-      _stopSimpleTimer();
-      
-      // Stop all audio when completing run
-      try {
-        // Directly stop all audio from our audio manager first
-        final audioManager = ref.read(audioManagerProvider);
-        await audioManager.stopAll();
-        
-        print('🎵 Audio stopped when run completed (audio manager)');
-        
-        // The nuclear stop will also handle stopping audio as backup
-        print('🎵 Nuclear stop will also ensure audio is stopped');
-      } catch (e) {
-        print('❌ Error stopping audio: $e');
-      }
-      
-      // Get the current episode and run data
-      final currentEpisode = ref.read(currentEpisodeProvider);
-      final userRunTarget = ref.read(userRunTargetProvider);
-      
-      // Note: Run completion is now handled by RunCompletionService
-      // No need to call _saveRunCompletion here to avoid duplicates
-      
-      // Stop the background session
-      print('🏁 RunScreen: Stopping background session');
-      ref.read(runSessionControllerProvider.notifier).stopSession();
-      print('🏁 RunScreen: stopSession called successfully');
-      
-      // Update UI to show timer is completed
-      setState(() {});
-      
-      // Show completion confirmation to user
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Run completed! Progress saved.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      print('🏁 RunScreen: Error completing run: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error completing run: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-  
-
-  
   // Method to resume timer from pause
   void _resumeTimer() async {
     print('🔄 RunScreen: Resuming timer from pause');
@@ -781,31 +634,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     print('🔄 RunScreen: Timer resumed from pause');
   }
   
-  // Method to reset timer state completely
-  void _resetTimer() {
-    print('🔄 RunScreen: Resetting timer state completely');
-    
-    // Reset the global stop flag in the run session manager
-    ref.read(runSessionControllerProvider.notifier).resetGlobalStop();
-    
-    // Reset our simple timer state
-    _pausedTime = Duration.zero;
-    
-    setState(() {
-      _timerStopped = false;
-      _isInitializing = true;
-    });
-    
-    // Start our simple timer from 0
-    _startSimpleTimer();
-    
-    // Wait a moment then start the run
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        _startRun();
-      }
-    });
-  }
+  // _resetTimer method removed - unnecessary complexity
 
   @override
   Widget build(BuildContext context) {
@@ -1491,36 +1320,99 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     try {
       print('🎯 RunScreen: Starting run completion process...');
       
-      // Use completion service to finish the run
-      final controller = ref.read(runCompletionControllerProvider.notifier);
-      final summaryData = await controller.completeRun();
+      // Get the current run data directly from the run session manager
+      final runSessionManager = ref.read(runSessionControllerProvider.notifier);
       
-      if (summaryData != null) {
-        print('✅ RunScreen: Run completed successfully, navigating to summary');
-        // Navigate to summary screen
-        if (mounted) {
-          context.go('/run/summary');
+      // Get route data directly using public methods
+      final route = runSessionManager.getCurrentRoute();
+      final stats = runSessionManager.getCurrentStats();
+      
+      print('💾 RunScreen: Direct route access - ${route.length} GPS points');
+      print('💾 RunScreen: Direct stats - ${stats?.distance ?? 0}km, ${stats?.elapsedTime ?? Duration.zero}');
+      
+      // SAVE THE RUN TO DATABASE FIRST - SIMPLE AND DIRECT
+      if (route.isNotEmpty && stats != null) {
+        print('💾 RunScreen: Saving run to database...');
+        try {
+          // Create the run model
+          final currentUser = ref.read(currentUserProvider).value;
+          final currentEpisode = ref.read(currentEpisodeProvider);
+          
+          if (currentUser != null && currentEpisode != null) {
+            final runModel = RunModel(
+              userId: currentUser.uid,
+              startTime: DateTime.now().subtract(stats!.elapsedTime), // Estimate start time
+              endTime: DateTime.now(),
+              route: route,
+              totalDistance: stats!.distance,
+              totalTime: stats!.elapsedTime,
+              averagePace: stats!.averagePace,
+              maxPace: stats!.maxPace,
+              minPace: stats!.minPace,
+              seasonId: currentEpisode.seasonId,
+              missionId: currentEpisode.id,
+              status: RunStatus.completed,
+              runTarget: RunTarget(
+                id: 'episode_${currentEpisode.id}',
+                type: RunTargetType.distance,
+                value: currentEpisode.targetDistance,
+                displayName: '${currentEpisode.targetDistance} km',
+                description: 'Episode target distance',
+                createdAt: DateTime.now(),
+                isCustom: false,
+              ),
+              metadata: {
+                'playedScenes': [], // Could be populated if needed
+                'totalPausedTime': 0,
+              },
+            );
+            
+            // Save to database directly
+            final firestore = FirestoreService();
+            final runId = await firestore.saveRun(runModel);
+            await firestore.completeRun(runId, runModel);
+            print('✅ RunScreen: Run saved to database with ID: $runId');
+            print('✅ RunScreen: ${route.length} GPS points saved');
+          } else {
+            print('❌ RunScreen: User or episode not available for saving');
+          }
+        } catch (e) {
+          print('❌ RunScreen: Error saving run to database: $e');
         }
       } else {
-        print('⚠️ RunScreen: No summary data returned, but continuing to summary screen');
-        // Even if no summary data, navigate to summary (it will show fallback data)
-        if (mounted) {
-          context.go('/run/summary');
-        }
+        print('⚠️ RunScreen: No GPS route data to save');
       }
-    } catch (e) {
-      print('❌ RunScreen: Error finishing run: $e');
+      
+      // NOW stop everything AFTER saving the data
+      print('🛑 RunScreen: Stopping session and cleanup...');
+      
+      // Stop the simple timer
+      _timerStopped = true;
+      _stopSimpleTimer();
+      print('🛑 Simple timer stopped completely');
+      
+      // Stop audio
+      final audioManager = ref.read(audioManagerProvider);
+      audioManager.stopAll();
+      print('🎵 Audio stopped when run finished');
+      
+      // Stop the run session
+      try {
+        await runSessionManager.stopSession();
+        print('🛑 RunSessionManager: Session stopped');
+      } catch (e) {
+        print('⚠️ RunScreen: Error stopping session: $e');
+      }
+      
+      // Navigate to summary screen
       if (mounted) {
-        // Show error but still navigate to summary (it will handle fallback data)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Warning: Using fallback data for summary'),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        
-        // Navigate to summary anyway - it will show fallback data
+        context.go('/run/summary');
+      }
+      
+    } catch (e) {
+      print('❌ RunScreen: Error in _finishRun: $e');
+      // Navigate to summary anyway
+      if (mounted) {
         context.go('/run/summary');
       }
     }

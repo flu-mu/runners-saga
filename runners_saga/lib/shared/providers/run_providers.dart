@@ -51,7 +51,10 @@ final firestoreServiceProvider = Provider<FirestoreService>((ref) {
 // Provider for user's run history
 final userRunsProvider = StreamProvider<List<RunModel>>((ref) {
   final firestoreService = ref.watch(firestoreServiceProvider);
-  return firestoreService.getUserRunsStream();
+  return firestoreService.getUserRunsStream().map((runs) {
+    final sortedRuns = [...runs]..sort((a, b) => b.startTime.compareTo(a.startTime));
+    return sortedRuns;
+  });
 });
 
 // Provider for user's completed runs only

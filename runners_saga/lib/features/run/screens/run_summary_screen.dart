@@ -165,6 +165,27 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: kSurfaceBase,
+        selectedItemColor: kElectricAqua,
+        unselectedItemColor: Colors.white70,
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Workouts'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+        ],
+        currentIndex: 1, // Set to Workouts since this is a run summary
+        onTap: (index) {
+          if (index == 0) {
+            context.go('/home');
+          } else if (index == 1) {
+            context.go('/run/history');
+          } else if (index == 2) {
+            context.go('/settings');
+          }
+        },
+      ),
     );
   }
 
@@ -183,7 +204,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           Row(
             children: [
               IconButton(
-                onPressed: () => context.pop(),
+                onPressed: () => context.go('/home'),
                 icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
               ),
               Expanded(
@@ -409,66 +430,9 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
     );
   }
 
+  // Action buttons removed - user should use bottom menu navigation
   Widget _buildActionButtons() {
-    return Column(
-      children: [
-        // Save Run Button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _saveRun,
-            icon: const Icon(Icons.save),
-            label: const Text('Save Run'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kElectricAqua,
-              foregroundColor: kMidnightNavy,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        
-        // Row of secondary buttons
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => context.go('/run'),
-                icon: const Icon(Icons.replay),
-                label: const Text('Run Again'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: kElectricAqua,
-                  side: BorderSide(color: kElectricAqua),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => context.go('/home'),
-                icon: const Icon(Icons.home),
-                label: const Text('Home'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: kTextMid,
-                  side: BorderSide(color: kTextMid),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
+    return const SizedBox.shrink(); // No buttons, just bottom menu
   }
 
   String _formatDuration(Duration duration) {
@@ -485,33 +449,5 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
     }
   }
 
-  void _saveRun() async {
-    try {
-      // Use completion service to save the run
-      final controller = ref.read(runCompletionControllerProvider.notifier);
-      final summaryData = await controller.completeRun();
-      
-      if (summaryData != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Run saved successfully!'),
-            backgroundColor: kMeadowGreen,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        );
-      } else {
-        throw Exception('Failed to save run');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving run: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      );
-    }
-  }
+  // _saveRun method removed - run is already saved when Finish Run is clicked
 }

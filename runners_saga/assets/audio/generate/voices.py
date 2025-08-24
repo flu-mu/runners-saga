@@ -15,8 +15,8 @@ OUTPUT_FILE = os.path.join(THIS_DIR, "episode2_final.wav")
 # Map characters to Google voices
 VOICE_MAP = {
     # Names match SSML <voice name="..."> values used in episode2.ssml
-    "Riley": "en-US-Wavenet-F",
-    "Maya": "en-US-Wavenet-D",
+    "Riley": "en-US-Chirp3-HD-Zubenelgenubi",
+    "Maya": "en-US-Chirp3-HD-Leda",
     "CommanderMorrison": "en-US-Wavenet-B",
     "Tommy": "en-US-Wavenet-C",
     "DrChen": "en-US-Wavenet-A",
