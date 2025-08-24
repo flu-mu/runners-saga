@@ -3,22 +3,24 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
+
 import '../../../main.dart'; // Import to access isFirebaseReady
 import '../../../shared/providers/run_session_providers.dart';
 import '../../../shared/providers/story_providers.dart';
 import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/providers/run_providers.dart';
-import '../../../shared/providers/run_completion_providers.dart';
+
 import '../../../shared/providers/audio_providers.dart';
 import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/services/scene_trigger_service.dart';
 import '../../../shared/services/run_session_manager.dart';
-import '../../../shared/services/audio_manager.dart';
-import '../../../shared/services/download_service.dart';
+
+
 import '../../../shared/models/episode_model.dart';
 import '../../../core/constants/app_theme.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import '../widgets/run_map_panel.dart';
 import '../widgets/scene_hud.dart';
@@ -26,9 +28,12 @@ import '../widgets/scene_progress_indicator.dart';
 import '../../../shared/widgets/skeleton_loader.dart';
 import '../../../shared/services/firestore_service.dart';
 import '../../../shared/services/run_completion_service.dart';
+import '../../../shared/providers/run_completion_providers.dart';
 import '../../../shared/models/run_model.dart';
-import '../../../shared/models/run_target_model.dart';
-import '../screens/run_summary_screen.dart';
+
+
+
+
 
 
 class RunScreen extends ConsumerStatefulWidget {
@@ -50,7 +55,11 @@ class _RunScreenState extends ConsumerState<RunScreen> {
   Duration _elapsedTime = Duration.zero;
   Duration _pausedTime = Duration.zero; // Time when paused
   
-  // GPS tracking for real runs
+  // GPS tracking for real distance calculation
+  List<Position> _gpsRoute = [];
+  double _totalDistance = 0.0;
+  StreamSubscription<Position>? _gpsSubscription;
+  Position? _lastGpsPosition;
   
   @override
   void initState() {
@@ -77,11 +86,85 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     try {
       _disposed = true;
       _stopSimpleTimer();
+      
+      // Clean up GPS tracking
+      _gpsSubscription?.cancel();
+      _gpsSubscription = null;
+      
     } catch (e) {
       // Log error but don't let it prevent disposal
       print('⚠️ RunScreen: Error during dispose: $e');
     } finally {
       super.dispose();
+    }
+  }
+  
+  /// Start GPS tracking for real distance calculation
+  void _startGpsTracking() async {
+    try {
+      print('📍 RunScreen: Starting GPS tracking for real distance calculation');
+      
+      // Get initial position
+      final initialPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+      
+      // Store initial position
+      _lastGpsPosition = initialPosition;
+      _gpsRoute.add(initialPosition);
+      _totalDistance = 0.0;
+      
+      print('📍 RunScreen: Initial GPS position captured: (${initialPosition.latitude}, ${initialPosition.longitude})');
+      print('📍 RunScreen: GPS route started with 1 point');
+      
+      // Start continuous GPS tracking
+      _gpsSubscription = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 5, // Update every 5 meters
+        ),
+      ).listen((position) {
+        _onGpsPositionUpdate(position);
+      });
+      
+      print('📍 RunScreen: Continuous GPS tracking started');
+      
+    } catch (e) {
+      print('❌ RunScreen: Failed to start GPS tracking: $e');
+    }
+  }
+  
+  /// Handle GPS position updates and calculate distance
+  void _onGpsPositionUpdate(Position position) {
+    if (_lastGpsPosition != null) {
+      // Calculate distance from last position
+      final distance = Geolocator.distanceBetween(
+        _lastGpsPosition!.latitude,
+        _lastGpsPosition!.longitude,
+        position.latitude,
+        position.longitude,
+      ) / 1000; // Convert to kilometers
+      
+      // Add to total distance
+      _totalDistance += distance;
+      
+      print('📍 RunScreen: GPS update - Position: (${position.latitude}, ${position.longitude})');
+      print('📍 RunScreen: GPS update - Distance: ${distance.toStringAsFixed(6)} km, Total: ${_totalDistance.toStringAsFixed(6)} km');
+      print('📍 RunScreen: GPS update - Accuracy: ${position.accuracy}m, Speed: ${position.speed}m/s');
+    }
+    
+    // Store the new position
+    _lastGpsPosition = position;
+    _gpsRoute.add(position);
+    
+    print('📍 RunScreen: GPS route now has ${_gpsRoute.length} points');
+    
+
+    
+    // Update UI if mounted
+    if (mounted && !_disposed) {
+      setState(() {});
     }
   }
   
@@ -102,6 +185,9 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       _elapsedTime = Duration.zero;
       print('🚀 Simple timer started from 0');
       
+      // Start GPS tracking for real distance calculation
+      _startGpsTracking();
+      
       // Audio will be handled by the background session (SceneTriggerService)
       print('🎵 Audio will be managed by background session');
     }
@@ -117,6 +203,8 @@ class _RunScreenState extends ConsumerState<RunScreen> {
         setState(() {
           _elapsedTime += const Duration(seconds: 1);
         });
+        
+
       }
       
       print('⏱️ Simple timer tick: ${_elapsedTime.inSeconds}s');
@@ -324,98 +412,275 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     }
   }
   
-  /// Direct save method that captures GPS data while session is still active
+  /// REAL GPS TRACKING with accurate distance calculation
   Future<void> _directSaveRun() async {
+    print('🚀 REAL GPS TRACKING: Starting GPS data save with real distance calculation');
+    
     try {
-      print('💾 RunScreen: Direct save method called - capturing GPS data BEFORE stopping session');
+      // Get current user first
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('❌ INDEPENDENT GPS CAPTURE: FAILED - No user logged in');
+        return;
+      }
       
-      // STEP 1: Get the RunSessionManager instance from the provider
-      final runSessionManagerState = ref.read(runSessionControllerProvider);
+      // Get current time and create a simple run ID
+      final now = DateTime.now();
+      final runId = 'run_${now.millisecondsSinceEpoch}';
       
-      // STEP 2: Capture GPS data while session is still active using public methods
-      final route = runSessionManagerState.getCurrentRoute();
-      final stats = runSessionManagerState.getCurrentStats();
+      // USE COLLECTED GPS DATA FOR REAL DISTANCE CALCULATION
+      List<Map<String, dynamic>> gpsPoints = [];
       
-      print('💾 RunScreen: Captured ${route.length} GPS points while session active');
-      print('💾 RunScreen: Stats - Distance: ${stats.distance}, Time: ${stats.elapsedTime}');
-      
-      if (route.isEmpty) {
-        print('❌ RunScreen: No GPS data captured - cannot save run');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No GPS data to save'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 3),
-            ),
-          );
+      // Calculate total distance from GPS route to ensure accuracy
+      double distance = 0.0;
+      if (_gpsRoute.length > 1) {
+        for (int i = 1; i < _gpsRoute.length; i++) {
+          final prevPos = _gpsRoute[i - 1];
+          final currPos = _gpsRoute[i];
+          final segmentDistance = Geolocator.distanceBetween(
+            prevPos.latitude,
+            prevPos.longitude,
+            currPos.latitude,
+            currPos.longitude,
+          ) / 1000; // Convert to kilometers
+          distance += segmentDistance;
         }
-        return;
+        print('🚀 REAL GPS TRACKING: Calculated total distance from GPS route: ${distance.toStringAsFixed(6)} km');
+      } else {
+        distance = _totalDistance; // Fallback to accumulated distance
+        print('🚀 REAL GPS TRACKING: Using accumulated distance: ${distance.toStringAsFixed(6)} km');
       }
       
-      // STEP 3: Get current episode and user data
-      final currentEpisode = ref.read(currentEpisodeProvider);
-      final currentUser = ref.read(currentUserProvider).value;
+      print('🚀 REAL GPS TRACKING: Using collected GPS data for distance calculation');
+      print('🚀 REAL GPS TRACKING: GPS route has ${_gpsRoute.length} points');
+      print('🚀 REAL GPS TRACKING: Total accumulated distance: ${_totalDistance.toStringAsFixed(4)} km');
+      print('🚀 REAL GPS TRACKING: Elapsed time: ${_elapsedTime.inSeconds} seconds');
       
-      if (currentUser == null || currentEpisode == null) {
-        print('❌ RunScreen: Missing user or episode data');
-        return;
+      // Debug: Check if GPS tracking was working
+      if (_gpsRoute.isNotEmpty) {
+        print('🚀 REAL GPS TRACKING: First GPS point: (${_gpsRoute.first.latitude}, ${_gpsRoute.first.longitude})');
+        print('🚀 REAL GPS TRACKING: Last GPS point: (${_gpsRoute.last.latitude}, ${_gpsRoute.last.longitude})');
       }
       
-      // STEP 4: Create run model directly with captured data
-      final runModel = RunModel(
-        userId: currentUser.uid,
-        startTime: DateTime.now().subtract(stats.elapsedTime),
-        endTime: DateTime.now(),
-        totalTime: stats.elapsedTime,
-        totalDistance: stats.distance,
-        averagePace: stats.averagePace,
-        maxPace: stats.maxPace,
-        minPace: stats.minPace,
-        route: route, // Already converted to LocationPoint list
-        seasonId: currentEpisode.seasonId,
-        missionId: currentEpisode.id, // Using episode ID as mission ID for now
-        status: RunStatus.completed,
-        runTarget: RunTarget(
-          id: 'quick_15',
-          type: RunTargetType.time,
-          value: 15.0, // We'll improve this later
-          displayName: '15 minutes',
-          description: 'Quick run',
-          createdAt: DateTime.now(),
-          isCustom: false,
-        ),
-      );
+      if (_gpsRoute.isNotEmpty) {
+        // Convert collected GPS positions to data points with elapsed time
+        for (int i = 0; i < _gpsRoute.length; i++) {
+          final position = _gpsRoute[i];
+          
+          // Calculate elapsed time at this GPS point
+          // Assume GPS points are collected every 5 seconds on average
+          final elapsedSecondsAtPoint = (i * 5).clamp(0, _elapsedTime.inSeconds);
+          
+          gpsPoints.add({
+            'latitude': position.latitude,
+            'longitude': position.longitude,
+            'timestamp': position.timestamp.toIso8601String(),
+            'elapsedSeconds': elapsedSecondsAtPoint,
+            'elapsedTimeFormatted': '${(elapsedSecondsAtPoint ~/ 60)}:${(elapsedSecondsAtPoint % 60).toString().padLeft(2, '0')}',
+            'accuracy': position.accuracy,
+            'altitude': position.altitude,
+            'speed': position.speed,
+            'heading': position.heading,
+          });
+        }
+        
+        print('🚀 REAL GPS TRACKING: Created ${gpsPoints.length} GPS points with real distance: ${distance.toStringAsFixed(4)} km');
+      } else {
+        print('⚠️ REAL GPS TRACKING: No GPS data collected - distance will be 0');
+        distance = 0.0;
+      }
       
-      print('💾 RunScreen: Created run model with ${runModel.route.length} GPS points');
+      // Create comprehensive run data with independent GPS capture
+      final runData = {
+        'id': runId,
+        'userId': currentUser.uid,
+        'startTime': now.subtract(Duration(seconds: _elapsedTime.inSeconds)).toIso8601String(),
+        'endTime': now.toIso8601String(),
+        'duration': _elapsedTime.inSeconds,
+        'durationFormatted': '${_elapsedTime.inMinutes}:${(_elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
+        'elapsedTimeSeconds': _elapsedTime.inSeconds,
+        'distance': distance,
+        'distanceFormatted': '${distance.toStringAsFixed(2)} km',
+        'averagePace': _elapsedTime.inSeconds > 0 && distance > 0 ? (_elapsedTime.inSeconds / 60) / distance : 0.0,
+        'averagePaceFormatted': _elapsedTime.inSeconds > 0 && distance > 0 ? '${((_elapsedTime.inSeconds / 60) / distance).toStringAsFixed(1)} min/km' : '0.0 min/km',
+        'gpsPoints': gpsPoints,
+        'totalGpsPoints': gpsPoints.length,
+        'episodeId': 'S01E01',
+        'episodeTitle': 'First Contact',
+        'status': 'completed',
+        'completedAt': now.toIso8601String(),
+        'createdAt': now.toIso8601String(),
+        'updatedAt': now.toIso8601String(),
+        'runType': 'episode',
+        'wasTimerUsed': true,
+        'timerElapsedSeconds': _elapsedTime.inSeconds,
+        'wasPaused': _isPaused,
+        'deviceInfo': {
+          'platform': 'iOS',
+          'appVersion': '1.0.0',
+        },
+        'metadata': {
+          'saveMethod': 'real_gps_tracking',
+          'gpsSource': 'continuous_collection',
+          'gpsPointsCollected': _gpsRoute.length,
+          'realDistanceCalculated': true,
+          'savedAt': now.toIso8601String(),
+        }
+      };
       
-      // STEP 5: Save to database using FirestoreService directly
-      final firestoreService = FirestoreService();
-      final runId = await firestoreService.saveRun(runModel);
+      print('🚀 REAL GPS TRACKING: Created complete run data');
+      print('🚀 REAL GPS TRACKING: Duration: ${_elapsedTime.inSeconds} seconds (${runData['durationFormatted']})');
+      print('🚀 REAL GPS TRACKING: Distance: ${distance.toStringAsFixed(2)} km');
+      print('🚀 REAL GPS TRACKING: GPS points: ${gpsPoints.length}');
+      print('🚀 REAL GPS TRACKING: Episode: ${runData['episodeTitle']}');
       
-      print('✅ RunScreen: Run saved successfully with ID: $runId');
+      // Save directly to Firestore
+      await FirebaseFirestore.instance.collection('runs').doc(runId).set(runData);
       
-      // STEP 6: Manually complete the session AFTER saving (preserves GPS data)
-      final runSessionController = ref.read(runSessionControllerProvider.notifier);
-      await runSessionController.manuallyCompleteSession();
+      print('✅ REAL GPS TRACKING: Complete run data saved successfully to Firestore!');
+      print('✅ REAL GPS TRACKING: Run ID: $runId');
+      print('✅ REAL GPS TRACKING: Collection: runs');
+      print('✅ REAL GPS TRACKING: User: ${currentUser.uid}');
       
-      // STEP 7: Navigate back instead of using pushReplacement to avoid routing issues
+      // Show success message
       if (mounted) {
-        Navigator.of(context).pop(); // Go back to previous screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Run saved successfully! Duration: ${runData['durationFormatted']}'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      
+      // Set up run summary data for the summary screen
+      if (mounted) {
+        // Create run summary data
+        final summaryData = RunSummaryData(
+          totalTime: _elapsedTime,
+          totalDistance: distance,
+          averagePace: _elapsedTime.inSeconds > 0 && distance > 0 ? (_elapsedTime.inSeconds / 60) / distance : 0.0,
+          caloriesBurned: _calculateCalories(distance, _elapsedTime),
+          episode: EpisodeModel(
+            id: 'S01E01',
+            title: 'First Contact',
+            description: 'First Contact episode',
+            seasonId: 'S01',
+            status: 'completed',
+            order: 1,
+            createdAt: now,
+            updatedAt: now,
+            objective: 'Complete the mission',
+            targetDistance: 0.0,
+            targetTime: 15 * 60 * 1000, // 15 minutes in milliseconds
+            audioFiles: [],
+          ),
+          achievements: _generateAchievements(distance, _elapsedTime),
+          route: gpsPoints.map((point) => LocationPoint(
+            latitude: point['latitude'],
+            longitude: point['longitude'],
+            timestamp: DateTime.parse(point['timestamp']),
+            accuracy: point['accuracy']?.toDouble() ?? 0.0,
+            altitude: point['altitude']?.toDouble() ?? 0.0,
+            speed: point['speed']?.toDouble() ?? 0.0,
+            heading: point['heading']?.toDouble() ?? 0.0,
+          )).toList(),
+          startTime: now.subtract(Duration(seconds: _elapsedTime.inSeconds)),
+          endTime: now,
+        );
+        
+        // Set the summary data in the provider
+        print('🚀 REAL GPS TRACKING: Setting summary data in provider...');
+        print('🚀 REAL GPS TRACKING: Summary data - Time: ${summaryData.totalTime.inSeconds}s, Distance: ${summaryData.totalDistance}km, Pace: ${summaryData.averagePace} min/km');
+        
+        ref.read(currentRunSummaryProvider.notifier).state = summaryData;
+        
+        // Verify the data was set
+        final verifyData = ref.read(currentRunSummaryProvider);
+        print('🚀 REAL GPS TRACKING: Provider verification - Data set: ${verifyData != null}');
+        if (verifyData != null) {
+          print('🚀 REAL GPS TRACKING: Verified data - Time: ${verifyData.totalTime.inSeconds}s, Distance: ${verifyData.totalDistance}km');
+        }
+        
+        // Navigate to run summary screen
+        print('🚀 REAL GPS TRACKING: Navigating to run summary screen...');
+        context.go('/run/summary');
       }
       
     } catch (e) {
-      print('❌ RunScreen: Error in direct save: $e');
+      print('❌ REAL GPS TRACKING: Error saving run: $e');
+      print('❌ REAL GPS TRACKING: Stack trace: $e');
+      
+      // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error saving run: $e'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            duration: Duration(seconds: 5),
           ),
         );
       }
     }
+  }
+
+  /// Calculate calories burned based on distance and time
+  int _calculateCalories(double distance, Duration time) {
+    // Simple calorie calculation based on MET values
+    final minutes = time.inSeconds / 60.0;
+    if (minutes <= 0) return 0;
+    
+    // Assume average weight of 70kg for calculation
+    final weightKg = 70.0;
+    
+    // Calculate pace (min/km) and speed (km/h)
+    final pace = distance > 0 ? minutes / distance : 0.0;
+    final speedKmh = pace > 0 ? 60.0 / pace : 9.0;
+    
+    // Determine MET value based on speed
+    double met;
+    if (speedKmh < 6) met = 6.0;      // Walking
+    else if (speedKmh < 8) met = 8.3;  // Jogging
+    else if (speedKmh < 9.7) met = 9.8; // Running
+    else if (speedKmh < 11.3) met = 11.0; // Fast running
+    else met = 12.8;                   // Sprinting
+    
+    // Calculate calories: MET * 3.5 * weight(kg) / 200 * time(minutes)
+    final kcal = met * 3.5 * weightKg / 200.0 * minutes;
+    return kcal.round();
+  }
+  
+  /// Generate achievements based on distance and time
+  List<String> _generateAchievements(double distance, Duration time) {
+    final achievements = <String>[];
+    
+    // Distance achievements
+    if (distance >= 5.0) achievements.add('5K Runner');
+    if (distance >= 10.0) achievements.add('10K Warrior');
+    if (distance >= 21.1) achievements.add('Half Marathon Hero');
+    if (distance >= 42.2) achievements.add('Marathon Master');
+    
+    // Time achievements
+    final minutes = time.inMinutes;
+    if (minutes >= 30) achievements.add('30 Minute Warrior');
+    if (minutes >= 60) achievements.add('Hour Hero');
+    if (minutes >= 120) achievements.add('2 Hour Champion');
+    
+    // Speed achievements
+    if (distance > 0) {
+      final pace = minutes / distance; // min/km
+      if (pace <= 4.0) achievements.add('Speed Demon');
+      if (pace <= 5.0) achievements.add('Fast Runner');
+      if (pace <= 6.0) achievements.add('Steady Pacer');
+    }
+    
+    // Consistency achievements
+    if (distance > 0 && time.inSeconds > 0) {
+      achievements.add('GPS Tracker');
+      achievements.add('Real Distance Runner');
+    }
+    
+    return achievements;
   }
 
   Future<bool> _ensureLocationPermission() async {
@@ -1230,8 +1495,8 @@ class _RunScreenState extends ConsumerState<RunScreen> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: _buildStatCard(
-                                  'Pace',
-                                   '${_formatPace(currentStats?.currentPace, currentStats?.distance)} min/km',
+                                  'Speed',
+                                   '${_formatSpeed(currentStats?.distance, currentStats?.elapsedTime)} km/h',
                                   Icons.speed,
                                   Colors.orange,
                                 ),
@@ -1255,7 +1520,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
                               Expanded(
                                 child: _buildStatCard(
                                   'Calories',
-                                  '${_calculateCalories(currentStats?.distance ?? 0.0).toStringAsFixed(0)} kcal',
+                                  '${_calculateCalories(currentStats?.distance ?? 0.0, currentStats?.elapsedTime ?? Duration.zero).toStringAsFixed(0)} kcal',
                                   Icons.local_fire_department,
                                   Colors.redAccent,
                                 ),
@@ -1376,41 +1641,17 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     return paceMinPerKm.toStringAsFixed(1);
   }
 
-  // Estimate calories: MET running 9 km/h ~ 9.8. kcal = MET * 3.5 * weight(kg)/200 * minutes
-  // If no user weight, assume 70kg.
-  double _calculateCalories(double distanceKm) {
-    // Use average pace if available to infer speed; default 9 km/h
-    final stats = ref.read(currentRunStatsProvider);
-    final minutes = (stats?.elapsedTime.inSeconds ?? 0) / 60.0;
-    if (minutes <= 0) return 0;
-
-    final avgPace = stats?.averagePace; // min/km
-    double speedKmh;
-    if (avgPace != null && avgPace > 0 && avgPace.isFinite) {
-      speedKmh = 60.0 / avgPace;
-    } else if (distanceKm > 0) {
-      speedKmh = distanceKm / (minutes / 60.0);
-    } else {
-      speedKmh = 9.0;
+  // Format speed in km/h based on distance and time
+  String _formatSpeed(double? distanceKm, Duration? elapsedTime) {
+    if ((distanceKm ?? 0) <= 0 || elapsedTime == null || elapsedTime.inSeconds <= 0) {
+      return '0.0';
     }
-
-    // Approximate MET from speed
-    double met;
-    if (speedKmh < 6) met = 6.0;
-    else if (speedKmh < 8) met = 8.3;
-    else if (speedKmh < 9.7) met = 9.8;
-    else if (speedKmh < 11.3) met = 11.0;
-    else met = 12.8;
-
-    // Read user-set weight from settings provider (persisted at sign-in)
-    double weightKg = 70.0;
-    try {
-      weightKg = ref.read(userWeightKgProvider);
-    } catch (_) {}
-
-    final kcal = met * 3.5 * weightKg / 200.0 * minutes;
-    return kcal;
+    final hours = elapsedTime.inSeconds / 3600.0;
+    final speedKmh = distanceKm! / hours;
+    return speedKmh.toStringAsFixed(1);
   }
+
+
 
   void _finishRun() async {
     try {
@@ -1461,7 +1702,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       
       // Stop the run session
       try {
-        await runSessionManager.stopSession();
+        runSessionManager.stopSession();
         print('🛑 RunSessionManager: Session stopped');
       } catch (e) {
         print('⚠️ RunScreen: Error stopping session: $e');

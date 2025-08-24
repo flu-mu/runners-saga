@@ -112,16 +112,16 @@ class RunSessionManager {
       
       SceneTriggerService.loadAudioFilesFromDatabase(episode.audioFiles);
       
-      // Start progress monitoring
+      // Start progress monitoring (but without blocking timers)
       if (kDebugMode) {
-        print('🚀 Starting progress monitor...');
+        print('🚀 Starting progress monitor (without blocking timers)...');
       }
       
       // Check if progress monitor can be started
       try {
         await _progressMonitor.start();
         if (kDebugMode) {
-          print('✅ Progress monitor started');
+          print('✅ Progress monitor started (without blocking timers)');
         }
       } catch (e) {
         if (kDebugMode) {
@@ -189,78 +189,45 @@ class RunSessionManager {
   }
 
   /// Stop the current run session and save data
-  Future<void> stopSession() async {
+  void stopSession() {
     print('🛑 RunSessionManager: stopSession() called from: ${StackTrace.current}');
-    if (!_isSessionActive && !_isPaused) {
-      print('🛑 RunSessionManager: Session is not active, cannot stop it');
+    print('🛑 RunSessionManager: stopSession() - _isSessionActive before: $_isSessionActive');
+    
+    if (!_isSessionActive) {
+      print('🛑 RunSessionManager: stopSession() - Session already inactive, returning early');
       return;
     }
-    
-    print('🛑 RunSessionManager: Stopping session...');
-    print('🛑 RunSessionManager: Session active: $_isSessionActive');
-    print('🛑 RunSessionManager: Session paused: $_isPaused');
-    
-    // Check authentication state
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      print('❌ RunSessionManager: User not authenticated, cannot save run');
-      return;
-    }
-    
-    print('🛑 RunSessionManager: User authenticated: ${currentUser.uid}');
-    
-    print('🔄 RunSessionManager: Setting _isSessionActive = false in stopSession()');
+
     _isSessionActive = false;
-    print('🔄 RunSessionManager: Setting _isPaused = false in stopSession()');
-    _isPaused = false;
-    print('🔄 RunSessionManager: Setting _globallyStopped = true in stopSession()');
-    _globallyStopped = true; // Set global stop flag
-    _currentEpisode = null;
+    print('🛑 RunSessionManager: stopSession() - _isSessionActive set to: $_isSessionActive');
     
-    // Stop the progress monitor
-    print('🛑 RunSessionManager: Stopping progress monitor...');
     _progressMonitor.forceStopMonitoring();
+    print('🛑 RunSessionManager: stopSession() - Progress monitor stopped, route cleared');
     
-    // Stop all other services
-    _progressMonitor.stop();
+    _audioManager.stopAll();
+    print('🛑 RunSessionManager: stopSession() - All audio stopped');
+    
     _sceneTrigger.stop();
-    await _audioManager.stopAll();
+    print('🛑 RunSessionManager: stopSession() - Scene trigger service stopped');
     
-    // Note: Run data is now saved directly in _finishRun before calling this method
-    print('🛑 RunSessionManager: Session stopped - all services stopped');
-    
-    // Notify state change
-    onSessionStateChanged?.call(sessionState);
+    print('🛑 RunSessionManager: stopSession() completed');
   }
 
   /// Complete the current session
   Future<void> completeSession() async {
-    if (!_isSessionActive && !_isPaused) return;
+    print('🎯 RunSessionManager: completeSession() called from: ${StackTrace.current}');
+    print('🎯 RunSessionManager: completeSession() - _isSessionActive: $_isSessionActive');
     
-    try {
-      // Don't automatically complete session when scenes finish
-      // Let the user manually finish the run to preserve GPS data
-      if (kDebugMode) {
-        print('🎯 Session completion requested - waiting for user to finish run');
-      }
-      
-      // Stop the session
-      await stopSession();
-      
-      // Mark episode as completed
-      if (_currentEpisode != null) {
-        // This would typically update the database
-        if (kDebugMode) {
-          print('Episode ${_currentEpisode!.id} completed');
-        }
-      }
-      
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error completing session: $e');
-      }
-      rethrow;
+    if (!_isSessionActive) {
+      print('🎯 RunSessionManager: completeSession() - Session already inactive, returning early');
+      return;
     }
+    
+    print('🎯 RunSessionManager: completeSession() - Session completion requested - waiting for user to finish run');
+    
+    // Note: We no longer automatically stop the session here
+    // The user must manually finish the run to preserve GPS data
+    print('🎯 RunSessionManager: completeSession() - Session remains active until user finishes run');
   }
 
   /// Ensure all scenes have played before completing
@@ -281,29 +248,17 @@ class RunSessionManager {
 
   /// Manually complete session when user finishes run (preserves GPS data)
   Future<void> manuallyCompleteSession() async {
-    if (!_isSessionActive && !_isPaused) return;
+    print('🎯 RunSessionManager: manuallyCompleteSession() called from: ${StackTrace.current}');
+    print('🎯 RunSessionManager: manuallyCompleteSession() - _isSessionActive before: $_isSessionActive');
     
-    try {
-      if (kDebugMode) {
-        print('🎯 Manual session completion - user finished run, preserving GPS data');
-      }
-      
-      // Stop the session
-      await stopSession();
-      
-      // Mark episode as completed
-      if (_currentEpisode != null) {
-        if (kDebugMode) {
-          print('Episode ${_currentEpisode!.id} manually completed');
-        }
-      }
-      
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error manually completing session: $e');
-      }
-      rethrow;
+    if (!_isSessionActive) {
+      print('🎯 RunSessionManager: manuallyCompleteSession() - Session already inactive, cannot complete');
+      return;
     }
+    
+    print('🎯 RunSessionManager: manuallyCompleteSession() - Calling stopSession() to clean up');
+    stopSession();
+    print('🎯 RunSessionManager: manuallyCompleteSession() completed');
   }
 
 
@@ -687,6 +642,9 @@ class RunSessionManager {
         .toList();
   }
 
+  /// Public getter to access the progress monitor directly
+  ProgressMonitorService get progressMonitor => _progressMonitor;
+  
   /// Public method to stop the progress timer directly
   void stopProgressTimer() {
     _timersStopped = true; // Prevent timers from being restarted
