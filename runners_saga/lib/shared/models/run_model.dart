@@ -17,9 +17,9 @@ class RunModel with _$RunModel {
     required DateTime startTime,
     @JsonKey(fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
     DateTime? endTime,
-    required List<LocationPoint> route,
+    @JsonKey(name: 'gpsPoints') // Map to the actual Firestore field name
+    List<LocationPoint>? route, // Make optional since not every run has GPS
     required double totalDistance, // in kilometers
-    @JsonKey(fromJson: _durationFromJson, toJson: _durationToJson)
     required Duration totalTime,
     required double averagePace, // minutes per kilometer
     required double maxPace, // fastest pace achieved
@@ -42,9 +42,11 @@ class LocationPoint with _$LocationPoint {
     required double accuracy,
     required double altitude,
     required double speed, // in meters per second
-    @JsonKey(fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
-    required DateTime timestamp,
+    @JsonKey(name: 'elapsedSeconds') // Map to actual Firestore field
+    required int elapsedSeconds, // Use elapsed seconds instead of timestamp
     double? heading, // compass direction in degrees
+    @JsonKey(name: 'elapsedTimeFormatted') // Additional field from Firestore
+    String? elapsedTimeFormatted, // Formatted time string
   }) = _LocationPoint;
 
   factory LocationPoint.fromJson(Map<String, dynamic> json) => _$LocationPointFromJson(json);
@@ -67,8 +69,9 @@ extension PositionExtension on Position {
       accuracy: accuracy,
       altitude: altitude,
       speed: speed,
-      timestamp: timestamp,
+      elapsedSeconds: 0, // Will be calculated when saving
       heading: heading,
+      elapsedTimeFormatted: '0:00', // Will be calculated when saving
     );
   }
 }
@@ -82,7 +85,9 @@ extension LatLngExtension on LatLng {
       accuracy: accuracy,
       altitude: altitude,
       speed: speed,
-      timestamp: DateTime.now(),
+      elapsedSeconds: 0, // Will be calculated when saving
+      heading: 0.0,
+      elapsedTimeFormatted: '0:00', // Will be calculated when saving
     );
   }
 }
@@ -105,26 +110,4 @@ DateTime _timestampToDateTime(dynamic timestamp) {
 Timestamp _dateTimeToTimestamp(DateTime? dateTime) {
   if (dateTime == null) return Timestamp.now();
   return Timestamp.fromDate(dateTime);
-}
-
-// Helper methods for Duration serialization
-Duration _durationFromJson(dynamic duration) {
-  if (duration == null) return Duration.zero;
-  if (duration is int) {
-    return Duration(milliseconds: duration);
-  }
-  if (duration is String) {
-    final parts = duration.split(':');
-    if (parts.length == 3) {
-      final hours = int.tryParse(parts[0]) ?? 0;
-      final minutes = int.tryParse(parts[1]) ?? 0;
-      final seconds = int.tryParse(parts[2]) ?? 0;
-      return Duration(hours: hours, minutes: minutes, seconds: seconds);
-    }
-  }
-  return Duration.zero;
-}
-
-int _durationToJson(Duration duration) {
-  return duration.inMilliseconds;
 }

@@ -172,7 +172,7 @@ class FirestoreService {
       runData['userId'] = userId;
       
       // Add completion metadata
-      runData['totalPoints'] = completedRun.route.length;
+              runData['totalPoints'] = completedRun.route?.length ?? 0;
       runData['finalDistance'] = completedRun.totalDistance;
       runData['finalTime'] = completedRun.totalTime.inSeconds;
       runData['finalPace'] = completedRun.averagePace;
@@ -420,7 +420,7 @@ class FirestoreService {
         totalDistance += run.totalDistance;
         totalTime += run.totalTime;
         totalPace += run.averagePace;
-        totalPoints += run.route.length;
+        totalPoints += run.route?.length ?? 0;
         
         if (run.averagePace > 0 && run.averagePace < bestPace) {
           bestPace = run.averagePace;

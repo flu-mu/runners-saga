@@ -1230,7 +1230,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           gpsPoints.add({
             'latitude': position.latitude,
             'longitude': position.longitude,
-            'timestamp': position.timestamp.toIso8601String(),
             'elapsedSeconds': elapsedSecondsAtPoint,
             'elapsedTimeFormatted': '${(elapsedSecondsAtPoint ~/ 60)}:${(elapsedSecondsAtPoint % 60).toString().padLeft(2, '0')}',
             'accuracy': position.accuracy,
@@ -1335,11 +1334,12 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           route: gpsPoints.map((point) => LocationPoint(
             latitude: point['latitude'],
             longitude: point['longitude'],
-            timestamp: DateTime.parse(point['timestamp']),
             accuracy: point['accuracy']?.toDouble() ?? 0.0,
             altitude: point['altitude']?.toDouble() ?? 0.0,
             speed: point['speed']?.toDouble() ?? 0.0,
+            elapsedSeconds: point['elapsedSeconds']?.toInt() ?? 0,
             heading: point['heading']?.toDouble() ?? 0.0,
+            elapsedTimeFormatted: point['elapsedTimeFormatted'] ?? '0:00',
           )).toList(),
           startTime: now.subtract(Duration(seconds: _elapsedTime.inSeconds)),
           endTime: now,
@@ -2555,11 +2555,11 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       // Access the underlying RunSessionManager through the controller's state
       final runModel = runSessionManager.state.createRunModel();
       
-      print('💾 RunScreen: Run model created with ${runModel.route.length} GPS points');
+      print('💾 RunScreen: Run model created with ${runModel.route?.length ?? 0} GPS points');
       print('💾 RunScreen: Distance: ${runModel.totalDistance}km, Time: ${runModel.totalTime}');
       
       // SAVE THE RUN TO DATABASE FIRST - SIMPLE AND DIRECT
-      if (runModel.route.isNotEmpty) {
+      if (runModel.route?.isNotEmpty == true) {
         print('💾 RunScreen: Saving run to database...');
         try {
           // Save to database directly
@@ -2567,7 +2567,7 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           final runId = await firestore.saveRun(runModel);
           await firestore.completeRun(runId, runModel);
           print('✅ RunScreen: Run saved to database with ID: $runId');
-          print('✅ RunScreen: ${runModel.route.length} GPS points saved');
+          print('✅ RunScreen: ${runModel.route?.length ?? 0} GPS points saved');
         } catch (e) {
           print('❌ RunScreen: Error saving run to database: $e');
         }

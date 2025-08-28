@@ -7,6 +7,7 @@ import '../models/run_model.dart';
 import '../models/run_target_model.dart';
 import '../services/firebase/firestore_service.dart';
 import '../services/story/scene_trigger_service.dart';
+import 'firebase_providers.dart';
 
 // Provider for current run state
 final currentRunProvider = StateNotifierProvider<RunTrackingNotifier, RunModel?>((ref) {
@@ -23,13 +24,13 @@ final runStatsProvider = Provider<RunStats>((ref) {
     distance: currentRun.totalDistance,
     elapsedTime: currentRun.totalTime,
     averagePace: currentRun.averagePace,
-    currentPace: _calculateCurrentPaceFromRoute(currentRun.route),
+    currentPace: _calculateCurrentPaceFromRoute(currentRun.route ?? []),
     maxPace: currentRun.maxPace,
     minPace: currentRun.minPace,
     progress: 0.0, // Default progress
     playedScenes: [], // No scenes for this provider
     currentScene: null, // No current scene
-    route: currentRun.route, // Include the route
+    route: currentRun.route ?? [], // Include the route (empty list if null)
   );
 });
 
@@ -43,34 +44,79 @@ final gpsServiceProvider = StateProvider<geolocator.ServiceStatus>((ref) {
   return geolocator.ServiceStatus.disabled;
 });
 
-// Provider for Firestore service
+// Provider for Firestore service - lazy initialization with Firebase readiness check
 final firestoreServiceProvider = Provider<FirestoreService>((ref) {
-  return FirestoreService();
+  try {
+    // Check if Firebase is ready before creating the service
+    final firebaseStatus = ref.watch(firebaseStatusProvider);
+    
+    if (firebaseStatus == FirebaseStatus.ready) {
+      print('✅ firestoreServiceProvider: Firebase ready, creating FirestoreService');
+      return FirestoreService();
+    } else if (firebaseStatus == FirebaseStatus.initializing) {
+      print('⏳ firestoreServiceProvider: Firebase still initializing, waiting...');
+      throw Exception('Firebase still initializing');
+    } else {
+      print('❌ firestoreServiceProvider: Firebase failed to initialize');
+      throw Exception('Firebase failed to initialize');
+    }
+  } catch (e) {
+    print('❌ firestoreServiceProvider: Error creating FirestoreService: $e');
+    rethrow;
+  }
 });
 
-// Provider for user's run history
+// Provider for user's run history - waits for Firebase to be ready
 final userRunsProvider = StreamProvider<List<RunModel>>((ref) {
-  final firestoreService = ref.watch(firestoreServiceProvider);
-  return firestoreService.getUserRunsStream().map((runs) {
-    final sortedRuns = [...runs]..sort((a, b) => b.startTime.compareTo(a.startTime));
-    return sortedRuns;
-  }).handleError((error, stackTrace) {
-    print('⚠️ userRunsProvider: Error loading runs: $error');
-    print('⚠️ userRunsProvider: Stack trace: $stackTrace');
-    // Return empty list instead of crashing
-    return <RunModel>[];
-  });
+  try {
+    // Wait for Firebase to be ready
+    final firebaseStatus = ref.watch(firebaseStatusProvider);
+    
+    if (firebaseStatus == FirebaseStatus.ready) {
+      print('✅ userRunsProvider: Firebase ready, loading runs');
+      final firestoreService = ref.watch(firestoreServiceProvider);
+      return firestoreService.getUserRunsStream().map((runs) {
+        final sortedRuns = [...runs]..sort((a, b) => b.startTime.compareTo(a.startTime));
+        return sortedRuns;
+      }).handleError((error, stackTrace) {
+        print('⚠️ userRunsProvider: Error loading runs: $error');
+        print('⚠️ userRunsProvider: Stack trace: $stackTrace');
+        // Return empty list instead of crashing
+        return <RunModel>[];
+      });
+    } else if (firebaseStatus == FirebaseStatus.initializing) {
+      print('⏳ userRunsProvider: Firebase still initializing, waiting...');
+      // Return empty stream while Firebase initializes
+      return Stream.value(<RunModel>[]);
+    } else {
+      print('❌ userRunsProvider: Firebase failed to initialize');
+      // Return empty stream on Firebase failure
+      return Stream.value(<RunModel>[]);
+    }
+  } catch (e, stackTrace) {
+    print('❌ userRunsProvider: Error initializing provider: $e');
+    print('❌ userRunsProvider: Stack trace: $stackTrace');
+    // Return empty list on initialization error
+    return Stream.value(<RunModel>[]);
+  }
 });
 
 // Provider for user's completed runs only
 final userCompletedRunsProvider = StreamProvider<List<RunModel>>((ref) {
-  final firestoreService = ref.watch(firestoreServiceProvider);
-  return firestoreService.getCompletedRunsStream().handleError((error, stackTrace) {
-    print('⚠️ userCompletedRunsProvider: Error loading completed runs: $error');
-    print('⚠️ userCompletedRunsProvider: Stack trace: $stackTrace');
-    // Return empty list instead of crashing
-    return <RunModel>[];
-  });
+  try {
+    final firestoreService = ref.watch(firestoreServiceProvider);
+    return firestoreService.getCompletedRunsStream().handleError((error, stackTrace) {
+      print('⚠️ userCompletedRunsProvider: Error loading completed runs: $error');
+      print('⚠️ userCompletedRunsProvider: Stack trace: $stackTrace');
+      // Return empty list instead of crashing
+      return <RunModel>[];
+    });
+  } catch (e, stackTrace) {
+    print('❌ userCompletedRunsProvider: Error initializing provider: $e');
+    print('❌ userCompletedRunsProvider: Stack trace: $stackTrace');
+    // Return empty list on initialization error
+    return Stream.value(<RunModel>[]);
+  }
 });
 
 // Provider for user's run statistics
@@ -98,7 +144,8 @@ double _calculateCurrentPaceFromRoute(List<LocationPoint> route) {
     lastPoint.longitude,
   ) / 1000; // Convert to kilometers
   
-  final timeDiff = lastPoint.timestamp.difference(secondLastPoint.timestamp);
+  // Calculate time difference using elapsed seconds
+  final timeDiff = Duration(seconds: lastPoint.elapsedSeconds - secondLastPoint.elapsedSeconds);
   final timeInMinutes = timeDiff.inSeconds / 60;
   
   if (distance > 0 && timeInMinutes > 0) {
@@ -289,7 +336,8 @@ class RunTrackingNotifier extends StateNotifier<RunModel?> {
   void _onLocationUpdate(geolocator.Position position) {
     if (state != null && state!.status == RunStatus.inProgress) {
       final locationPoint = position.toLocationPoint();
-      final updatedRoute = [...state!.route, locationPoint];
+      final currentRoute = state!.route ?? [];
+      final updatedRoute = [...currentRoute, locationPoint];
       
       // Calculate new distance
       final newDistance = _calculateTotalDistance(updatedRoute);
@@ -356,7 +404,8 @@ class RunTrackingNotifier extends StateNotifier<RunModel?> {
     final totalDistance = _calculateTotalDistance(route);
     if (totalDistance == 0) return 0.0;
     
-    final totalTime = route.last.timestamp.difference(route.first.timestamp);
+    // Calculate time difference using elapsed seconds
+    final totalTime = Duration(seconds: route.last.elapsedSeconds - route.first.elapsedSeconds);
     final totalTimeInMinutes = totalTime.inSeconds / 60;
     
     return totalTimeInMinutes / totalDistance;
@@ -397,7 +446,8 @@ class RunTrackingNotifier extends StateNotifier<RunModel?> {
       point2.latitude,
     ) / 1000; // Convert to kilometers
     
-    final timeDiff = point2.timestamp.difference(point1.timestamp);
+    // Calculate time difference using elapsed seconds
+    final timeDiff = Duration(seconds: point2.elapsedSeconds - point1.elapsedSeconds);
     final timeInMinutes = timeDiff.inSeconds / 60;
     
     if (distance > 0 && timeInMinutes > 0) {

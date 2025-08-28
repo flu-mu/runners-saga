@@ -452,7 +452,7 @@ class RunHistoryScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       _buildDetailCard(
                         'Route Points',
-                        '${run.route.length}',
+                        '${run.route?.length ?? 0}',
                         Icons.map,
                       ),
                       const SizedBox(height: 8),
@@ -498,7 +498,7 @@ class RunHistoryScreen extends ConsumerWidget {
                                 ),
                               ),
                               Text(
-                                '${run.route.length} GPS points recorded',
+                                '${run.route?.length ?? 0} GPS points recorded',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.5),
                                   fontSize: 12,

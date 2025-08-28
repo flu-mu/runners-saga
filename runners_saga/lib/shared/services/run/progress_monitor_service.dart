@@ -391,7 +391,10 @@ class ProgressMonitorService {
     
     // Calculate current pace (minutes per kilometer)
     if (distance > 0) {
-      final timeDiff = position.timestamp.difference(_lastPosition!.timestamp);
+      // Calculate time difference using elapsed seconds or current time
+      final timeDiff = _lastPosition != null 
+          ? Duration(seconds: 5) // Assume 5 seconds between GPS updates
+          : Duration.zero;
       if (timeDiff.inSeconds > 0) {
         _currentPace = timeDiff.inMinutes / distance;
         

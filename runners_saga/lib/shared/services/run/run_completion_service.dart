@@ -35,8 +35,8 @@ class RunCompletionService {
         print('⚠️ RunCompletionService: No GPS data available from RunSessionManager');
         // Try to get route from current run provider as fallback
         final currentRun = _container.read(currentRunProvider);
-        if (currentRun != null && currentRun.route.isNotEmpty) {
-          print('📍 RunCompletionService: Fallback - Got route from currentRunProvider with ${currentRun.route.length} GPS points');
+        if (currentRun != null && currentRun.route?.isNotEmpty == true) {
+          print('📍 RunCompletionService: Fallback - Got route from currentRunProvider with ${currentRun.route?.length ?? 0} GPS points');
         }
       }
       
@@ -279,14 +279,14 @@ class RunCompletionService {
         ),
       );
       
-      print('💾 RunCompletionService: Created run model with ${runModel.route.length} GPS points');
+      print('💾 RunCompletionService: Created run model with ${runModel.route?.length ?? 0} GPS points');
       
       // Save the run to Firestore
       final firestoreService = _container.read(firestoreServiceProvider);
       final runId = await firestoreService.saveRun(runModel);
       
       print('✅ RunCompletionService: Run saved successfully with ID: $runId');
-      print('💾 RunCompletionService: Run saved with ${runModel.route.length} GPS points');
+      print('💾 RunCompletionService: Run saved with ${runModel.route?.length ?? 0} GPS points');
       
     } catch (e, stackTrace) {
       print('❌ RunCompletionService: Error saving run to database: $e');

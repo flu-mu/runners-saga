@@ -322,14 +322,20 @@ class RunSessionManager {
       final converted = route.map((e) {
         // e can be geolocator Position or our LocationPoint
         if (e is LocationPoint) return e;
+        // Calculate elapsed seconds from timestamp
+        final elapsedSeconds = e.timestamp != null 
+            ? DateTime.now().difference(e.timestamp as DateTime).inSeconds
+            : 0;
+            
         return LocationPoint(
           latitude: e.latitude as double,
           longitude: e.longitude as double,
           accuracy: (e.accuracy as num).toDouble(),
           altitude: (e.altitude as num).toDouble(),
           speed: (e.speed as num).toDouble(),
-          timestamp: e.timestamp as DateTime,
+          elapsedSeconds: elapsedSeconds,
           heading: (e.heading as num?)?.toDouble(),
+          elapsedTimeFormatted: '${(elapsedSeconds ~/ 60)}:${(elapsedSeconds % 60).toString().padLeft(2, '0')}',
         );
       }).toList();
       onRouteUpdated?.call(converted);
