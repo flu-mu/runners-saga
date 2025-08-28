@@ -69,6 +69,14 @@ class _RunScreenState extends ConsumerState<RunScreen> {
   double _averagePaceBeforeSignalLoss = 0.0; // km/h
   Timer? _gpsSignalLossTimer;
   
+  // Real-time pace and speed calculation
+  List<Position> _recentGpsPoints = []; // Last 30 seconds of GPS data
+  double _currentPace = 0.0; // Current pace in min/km
+  double _currentSpeed = 0.0; // Current speed in km/h
+  double _previousPace = 0.0; // Previous pace for trend analysis
+  String _paceTrend = 'steady'; // 'improving', 'declining', 'steady'
+  Timer? _paceCalculationTimer;
+  
   @override
   void initState() {
     super.initState();
@@ -102,6 +110,10 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       // Clean up GPS signal loss detection
       _gpsSignalLossTimer?.cancel();
       _gpsSignalLossTimer = null;
+      
+      // Clean up pace calculation timer
+      _paceCalculationTimer?.cancel();
+      _paceCalculationTimer = null;
       
     } catch (e) {
       // Log error but don't let it prevent disposal
@@ -255,6 +267,301 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     }
   }
   
+  /// Start real-time pace calculation
+  void _startPaceCalculation() {
+    // Cancel any existing timer
+    _paceCalculationTimer?.cancel();
+    
+    // Calculate pace every 5 seconds for real-time updates
+    _paceCalculationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_disposed || !_isTimerRunning || _isPaused) {
+        timer.cancel();
+        return;
+      }
+      
+      _calculateCurrentPace();
+    });
+    
+    print('⚡ RunScreen: Real-time pace calculation started');
+  }
+  
+  /// Calculate current pace based on recent GPS data
+  void _calculateCurrentPace() {
+    if (_gpsRoute.length < 2) return;
+    
+    // Keep only GPS points from last 30 seconds
+    final cutoffTime = DateTime.now().subtract(const Duration(seconds: 30));
+    _recentGpsPoints = _gpsRoute.where((position) => 
+      position.timestamp != null && 
+      position.timestamp!.isAfter(cutoffTime)
+    ).toList();
+    
+    if (_recentGpsPoints.length < 2) return;
+    
+    // Calculate total distance and time for recent points
+    double recentDistance = 0.0;
+    Duration recentTime = Duration.zero;
+    
+    for (int i = 1; i < _recentGpsPoints.length; i++) {
+      final prev = _recentGpsPoints[i - 1];
+      final curr = _recentGpsPoints[i];
+      
+      // Calculate distance between consecutive points
+      final distance = Geolocator.distanceBetween(
+        prev.latitude, prev.longitude,
+        curr.latitude, curr.longitude,
+      ) / 1000; // Convert to kilometers
+      
+      recentDistance += distance;
+      
+      // Calculate time difference
+      if (prev.timestamp != null && curr.timestamp != null) {
+        final timeDiff = curr.timestamp!.difference(prev.timestamp!);
+        recentTime += timeDiff;
+      }
+    }
+    
+    // Calculate current pace and speed
+    if (recentDistance > 0 && recentTime.inSeconds > 0) {
+      _previousPace = _currentPace;
+      
+      // Current pace in min/km
+      _currentPace = (recentTime.inMinutes / recentDistance);
+      
+      // Current speed in km/h
+      _currentSpeed = (recentDistance / recentTime.inHours);
+      
+      // Analyze pace trend
+      _analyzePaceTrend();
+      
+      print('⚡ RunScreen: Current pace: ${_currentPace.toStringAsFixed(1)} min/km');
+      print('⚡ RunScreen: Current speed: ${_currentSpeed.toStringAsFixed(1)} km/h');
+      print('⚡ RunScreen: Pace trend: $_paceTrend');
+      
+      // Update UI
+      if (mounted && !_disposed) {
+        setState(() {});
+      }
+    }
+  }
+  
+  /// Analyze pace trend based on current vs previous pace
+  void _analyzePaceTrend() {
+    if (_previousPace == 0.0) {
+      _paceTrend = 'steady';
+      return;
+    }
+    
+    final paceDifference = _currentPace - _previousPace;
+    final threshold = 0.1; // 0.1 min/km threshold for trend detection
+    
+    if (paceDifference < -threshold) {
+      _paceTrend = 'improving'; // Getting faster (lower pace)
+    } else if (paceDifference > threshold) {
+      _paceTrend = 'declining'; // Getting slower (higher pace)
+    } else {
+      _paceTrend = 'steady';
+    }
+  }
+  
+  /// Get pace zone based on current pace
+  String _getPaceZone(double pace) {
+    if (pace <= 4.0) return 'very_hard';
+    if (pace <= 5.0) return 'hard';
+    if (pace <= 6.0) return 'moderate';
+    if (pace <= 7.0) return 'easy';
+    return 'very_easy';
+  }
+  
+  /// Get pace zone color
+  Color _getPaceZoneColor(String zone) {
+    switch (zone) {
+      case 'very_hard':
+        return Colors.red;
+      case 'hard':
+        return Colors.orange;
+      case 'moderate':
+        return Colors.yellow.shade700;
+      case 'easy':
+        return Colors.green;
+      case 'very_easy':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+  
+  /// Get pace zone description
+  String _getPaceZoneDescription(String zone) {
+    switch (zone) {
+      case 'very_hard':
+        return 'Very Hard';
+      case 'hard':
+        return 'Hard';
+      case 'moderate':
+        return 'Moderate';
+      case 'easy':
+        return 'Easy';
+      case 'very_easy':
+        return 'Very Easy';
+      default:
+        return 'Unknown';
+    }
+  }
+  
+  /// Build current pace display with trend indicator
+  Widget _buildCurrentPaceDisplay() {
+    if (_currentPace == 0.0) {
+      return const Text('--:--', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold));
+    }
+    
+    final paceZone = _getPaceZone(_currentPace);
+    final zoneColor = _getPaceZoneColor(paceZone);
+    
+    return Column(
+      children: [
+        Text(
+          '${_currentPace.toStringAsFixed(1)} min/km',
+          style: TextStyle(
+            fontSize: 16, 
+            fontWeight: FontWeight.bold,
+            color: zoneColor,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _getPaceTrendIcon(),
+              size: 12,
+              color: _getPaceTrendColor(),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              _getPaceZoneDescription(paceZone),
+              style: TextStyle(
+                fontSize: 10,
+                color: zoneColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  /// Get pace trend icon
+  IconData _getPaceTrendIcon() {
+    switch (_paceTrend) {
+      case 'improving':
+        return Icons.trending_down; // Down arrow = getting faster
+      case 'declining':
+        return Icons.trending_up; // Up arrow = getting slower
+      case 'steady':
+      default:
+        return Icons.remove; // Horizontal line = steady
+    }
+  }
+  
+  /// Get pace trend color
+  Color _getPaceTrendColor() {
+    switch (_paceTrend) {
+      case 'improving':
+        return Colors.green;
+      case 'declining':
+        return Colors.red;
+      case 'steady':
+      default:
+        return Colors.grey;
+    }
+  }
+  
+  /// Build pace zone indicator
+  Widget _buildPaceZoneIndicator() {
+    if (!_isTimerRunning || _currentPace == 0.0) return const SizedBox.shrink();
+    
+    final paceZone = _getPaceZone(_currentPace);
+    final zoneColor = _getPaceZoneColor(paceZone);
+    final zoneDescription = _getPaceZoneDescription(paceZone);
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: zoneColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: zoneColor.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _getPaceZoneIcon(paceZone),
+            color: zoneColor,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Current Effort Level',
+                  style: TextStyle(
+                    color: zoneColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  zoneDescription,
+                  style: TextStyle(
+                    color: zoneColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: zoneColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '${_currentPace.toStringAsFixed(1)}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Get pace zone icon
+  IconData _getPaceZoneIcon(String zone) {
+    switch (zone) {
+      case 'very_hard':
+        return Icons.fitness_center;
+      case 'hard':
+        return Icons.directions_run;
+      case 'moderate':
+        return Icons.directions_walk;
+      case 'easy':
+        return Icons.emoji_emotions;
+      case 'very_easy':
+        return Icons.airline_seat_flat;
+      default:
+        return Icons.help_outline;
+    }
+  }
+  
   /// Handle GPS position updates and calculate distance
   void _onGpsPositionUpdate(Position position) {
     if (_lastGpsPosition != null) {
@@ -310,6 +617,9 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       
       // Start GPS signal loss detection
       _startGpsSignalLossDetection();
+      
+      // Start real-time pace calculation
+      _startPaceCalculation();
       
       // Audio will be handled by the background session (SceneTriggerService)
       print('🎵 Audio will be managed by background session');
@@ -1611,6 +1921,11 @@ class _RunScreenState extends ConsumerState<RunScreen> {
                           
                           const SizedBox(height: 16),
                           
+                          // Pace Zone Indicator
+                          _buildPaceZoneIndicator(),
+                          
+                          const SizedBox(height: 16),
+                          
                           Row(
                             children: [
                               Expanded(
@@ -1635,6 +1950,30 @@ class _RunScreenState extends ConsumerState<RunScreen> {
 
                           const SizedBox(height: 16),
 
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatCard(
+                                  'Current Pace',
+                                  _buildCurrentPaceDisplay(),
+                                  Icons.trending_up,
+                                  _getPaceZoneColor(_getPaceZone(_currentPace)),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildStatCard(
+                                  'Current Speed',
+                                  '${_currentSpeed.toStringAsFixed(1)} km/h',
+                                  Icons.speed,
+                                  Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
                           Row(
                             children: [
                               Expanded(
@@ -1750,7 +2089,7 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(String title, dynamic value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1762,14 +2101,26 @@ class _RunScreenState extends ConsumerState<RunScreen> {
         children: [
           Icon(icon, color: color, size: 32),
           const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
+          if (value is String)
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            )
+          else if (value is Widget)
+            value
+          else
+            Text(
+              value.toString(),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
           const SizedBox(height: 4),
           Text(
             title,
