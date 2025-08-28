@@ -22,6 +22,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'dart:io';
 import '../widgets/run_map_panel.dart';
 import '../widgets/scene_hud.dart';
 import '../widgets/scene_progress_indicator.dart';
@@ -77,6 +78,14 @@ class _RunScreenState extends ConsumerState<RunScreen> {
   String _paceTrend = 'steady'; // 'improving', 'declining', 'steady'
   Timer? _paceCalculationTimer;
   
+  // Error handling and user feedback
+  bool _isLoading = false;
+  String? _currentErrorMessage;
+  bool _showErrorToast = false;
+  Timer? _errorToastTimer;
+  bool _isNetworkAvailable = true;
+  Timer? _networkCheckTimer;
+  
   @override
   void initState() {
     super.initState();
@@ -114,6 +123,12 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       // Clean up pace calculation timer
       _paceCalculationTimer?.cancel();
       _paceCalculationTimer = null;
+      
+      // Clean up error handling timers
+      _errorToastTimer?.cancel();
+      _errorToastTimer = null;
+      _networkCheckTimer?.cancel();
+      _networkCheckTimer = null;
       
     } catch (e) {
       // Log error but don't let it prevent disposal
@@ -562,6 +577,159 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     }
   }
   
+  /// Start network availability monitoring
+  void _startNetworkMonitoring() {
+    _networkCheckTimer?.cancel();
+    
+    // Check network every 10 seconds
+    _networkCheckTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (_disposed) {
+        timer.cancel();
+        return;
+      }
+      
+      _checkNetworkAvailability();
+    });
+    
+    print('🌐 RunScreen: Network monitoring started');
+  }
+  
+  /// Check network availability
+  void _checkNetworkAvailability() async {
+    try {
+      // Simple network check - try to access a reliable endpoint
+      final result = await InternetAddress.lookup('google.com');
+      final wasNetworkAvailable = _isNetworkAvailable;
+      _isNetworkAvailable = result.isNotEmpty && result.first.rawAddress.isNotEmpty;
+      
+      // If network status changed, update UI
+      if (wasNetworkAvailable != _isNetworkAvailable) {
+        if (mounted && !_disposed) {
+          setState(() {});
+        }
+        
+        if (!_isNetworkAvailable) {
+          _showToast('Network connection lost. Some features may be limited.', isError: true);
+        } else {
+          _showToast('Network connection restored!', isError: false);
+        }
+      }
+    } catch (e) {
+      final wasNetworkAvailable = _isNetworkAvailable;
+      _isNetworkAvailable = false;
+      
+      if (wasNetworkAvailable && mounted && !_disposed) {
+        setState(() {});
+        _showToast('Network connection lost. Some features may be limited.', isError: true);
+      }
+    }
+  }
+  
+  /// Show toast notification
+  void _showToast(String message, {bool isError = false, Duration duration = const Duration(seconds: 3)}) {
+    _currentErrorMessage = message;
+    _showErrorToast = true;
+    
+    // Auto-hide toast after duration
+    _errorToastTimer?.cancel();
+    _errorToastTimer = Timer(duration, () {
+      if (mounted && !_disposed) {
+        setState(() {
+          _showErrorToast = false;
+          _currentErrorMessage = null;
+        });
+      }
+    });
+    
+    // Update UI immediately
+    if (mounted && !_disposed) {
+      setState(() {});
+    }
+    
+    print('${isError ? '❌' : 'ℹ️'} RunScreen: Toast - $message');
+  }
+  
+  /// Show loading state
+  void _showLoading(String message) {
+    _isLoading = true;
+    _currentErrorMessage = message;
+    
+    if (mounted && !_disposed) {
+      setState(() {});
+    }
+    
+    print('⏳ RunScreen: Loading - $message');
+  }
+  
+  /// Hide loading state
+  void _hideLoading() {
+    _isLoading = false;
+    _currentErrorMessage = null;
+    
+    if (mounted && !_disposed) {
+      setState(() {});
+    }
+    
+    print('✅ RunScreen: Loading completed');
+  }
+  
+  /// Handle errors with user-friendly feedback
+  void _handleError(dynamic error, String operation, {bool showDialog = true, bool showToast = true, VoidCallback? onRetry}) {
+    final errorMessage = _getUserFriendlyErrorMessage(error);
+    final fullMessage = 'Failed to $operation. $errorMessage';
+    
+    print('❌ RunScreen: Error in $operation: $error');
+    
+    if (showToast) {
+      _showToast(fullMessage, isError: true);
+    }
+    
+    if (showDialog && onRetry != null) {
+      _showErrorDialog(
+        'Operation Failed',
+        fullMessage,
+        showRetry: true,
+        onRetry: onRetry,
+      );
+    } else if (showDialog) {
+      _showErrorDialog(
+        'Operation Failed',
+        fullMessage,
+        showRetry: false,
+      );
+    }
+    
+    // Hide loading if it was showing
+    _hideLoading();
+  }
+  
+  /// Retry operation with exponential backoff
+  Future<T?> _retryOperation<T>(Future<T> Function() operation, {
+    int maxRetries = 3,
+    Duration initialDelay = const Duration(seconds: 1),
+  }) async {
+    int retryCount = 0;
+    Duration delay = initialDelay;
+    
+    while (retryCount < maxRetries) {
+      try {
+        return await operation();
+      } catch (e) {
+        retryCount++;
+        
+        if (retryCount >= maxRetries) {
+          rethrow;
+        }
+        
+        print('🔄 RunScreen: Retry $retryCount/$maxRetries failed: $e');
+        await Future.delayed(delay);
+        delay *= 2; // Exponential backoff
+      }
+    }
+    
+    return null;
+  }
+  
   /// Handle GPS position updates and calculate distance
   void _onGpsPositionUpdate(Position position) {
     if (_lastGpsPosition != null) {
@@ -620,6 +788,9 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       
       // Start real-time pace calculation
       _startPaceCalculation();
+      
+      // Start network monitoring
+      _startNetworkMonitoring();
       
       // Audio will be handled by the background session (SceneTriggerService)
       print('🎵 Audio will be managed by background session');
@@ -2051,41 +2222,79 @@ class _RunScreenState extends ConsumerState<RunScreen> {
         ? 'GPS Signal Lost - Estimating Distance'
         : 'GPS Signal Strong';
     
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: statusColor.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(statusIcon, color: statusColor, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              statusText,
-              style: TextStyle(
-                color: statusColor,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
+    return Column(
+      children: [
+        // GPS Status
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: statusColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: statusColor.withOpacity(0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(statusIcon, color: statusColor, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
               ),
+              if (_isGpsSignalLost) ...[
+                const SizedBox(width: 8),
+                Text(
+                  '${_gpsSignalLossDuration.inSeconds}s',
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 8),
+        
+        // Network Status
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isNetworkAvailable ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _isNetworkAvailable ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
             ),
           ),
-          if (_isGpsSignalLost) ...[
-            const SizedBox(width: 8),
-            Text(
-              '${_gpsSignalLossDuration.inSeconds}s',
-              style: TextStyle(
-                color: statusColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                _isNetworkAvailable ? Icons.wifi : Icons.wifi_off,
+                color: _isNetworkAvailable ? Colors.green : Colors.red,
+                size: 16,
               ),
-            ),
-          ],
-        ],
-      ),
+              const SizedBox(width: 8),
+              Text(
+                _isNetworkAvailable ? 'Network Connected' : 'Network Offline',
+                style: TextStyle(
+                  color: _isNetworkAvailable ? Colors.green : Colors.red,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -2308,5 +2517,108 @@ class _RunScreenState extends ConsumerState<RunScreen> {
     } else {
       return 'An unexpected error occurred. Please try again.';
     }
+  }
+  
+  /// Build toast notification
+  Widget _buildToastNotification() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
+            ? Colors.red.shade100
+            : Colors.green.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
+              ? Colors.red.shade300
+              : Colors.green.shade300,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
+                ? Icons.error_outline
+                : Icons.check_circle_outline,
+            color: _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
+                ? Colors.red.shade600
+                : Colors.green.shade600,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              _currentErrorMessage ?? '',
+              style: TextStyle(
+                color: _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
+                    ? Colors.red.shade600
+                    : Colors.green.shade600,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _showErrorToast = false;
+                _currentErrorMessage = null;
+              });
+            },
+            icon: const Icon(Icons.close, size: 20),
+            color: Colors.grey.shade600,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Build loading overlay
+  Widget _buildLoadingOverlay() {
+    return Container(
+      color: Colors.black.withOpacity(0.5),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(kElectricAqua),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _currentErrorMessage ?? 'Loading...',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
