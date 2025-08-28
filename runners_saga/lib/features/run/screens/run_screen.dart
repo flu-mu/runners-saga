@@ -61,6 +61,14 @@ class _RunScreenState extends ConsumerState<RunScreen> {
   StreamSubscription<Position>? _gpsSubscription;
   Position? _lastGpsPosition;
   
+  // GPS signal loss handling
+  DateTime? _lastGpsUpdate;
+  bool _isGpsSignalLost = false;
+  Duration _gpsSignalLossDuration = Duration.zero;
+  double _estimatedDistanceDuringSignalLoss = 0.0;
+  double _averagePaceBeforeSignalLoss = 0.0; // km/h
+  Timer? _gpsSignalLossTimer;
+  
   @override
   void initState() {
     super.initState();
@@ -90,6 +98,10 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       // Clean up GPS tracking
       _gpsSubscription?.cancel();
       _gpsSubscription = null;
+      
+      // Clean up GPS signal loss detection
+      _gpsSignalLossTimer?.cancel();
+      _gpsSignalLossTimer = null;
       
     } catch (e) {
       // Log error but don't let it prevent disposal
@@ -132,6 +144,114 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       
     } catch (e) {
       print('❌ RunScreen: Failed to start GPS tracking: $e');
+    }
+  }
+  
+  /// Start GPS signal loss detection
+  void _startGpsSignalLossDetection() {
+    // Cancel any existing timer
+    _gpsSignalLossTimer?.cancel();
+    
+    // Check for GPS signal loss every 5 seconds
+    _gpsSignalLossTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_disposed || !_isTimerRunning || _isPaused) {
+        timer.cancel();
+        return;
+      }
+      
+      _checkGpsSignalLoss();
+    });
+    
+    print('🔍 RunScreen: GPS signal loss detection started');
+  }
+  
+  /// Check if GPS signal has been lost
+  void _checkGpsSignalLoss() {
+    if (_lastGpsUpdate == null) return;
+    
+    final timeSinceLastUpdate = DateTime.now().difference(_lastGpsUpdate!);
+    final signalLossThreshold = const Duration(seconds: 15); // Consider signal lost after 15 seconds
+    
+    if (timeSinceLastUpdate > signalLossThreshold && !_isGpsSignalLost) {
+      _handleGpsSignalLoss();
+    }
+  }
+  
+  /// Handle GPS signal loss
+  void _handleGpsSignalLoss() {
+    _isGpsSignalLost = true;
+    _gpsSignalLossDuration = Duration.zero;
+    _estimatedDistanceDuringSignalLoss = 0.0;
+    
+    // Calculate average pace before signal loss (if we have enough data)
+    if (_gpsRoute.length > 1 && _elapsedTime.inSeconds > 0) {
+      _averagePaceBeforeSignalLoss = _totalDistance / (_elapsedTime.inHours);
+    }
+    
+    print('⚠️ RunScreen: GPS signal lost - Starting distance estimation');
+    print('⚠️ RunScreen: Average pace before signal loss: ${_averagePaceBeforeSignalLoss.toStringAsFixed(2)} km/h');
+    
+    // Start estimating distance during signal loss
+    _startDistanceEstimationDuringSignalLoss();
+    
+    // Update UI to show signal loss status
+    if (mounted && !_disposed) {
+      setState(() {});
+    }
+  }
+  
+  /// Start estimating distance during GPS signal loss
+  void _startDistanceEstimationDuringSignalLoss() {
+    // Cancel any existing timer
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_disposed || !_isTimerRunning || _isPaused || !_isGpsSignalLost) {
+        timer.cancel();
+        return;
+      }
+      
+      // Update signal loss duration
+      _gpsSignalLossDuration += const Duration(seconds: 1);
+      
+              // Estimate distance based on average pace
+        if (_averagePaceBeforeSignalLoss > 0) {
+          final estimatedDistance = _averagePaceBeforeSignalLoss * (_gpsSignalLossDuration.inHours);
+          _estimatedDistanceDuringSignalLoss = estimatedDistance;
+          
+          // Update total distance with estimated distance (but don't add to GPS route)
+          // We need to calculate the total as: original_distance + new_estimated_distance
+          final originalDistance = _totalDistance - _estimatedDistanceDuringSignalLoss;
+          _totalDistance = originalDistance + estimatedDistance;
+          
+          print('📍 RunScreen: Signal loss - Estimated distance: ${_estimatedDistanceDuringSignalLoss.toStringAsFixed(6)} km');
+          print('📍 RunScreen: Signal loss - Total distance (with estimation): ${_totalDistance.toStringAsFixed(6)} km');
+          
+          // Update UI
+          if (mounted && !_disposed) {
+            setState(() {});
+          }
+        }
+    });
+  }
+  
+  /// Handle GPS signal recovery
+  void _handleGpsSignalRecovery() {
+    _isGpsSignalLost = false;
+    
+    // Calculate actual distance traveled during signal loss
+    final actualDistanceTraveled = _estimatedDistanceDuringSignalLoss;
+    
+    print('✅ RunScreen: GPS signal recovered!');
+    print('✅ RunScreen: Estimated distance during signal loss: ${_estimatedDistanceDuringSignalLoss.toStringAsFixed(6)} km');
+    print('✅ RunScreen: Signal loss duration: ${_gpsSignalLossDuration.inSeconds} seconds');
+    
+    // Reset signal loss tracking
+    _gpsSignalLossDuration = Duration.zero;
+    _estimatedDistanceDuringSignalLoss = 0.0;
+    _averagePaceBeforeSignalLoss = 0.0;
+    
+    // Update UI to show signal recovery
+    if (mounted && !_disposed) {
+      setState(() {});
     }
   }
   
@@ -187,6 +307,9 @@ class _RunScreenState extends ConsumerState<RunScreen> {
       
       // Start GPS tracking for real distance calculation
       _startGpsTracking();
+      
+      // Start GPS signal loss detection
+      _startGpsSignalLossDetection();
       
       // Audio will be handled by the background session (SceneTriggerService)
       print('🎵 Audio will be managed by background session');
@@ -1483,6 +1606,11 @@ class _RunScreenState extends ConsumerState<RunScreen> {
                       
                       return Column(
                         children: [
+                          // GPS Status Indicator
+                          _buildGpsStatusIndicator(),
+                          
+                          const SizedBox(height: 16),
+                          
                           Row(
                             children: [
                               Expanded(
@@ -1571,6 +1699,54 @@ class _RunScreenState extends ConsumerState<RunScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Build GPS status indicator
+  Widget _buildGpsStatusIndicator() {
+    if (!_isTimerRunning) return const SizedBox.shrink();
+    
+    final statusColor = _isGpsSignalLost ? Colors.orange : Colors.green;
+    final statusIcon = _isGpsSignalLost ? Icons.gps_off : Icons.gps_fixed;
+    final statusText = _isGpsSignalLost 
+        ? 'GPS Signal Lost - Estimating Distance'
+        : 'GPS Signal Strong';
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(statusIcon, color: statusColor, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              statusText,
+              style: TextStyle(
+                color: statusColor,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          if (_isGpsSignalLost) ...[
+            const SizedBox(width: 8),
+            Text(
+              '${_gpsSignalLossDuration.inSeconds}s',
+              style: TextStyle(
+                color: statusColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
