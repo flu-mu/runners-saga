@@ -632,35 +632,41 @@ class FirestoreService {
   }
   
   /// Get runs with server-only source (bypasses cache)
-  Stream<List<RunModel>> getRunsFromServer({int limit = 100}) {
+  /// Note: This method forces a fresh fetch by clearing cache first
+  Future<List<RunModel>> getRunsFromServer({int limit = 100}) async {
     try {
+      print('🔄 FirestoreService: Getting runs from server...');
+      
+      // Clear cache first to ensure fresh data
+      await clearCache();
+      
       final userId = currentUserId;
       if (userId == null) {
         throw Exception('User not authenticated');
       }
       
-      return _firestoreInstance
+      final snapshot = await _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
           .orderBy('startTime', descending: true)
           .limit(limit)
-          .snapshots(const SnapshotOptions(source: Source.server))
-          .map((snapshot) {
-            final validRuns = <RunModel>[];
-            
-            for (final doc in snapshot.docs) {
-              try {
-                final runData = _convertDocData(doc);
-                final run = RunModel.fromJson(runData);
-                validRuns.add(run);
-              } catch (e) {
-                print('⚠️ FirestoreService: Skipping invalid run document ${doc.id}: $e');
-                continue;
-              }
-            }
-            
-            return validRuns;
-          });
+          .get(const GetOptions(source: Source.server));
+      
+      final validRuns = <RunModel>[];
+      
+      for (final doc in snapshot.docs) {
+        try {
+          final runData = _convertDocData(doc);
+          final run = RunModel.fromJson(runData);
+          validRuns.add(run);
+        } catch (e) {
+          print('⚠️ FirestoreService: Skipping invalid run document ${doc.id}: $e');
+          continue;
+        }
+      }
+      
+      print('✅ FirestoreService: Server fetch completed - ${validRuns.length} runs loaded');
+      return validRuns;
     } catch (e) {
       print('❌ FirestoreService: Error in getRunsFromServer: $e');
       throw Exception('Failed to get runs from server: $e');
