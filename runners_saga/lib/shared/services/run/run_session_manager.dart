@@ -518,15 +518,22 @@ class RunSessionManager {
       startTime: _sessionStartTime!,
       endTime: DateTime.now(),
       route: route
-          .map((pos) => LocationPoint(
-                latitude: pos.latitude,
-                longitude: pos.longitude,
-                accuracy: pos.accuracy,
-                altitude: pos.altitude,
-                speed: pos.speed,
-                timestamp: pos.timestamp,
-                heading: pos.heading,
-              ))
+          .map((pos) {
+            // Convert Position to LocationPoint
+            final elapsedSeconds = pos.timestamp != null 
+                ? DateTime.now().difference(pos.timestamp).inSeconds
+                : 0;
+            return LocationPoint(
+              latitude: pos.latitude,
+              longitude: pos.longitude,
+              accuracy: pos.accuracy,
+              altitude: pos.altitude,
+              speed: pos.speed,
+              elapsedSeconds: elapsedSeconds,
+              heading: pos.heading,
+              elapsedTimeFormatted: '${(elapsedSeconds ~/ 60)}:${(elapsedSeconds % 60).toString().padLeft(2, '0')}',
+            );
+          })
           .toList(),
       totalDistance: stats['distance'] as double,
       totalTime: stats['elapsedTime'] as Duration,
@@ -576,17 +583,7 @@ class RunSessionManager {
       userId: currentUserId,
       startTime: _sessionStartTime!,
       endTime: DateTime.now(),
-      route: route
-          .map((pos) => LocationPoint(
-                latitude: pos.latitude,
-                longitude: pos.longitude,
-                accuracy: pos.accuracy,
-                altitude: pos.altitude,
-                speed: pos.speed,
-                timestamp: pos.timestamp,
-                heading: pos.heading,
-              ))
-          .toList(),
+      route: route, // Already a List<LocationPoint>, no conversion needed
       totalDistance: stats['distance'] as double,
       totalTime: stats['elapsedTime'] as Duration,
       averagePace: stats['averagePace'] as double,
@@ -636,15 +633,22 @@ class RunSessionManager {
     print('🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has ${route.length} points');
     print('🔍 RunSessionManager: _isSessionActive: $_isSessionActive, _isPaused: $_isPaused');
     return route
-        .map((pos) => LocationPoint(
-              latitude: pos.latitude,
-              longitude: pos.longitude,
-              accuracy: pos.accuracy,
-              altitude: pos.altitude,
-              speed: pos.speed,
-              timestamp: pos.timestamp,
-              heading: pos.heading,
-            ))
+        .map((pos) {
+          // Convert Position to LocationPoint
+          final elapsedSeconds = pos.timestamp != null 
+              ? DateTime.now().difference(pos.timestamp).inSeconds
+              : 0;
+          return LocationPoint(
+            latitude: pos.latitude,
+            longitude: pos.longitude,
+            accuracy: pos.accuracy,
+            altitude: pos.altitude,
+            speed: pos.speed,
+            elapsedSeconds: elapsedSeconds,
+            heading: pos.heading,
+            elapsedTimeFormatted: '${(elapsedSeconds ~/ 60)}:${(elapsedSeconds % 60).toString().padLeft(2, '0')}',
+          );
+        })
         .toList();
   }
 
