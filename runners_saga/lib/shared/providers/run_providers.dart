@@ -54,13 +54,23 @@ final userRunsProvider = StreamProvider<List<RunModel>>((ref) {
   return firestoreService.getUserRunsStream().map((runs) {
     final sortedRuns = [...runs]..sort((a, b) => b.startTime.compareTo(a.startTime));
     return sortedRuns;
+  }).handleError((error, stackTrace) {
+    print('⚠️ userRunsProvider: Error loading runs: $error');
+    print('⚠️ userRunsProvider: Stack trace: $stackTrace');
+    // Return empty list instead of crashing
+    return <RunModel>[];
   });
 });
 
 // Provider for user's completed runs only
 final userCompletedRunsProvider = StreamProvider<List<RunModel>>((ref) {
   final firestoreService = ref.watch(firestoreServiceProvider);
-  return firestoreService.getCompletedRunsStream();
+  return firestoreService.getCompletedRunsStream().handleError((error, stackTrace) {
+    print('⚠️ userCompletedRunsProvider: Error loading completed runs: $error');
+    print('⚠️ userCompletedRunsProvider: Stack trace: $stackTrace');
+    // Return empty list instead of crashing
+    return <RunModel>[];
+  });
 });
 
 // Provider for user's run statistics

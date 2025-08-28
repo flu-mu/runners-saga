@@ -38,7 +38,18 @@ class FirestoreService {
   
   // Helper method to safely convert document data
   Map<String, dynamic> _convertDocData(DocumentSnapshot doc) {
-    return doc.data() as Map<String, dynamic>;
+    final data = doc.data();
+    if (data == null) {
+      print('⚠️ FirestoreService: Document ${doc.id} has no data');
+      throw Exception('Document ${doc.id} has no data');
+    }
+    
+    if (data is! Map<String, dynamic>) {
+      print('⚠️ FirestoreService: Document ${doc.id} data is not a Map: ${data.runtimeType}');
+      throw Exception('Document ${doc.id} data is not in expected format');
+    }
+    
+    return data;
   }
   
   // Save a new run to Firestore
@@ -493,10 +504,28 @@ class FirestoreService {
           // .orderBy('startTime', descending: true)
           .limit(limit)
           .snapshots()
-          .map((snapshot) => snapshot.docs
-              .map((doc) => RunModel.fromJson(_convertDocData(doc)))
-              .toList());
+          .map((snapshot) {
+            final validRuns = <RunModel>[];
+            
+            for (final doc in snapshot.docs) {
+              try {
+                final runData = _convertDocData(doc);
+                final run = RunModel.fromJson(runData);
+                validRuns.add(run);
+              } catch (e) {
+                print('⚠️ FirestoreService: Skipping invalid run document ${doc.id}: $e');
+                // Continue processing other documents instead of failing completely
+                continue;
+              }
+            }
+            
+            // Sort by start time (newest first)
+            validRuns.sort((a, b) => b.startTime.compareTo(a.startTime));
+            
+            return validRuns;
+          });
     } catch (e) {
+      print('❌ FirestoreService: Error in getUserRunsStream: $e');
       throw Exception('Failed to get user runs stream: $e');
     }
   }
@@ -517,10 +546,26 @@ class FirestoreService {
           .orderBy('startTime', descending: true)
           .limit(limit)
           .snapshots()
-          .map((snapshot) => snapshot.docs
-              .map((doc) => RunModel.fromJson(_convertDocData(doc)))
-              .toList());
+          .map((snapshot) {
+            final validRuns = <RunModel>[];
+            
+            for (final doc in snapshot.docs) {
+              try {
+                final runData = _convertDocData(doc);
+                final run = RunModel.fromJson(runData);
+                validRuns.add(run);
+              } catch (e) {
+                print('⚠️ FirestoreService: Skipping invalid completed run document ${doc.id}: $e');
+                // Continue processing other documents instead of failing completely
+                continue;
+              }
+            }
+            
+            // Already sorted by startTime from the query
+            return validRuns;
+          });
     } catch (e) {
+      print('❌ FirestoreService: Error in getCompletedRunsStream: $e');
       throw Exception('Failed to get completed runs stream: $e');
     }
   }
