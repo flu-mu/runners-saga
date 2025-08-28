@@ -226,7 +226,7 @@ class FirestoreService {
   
   // Get all runs for the current user
   Future<List<RunModel>> getUserRuns({
-    int limit = 50,
+    int limit = 100,
     DocumentSnapshot? startAfter,
   }) async {
     try {
@@ -257,7 +257,7 @@ class FirestoreService {
   }
   
   // Get runs by status
-  Future<List<RunModel>> getRunsByStatus(RunStatus status, {int limit = 50}) async {
+  Future<List<RunModel>> getRunsByStatus(RunStatus status, {int limit = 100}) async {
     try {
       final userId = currentUserId;
       if (userId == null) {
@@ -281,7 +281,7 @@ class FirestoreService {
   }
   
   // Get runs by season
-  Future<List<RunModel>> getRunsBySeason(String seasonId, {int limit = 50}) async {
+  Future<List<RunModel>> getRunsBySeason(String seasonId, {int limit = 100}) async {
     try {
       final userId = currentUserId;
       if (userId == null) {
@@ -305,7 +305,7 @@ class FirestoreService {
   }
   
   // Get runs by mission
-  Future<List<RunModel>> getRunsByMission(String missionId, {int limit = 50}) async {
+  Future<List<RunModel>> getRunsByMission(String missionId, {int limit = 100}) async {
     try {
       final userId = currentUserId;
       if (userId == null) {
@@ -329,7 +329,7 @@ class FirestoreService {
   }
   
   // Get completed runs only
-  Future<List<RunModel>> getCompletedRuns({int limit = 50}) async {
+  Future<List<RunModel>> getCompletedRuns({int limit = 100}) async {
     try {
       final userId = currentUserId;
       if (userId == null) {
