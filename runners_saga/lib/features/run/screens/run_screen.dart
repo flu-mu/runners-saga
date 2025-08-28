@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../../../main.dart'; // Import to access isFirebaseReady
+import '../../../shared/providers/firebase_providers.dart';
 import '../../../shared/providers/run_session_providers.dart';
 import '../../../shared/providers/story_providers.dart';
 import '../../../shared/providers/auth_providers.dart';
@@ -269,8 +269,9 @@ class _RunScreenState extends ConsumerState<RunScreen> {
   /// Mark episode as completed for the user
   Future<void> _markEpisodeCompleted(String episodeId) async {
     try {
-      // Check if Firebase is ready
-      if (!isFirebaseReady) {
+      // Check if Firebase is ready using the provider
+      final firebaseStatus = ref.read(firebaseStatusProvider);
+      if (firebaseStatus != FirebaseStatus.ready) {
         print('⚠️ RunScreen: Firebase not ready, skipping episode completion');
         return;
       }

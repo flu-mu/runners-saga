@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/run_model.dart';
-import '../../../main.dart'; // Import to access isFirebaseReady
+import '../../../shared/providers/firebase_providers.dart';
 
 class FirestoreService {
   static const String _runsCollection = 'runs';
@@ -12,25 +12,25 @@ class FirestoreService {
   
   // Lazy initialization to ensure Firebase is ready
   FirebaseFirestore get _firestoreInstance {
-    print('🔧 FirestoreService: Checking isFirebaseReady: $isFirebaseReady');
-    if (!isFirebaseReady) {
+    try {
+      _firestore ??= FirebaseFirestore.instance;
+      print('✅ FirestoreService: Firestore instance ready');
+      return _firestore!;
+    } catch (e) {
       print('❌ FirestoreService: Firebase not initialized yet. Please wait for app startup to complete.');
       throw Exception('Firebase not initialized yet. Please wait for app startup to complete.');
     }
-    _firestore ??= FirebaseFirestore.instance;
-    print('✅ FirestoreService: Firestore instance ready');
-    return _firestore!;
   }
   
   FirebaseAuth get _authInstance {
-    print('🔧 FirestoreService: Checking isFirebaseReady: $isFirebaseReady');
-    if (!isFirebaseReady) {
+    try {
+      _auth ??= FirebaseAuth.instance;
+      print('✅ FirestoreService: Firebase Auth instance ready');
+      return _auth!;
+    } catch (e) {
       print('❌ FirestoreService: Firebase not initialized yet. Please wait for app startup to complete.');
       throw Exception('Firebase not initialized yet. Please wait for app startup to complete.');
     }
-    _auth ??= FirebaseAuth.instance;
-    print('✅ FirestoreService: Firebase Auth instance ready');
-    return _auth!;
   }
   
   // Get current user ID

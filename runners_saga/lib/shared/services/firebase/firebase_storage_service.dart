@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../../main.dart'; // Import to access isFirebaseReady
+import '../../../shared/providers/firebase_providers.dart';
 
 class FirebaseStorageService {
   static FirebaseStorage? _storage;
@@ -10,11 +10,12 @@ class FirebaseStorageService {
   
   // Lazy initialization to ensure Firebase is ready
   static FirebaseStorage get _storageInstance {
-    if (!isFirebaseReady) {
+    try {
+      _storage ??= FirebaseStorage.instance;
+      return _storage!;
+    } catch (e) {
       throw Exception('Firebase not initialized yet. Please wait for app startup to complete.');
     }
-    _storage ??= FirebaseStorage.instance;
-    return _storage!;
   }
   
   /// Get the download URL for an audio file

@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../../main.dart'; // Import to access isFirebaseReady
+import '../../../shared/providers/firebase_providers.dart';
 
 class DownloadResult {
   final bool success;
@@ -221,7 +221,9 @@ class DownloadService {
   Future<String> _getFirebaseDownloadUrl(String episodeId, String fileName) async {
     try {
       // Check if Firebase is ready
-      if (!isFirebaseReady) {
+      try {
+        FirebaseStorage.instance;
+      } catch (e) {
         throw Exception('Firebase not initialized yet. Please wait for app startup to complete.');
       }
       
