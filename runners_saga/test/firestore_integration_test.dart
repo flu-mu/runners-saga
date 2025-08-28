@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runners_saga/shared/services/firestore_service.dart';
+import 'package:runners_saga/shared/services/firebase/firestore_service.dart';
 import 'package:runners_saga/shared/models/run_model.dart';
 import 'package:runners_saga/shared/models/run_target_model.dart';
 

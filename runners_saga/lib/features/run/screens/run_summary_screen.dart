@@ -6,7 +6,7 @@ import '../../../shared/models/episode_model.dart';
 import '../../../shared/providers/run_providers.dart';
 import '../../../shared/providers/run_session_providers.dart';
 import '../../../shared/providers/run_completion_providers.dart';
-import '../../../shared/services/run_completion_service.dart';
+import '../../../shared/services/run/run_completion_service.dart';
 import '../../../shared/providers/settings_providers.dart';
 
 class RunSummaryScreen extends ConsumerStatefulWidget {

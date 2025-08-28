@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:runners_saga/shared/services/scene_trigger_service.dart';
+import 'package:runners_saga/shared/services/story/scene_trigger_service.dart';
 
 void main() {
   group('Scene Trigger System Tests', () {

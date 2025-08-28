@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_providers.dart';
+import '../../providers/auth_providers.dart';
 
-import '../../features/auth/screens/login_screen.dart';
-import '../../features/auth/screens/signup_screen.dart';
-import '../../features/home/screens/home_screen.dart';
-import '../../features/run/screens/run_screen.dart';
-import '../../features/run/screens/run_history_screen.dart';
-import '../../features/run/screens/run_target_selection_screen.dart';
-import '../../features/run/screens/run_summary_screen.dart';
-import '../../features/story/screens/story_screen.dart';
-import '../../features/story/screens/season_hub_screen.dart';
-import '../../features/story/screens/episode_detail_screen.dart';
-import '../../features/story/screens/seasons_screen.dart';
-import '../../features/onboarding/screens/welcome_screen.dart';
-import '../../features/onboarding/screens/story_intro_screen.dart';
-import '../../features/onboarding/screens/account_creation_screen.dart';
-import '../../shared/widgets/splash_screen.dart';
-import '../../features/settings/screens/settings_screen.dart';
+import '../../../features/auth/screens/login_screen.dart';
+import '../../../features/auth/screens/signup_screen.dart';
+import '../../../features/home/screens/home_screen.dart';
+import '../../../features/run/screens/run_screen.dart';
+import '../../../features/run/screens/run_history_screen.dart';
+import '../../../features/run/screens/run_target_selection_screen.dart';
+import '../../../features/run/screens/run_summary_screen.dart';
+import '../../../features/story/screens/story_screen.dart';
+import '../../../features/story/screens/season_hub_screen.dart';
+import '../../../features/story/screens/episode_detail_screen.dart';
+import '../../../features/story/screens/seasons_screen.dart';
+import '../../../features/onboarding/screens/welcome_screen.dart';
+import '../../../features/onboarding/screens/story_intro_screen.dart';
+import '../../../features/onboarding/screens/account_creation_screen.dart';
+import 'splash_screen.dart';
+import '../../../features/settings/screens/settings_screen.dart';
 
 /// App router configuration using GoRouter
 class AppRouter {

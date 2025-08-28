@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../main.dart'; // Import to access isFirebaseReady
+import '../../../main.dart'; // Import to access isFirebaseReady
 
 class DownloadResult {
   final bool success;

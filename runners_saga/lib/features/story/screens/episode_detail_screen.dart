@@ -10,8 +10,8 @@ import '../../../shared/models/episode_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart';
 import '../../run/widgets/run_target_sheet.dart';
-import '../../../shared/services/download_service.dart';
-import '../../../shared/services/firebase_storage_service.dart';
+import '../../../shared/services/audio/download_service.dart';
+import '../../../shared/services/firebase/firebase_storage_service.dart';
 import '../../../core/constants/app_theme.dart';
 
 class EpisodeDetailScreen extends ConsumerStatefulWidget {

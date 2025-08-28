@@ -1,4 +1,4 @@
-import 'story_service.dart';
+import 'package:runners_saga/shared/services/story/story_service.dart';
 
 /// Test file demonstrating the episode progression system
 /// This is not a formal test, but a demonstration of the new functionality

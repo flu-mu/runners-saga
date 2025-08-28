@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../main.dart'; // Import to access isFirebaseReady
+import '../../../main.dart'; // Import to access isFirebaseReady
 
 class FirebaseStorageService {
   static FirebaseStorage? _storage;

@@ -46,3 +46,6 @@ app.*.map.json
 
 # Keep sagarunners folder out of version control
 sagarunners/
+
+# macOS metadata files
+**/.DS_Store

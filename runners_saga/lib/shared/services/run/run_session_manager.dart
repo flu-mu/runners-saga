@@ -4,15 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'progress_monitor_service.dart';
-import 'scene_trigger_service.dart';
-import 'audio_manager.dart';
-import 'firestore_service.dart';
-import 'download_service.dart';
-import 'firebase_storage_service.dart';
-import '../models/episode_model.dart';
-import '../models/run_model.dart';
-import '../models/run_target_model.dart';
-import '../providers/settings_providers.dart';
+import '../story/scene_trigger_service.dart';
+import '../audio/audio_manager.dart';
+import '../firebase/firestore_service.dart';
+import '../audio/download_service.dart';
+import '../firebase/firebase_storage_service.dart';
+import '../../models/episode_model.dart';
+import '../../models/run_model.dart';
+import '../../models/run_target_model.dart';
+import '../../providers/settings_providers.dart';
 
 class RunSessionManager {
   final ProgressMonitorService _progressMonitor = ProgressMonitorService();

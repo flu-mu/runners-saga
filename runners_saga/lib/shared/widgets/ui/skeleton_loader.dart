@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_theme.dart';
+import '../../../core/constants/app_theme.dart';
 
 class SkeletonLoader extends StatefulWidget {
   final double height;

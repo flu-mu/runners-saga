@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/story_service.dart';
+import '../services/story/story_service.dart';
 import '../models/episode_model.dart';
 import '../models/season_model.dart';
 

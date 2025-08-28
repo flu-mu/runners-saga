@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/run_model.dart';
-import '../../main.dart'; // Import to access isFirebaseReady
+import '../../models/run_model.dart';
+import '../../../main.dart'; // Import to access isFirebaseReady
 
 class FirestoreService {
   static const String _runsCollection = 'runs';

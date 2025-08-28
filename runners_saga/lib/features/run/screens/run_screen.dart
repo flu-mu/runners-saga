@@ -12,8 +12,8 @@ import '../../../shared/providers/run_providers.dart';
 
 import '../../../shared/providers/audio_providers.dart';
 import '../../../shared/providers/settings_providers.dart';
-import '../../../shared/services/scene_trigger_service.dart';
-import '../../../shared/services/run_session_manager.dart';
+import '../../../shared/services/story/scene_trigger_service.dart';
+import '../../../shared/services/run/run_session_manager.dart';
 
 
 import '../../../shared/models/episode_model.dart';
@@ -25,9 +25,9 @@ import 'dart:async';
 import '../widgets/run_map_panel.dart';
 import '../widgets/scene_hud.dart';
 import '../widgets/scene_progress_indicator.dart';
-import '../../../shared/widgets/skeleton_loader.dart';
-import '../../../shared/services/firestore_service.dart';
-import '../../../shared/services/run_completion_service.dart';
+import '../../../shared/widgets/ui/skeleton_loader.dart';
+import '../../../shared/services/firebase/firestore_service.dart';
+import '../../../shared/services/run/run_completion_service.dart';
 import '../../../shared/providers/run_completion_providers.dart';
 import '../../../shared/models/run_model.dart';
 

@@ -5,8 +5,8 @@ import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:permission_handler/permission_handler.dart';
 import '../models/run_model.dart';
 import '../models/run_target_model.dart';
-import '../services/firestore_service.dart';
-import '../services/scene_trigger_service.dart';
+import '../services/firebase/firestore_service.dart';
+import '../services/story/scene_trigger_service.dart';
 
 // Provider for current run state
 final currentRunProvider = StateNotifierProvider<RunTrackingNotifier, RunModel?>((ref) {

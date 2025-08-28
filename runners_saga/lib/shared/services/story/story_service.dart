@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/season_model.dart';
-import '../models/episode_model.dart';
-import '../models/story_segment_model.dart';
-import '../models/user_model.dart';
+import '../../models/season_model.dart';
+import '../../models/episode_model.dart';
+import '../../models/story_segment_model.dart';
+import '../../models/user_model.dart';
 
 /// Data class representing episode progression requirements and next episodes
 class EpisodeProgression {

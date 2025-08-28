@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/run_completion_service.dart';
+import '../services/run/run_completion_service.dart';
 
 /// Provider for the run completion service
 final runCompletionServiceProvider = Provider<RunCompletionService>((ref) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../shared/providers/run_session_providers.dart';
-import '../../../shared/services/scene_trigger_service.dart';
+import '../../../shared/services/story/scene_trigger_service.dart';
 
 class SceneHud extends ConsumerWidget {
   const SceneHud({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/audio_manager.dart';
+import '../services/audio/audio_manager.dart';
 
 /// Provider for AudioManager service
 final audioManagerProvider = Provider<AudioManager>((ref) {
