@@ -490,7 +490,7 @@ class FirestoreService {
   
   // Stream of user runs for real-time updates
   // Note: Requires composite index: userId (ascending) + startTime (descending)
-  Stream<List<RunModel>> getUserRunsStream({int limit = 50}) {
+  Stream<List<RunModel>> getUserRunsStream({int limit = 100}) {
     try {
       final userId = currentUserId;
       if (userId == null) {
@@ -500,8 +500,7 @@ class FirestoreService {
       return _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
-          // Temporarily removed orderBy to avoid index requirement
-          // .orderBy('startTime', descending: true)
+          .orderBy('startTime', descending: true)
           .limit(limit)
           .snapshots()
           .map((snapshot) {
@@ -519,9 +518,7 @@ class FirestoreService {
               }
             }
             
-            // Sort by start time (newest first)
-            validRuns.sort((a, b) => b.startTime.compareTo(a.startTime));
-            
+            // Already sorted by startTime from the query
             return validRuns;
           });
     } catch (e) {
@@ -532,7 +529,7 @@ class FirestoreService {
   
   // Stream of completed runs only
   // Note: Requires composite index: userId (ascending) + status (ascending) + startTime (descending)
-  Stream<List<RunModel>> getCompletedRunsStream({int limit = 50}) {
+  Stream<List<RunModel>> getCompletedRunsStream({int limit = 100}) {
     try {
       final userId = currentUserId;
       if (userId == null) {
@@ -567,6 +564,106 @@ class FirestoreService {
     } catch (e) {
       print('❌ FirestoreService: Error in getCompletedRunsStream: $e');
       throw Exception('Failed to get completed runs stream: $e');
+    }
+  }
+  
+  /// Clear Firestore cache and force fresh data fetch
+  Future<void> clearCache() async {
+    try {
+      print('🧹 FirestoreService: Clearing cache...');
+      
+      // Clear Firestore cache
+      await _firestoreInstance.clearPersistence();
+      
+      // Force a fresh connection
+      await _firestoreInstance.enableNetwork();
+      
+      // Also clear any in-memory cache
+      await _firestoreInstance.disableNetwork();
+      await _firestoreInstance.enableNetwork();
+      
+      print('✅ FirestoreService: Cache cleared successfully');
+    } catch (e) {
+      print('❌ FirestoreService: Error clearing cache: $e');
+      // Don't throw - cache clearing is not critical
+    }
+  }
+  
+  /// Force refresh of runs data by clearing cache and re-fetching
+  Future<List<RunModel>> forceRefreshRuns({int limit = 100}) async {
+    try {
+      print('🔄 FirestoreService: Force refreshing runs...');
+      
+      // Clear cache first
+      await clearCache();
+      
+      // Get fresh data
+      final userId = currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      final snapshot = await _firestoreInstance
+          .collection(_runsCollection)
+          .where('userId', isEqualTo: userId)
+          .orderBy('startTime', descending: true)
+          .limit(limit)
+          .get(const GetOptions(source: Source.server));
+      
+      final validRuns = <RunModel>[];
+      
+      for (final doc in snapshot.docs) {
+        try {
+          final runData = _convertDocData(doc);
+          final run = RunModel.fromJson(runData);
+          validRuns.add(run);
+        } catch (e) {
+          print('⚠️ FirestoreService: Skipping invalid run document ${doc.id}: $e');
+          continue;
+        }
+      }
+      
+      print('✅ FirestoreService: Force refresh completed - ${validRuns.length} runs loaded');
+      return validRuns;
+    } catch (e) {
+      print('❌ FirestoreService: Error in force refresh: $e');
+      throw Exception('Failed to force refresh runs: $e');
+    }
+  }
+  
+  /// Get runs with server-only source (bypasses cache)
+  Stream<List<RunModel>> getRunsFromServer({int limit = 100}) {
+    try {
+      final userId = currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      return _firestoreInstance
+          .collection(_runsCollection)
+          .where('userId', isEqualTo: userId)
+          .orderBy('startTime', descending: true)
+          .limit(limit)
+          .snapshots(const SnapshotOptions(source: Source.server))
+          .map((snapshot) {
+            final validRuns = <RunModel>[];
+            
+            for (final doc in snapshot.docs) {
+              try {
+                final runData = _convertDocData(doc);
+                final run = RunModel.fromJson(runData);
+                validRuns.add(run);
+              } catch (e) {
+                print('⚠️ FirestoreService: Skipping invalid run document ${doc.id}: $e');
+                continue;
+              }
+            }
+            
+            return validRuns;
+          });
+    } catch (e) {
+      print('❌ FirestoreService: Error in getRunsFromServer: $e');
+      throw Exception('Failed to get runs from server: $e');
     }
   }
 }

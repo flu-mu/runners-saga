@@ -21,6 +21,23 @@ class RunHistoryScreen extends ConsumerWidget {
         title: const Text('Run History', style: TextStyle(color: Colors.white)),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () {
+              // Force refresh the runs data
+              ref.refresh(userRunsProvider);
+              ref.refresh(userCompletedRunsProvider);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Refreshing run data...'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            tooltip: 'Refresh runs',
+          ),
+        ],
       ),
       body: runsAsync.when(
         data: (runs) => _buildRunHistory(context, ref, runs, statsAsync),
