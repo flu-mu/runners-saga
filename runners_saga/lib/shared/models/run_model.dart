@@ -15,7 +15,7 @@ class RunModel with _$RunModel {
     required String userId,
     @JsonKey(fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
     required DateTime startTime,
-    @JsonKey(fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
+    @JsonKey(name: 'completedAt', fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
     DateTime? endTime,
     @JsonKey(name: 'gpsPoints') // Map to the actual Firestore field name
     List<LocationPoint>? route, // Make optional since not every run has GPS
@@ -135,10 +135,11 @@ extension RunModelFirestore on RunModel {
       print('⚠️ RunModel.toFirestore() - startTime is not DateTime: ${json['startTime']?.runtimeType}');
     }
     
-    if (json['endTime'] is DateTime) {
-      final timestamp = Timestamp.fromDate(json['endTime'] as DateTime);
-      json['endTime'] = timestamp;
-      print('🔧 RunModel.toFirestore() - Converted endTime to Timestamp: $timestamp');
+    // completedAt is the Firestore field for endTime
+    if (json['completedAt'] is DateTime) {
+      final timestamp = Timestamp.fromDate(json['completedAt'] as DateTime);
+      json['completedAt'] = timestamp;
+      print('🔧 RunModel.toFirestore() - Converted completedAt to Timestamp: $timestamp');
     }
     
     print('🔧 RunModel.toFirestore() - Final startTime type: ${json['startTime']?.runtimeType}');
