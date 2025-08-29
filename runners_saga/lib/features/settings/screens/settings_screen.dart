@@ -178,6 +178,54 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  try {
+                    final firestoreService = FirestoreService();
+                    final result = await firestoreService.forceUpdateAllTimestamps();
+                    
+                    if (context.mounted) {
+                      final updatedCount = result['updatedCount'] as int;
+                      final totalRuns = result['totalRuns'] as int;
+                      
+                      String message;
+                      if (updatedCount > 0) {
+                        message = 'Force updated $updatedCount timestamps! This should fix all workout display issues.';
+                      } else {
+                        message = 'All $totalRuns runs already have valid timestamps!';
+                      }
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(message),
+                          backgroundColor: updatedCount > 0 ? Colors.green : Colors.blue,
+                          duration: Duration(seconds: 4),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to force update timestamps: $e'),
+                          backgroundColor: Colors.red,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.force_update),
+                label: const Text('Force Update All Timestamps'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
               ],
             ),
           ),

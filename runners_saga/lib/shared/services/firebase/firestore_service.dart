@@ -124,7 +124,7 @@ class FirestoreService {
         throw Exception('User not authenticated');
       }
       
-      final runData = run.toJson();
+      final runData = run.toFirestore();
       runData['updatedAt'] = FieldValue.serverTimestamp();
       runData['userId'] = userId; // Ensure userId is included
       
@@ -166,7 +166,7 @@ class FirestoreService {
         throw Exception('Run must have an end time');
       }
       
-      final runData = completedRun.toJson();
+      final runData = completedRun.toFirestore();
       runData['updatedAt'] = FieldValue.serverTimestamp();
       runData['completedAt'] = FieldValue.serverTimestamp();
       runData['userId'] = userId;
@@ -725,6 +725,100 @@ class FirestoreService {
     } catch (e) {
       print('❌ FirestoreService: Error fixing timestamp formats: $e');
       throw Exception('Failed to fix timestamp formats: $e');
+    }
+  }
+
+  /// Force update all run timestamps to proper Firestore format
+  Future<Map<String, dynamic>> forceUpdateAllTimestamps() async {
+    try {
+      print('🔧 FirestoreService: Force updating all timestamps...');
+      
+      final userId = currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      // Get all runs for the user
+      final snapshot = await _firestoreInstance
+          .collection(_runsCollection)
+          .where('userId', isEqualTo: userId)
+          .get();
+      
+      int updatedCount = 0;
+      int totalRuns = snapshot.docs.length;
+      final batch = _firestoreInstance.batch();
+      final errors = <String>[];
+      
+      print('🔧 FirestoreService: Found $totalRuns total runs to update');
+      
+      for (final doc in snapshot.docs) {
+        try {
+          final data = doc.data();
+          final startTime = data['startTime'];
+          
+          if (startTime == null) {
+            print('⚠️ FirestoreService: Run ${doc.id} has no startTime field');
+            continue;
+          }
+          
+          Timestamp? newTimestamp;
+          
+          if (startTime is String) {
+            // Parse ISO string
+            try {
+              final dateTime = DateTime.parse(startTime);
+              newTimestamp = Timestamp.fromDate(dateTime);
+              print('🔧 FirestoreService: Converting string to timestamp: $startTime -> ${newTimestamp.toDate()}');
+            } catch (e) {
+              final error = 'Failed to parse string timestamp for run ${doc.id}: $e';
+              print('⚠️ FirestoreService: $error');
+              errors.add(error);
+              continue;
+            }
+          } else if (startTime is Timestamp) {
+            // Already a timestamp, but let's ensure it's properly formatted
+            newTimestamp = startTime;
+            print('✅ FirestoreService: Run ${doc.id} already has valid Timestamp');
+          } else {
+            print('⚠️ FirestoreService: Run ${doc.id} has unknown timestamp type: ${startTime.runtimeType}');
+            continue;
+          }
+          
+          // Update the document with the proper timestamp
+          final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
+          batch.update(docRef, {'startTime': newTimestamp});
+          updatedCount++;
+          
+        } catch (e) {
+          final error = 'Error processing run ${doc.id}: $e';
+          print('⚠️ FirestoreService: $error');
+          errors.add(error);
+        }
+      }
+      
+      if (updatedCount > 0) {
+        await batch.commit();
+        print('✅ FirestoreService: Successfully updated $updatedCount timestamp formats');
+        
+        // Force a cache refresh
+        try {
+          await _firestoreInstance.enableNetwork();
+          print('🔄 FirestoreService: Network refreshed after timestamp updates');
+        } catch (e) {
+          print('⚠️ FirestoreService: Could not refresh network: $e');
+        }
+      } else {
+        print('✅ FirestoreService: No timestamps needed updating');
+      }
+      
+      return {
+        'totalRuns': totalRuns,
+        'updatedCount': updatedCount,
+        'errors': errors,
+      };
+    } catch (e) {
+      print('❌ FirestoreService: Error force updating timestamps: $e');
+      throw Exception('Failed to force update timestamps: $e');
     }
   }
 

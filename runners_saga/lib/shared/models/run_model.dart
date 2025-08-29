@@ -121,14 +121,27 @@ Timestamp _dateTimeToTimestamp(DateTime? dateTime) {
 // Extension to add Firestore serialization method
 extension RunModelFirestore on RunModel {
   Map<String, dynamic> toFirestore() {
+    print('🔧 RunModel.toFirestore() called');
     final json = toJson();
+    print('🔧 RunModel.toFirestore() - startTime type: ${json['startTime']?.runtimeType}');
+    print('🔧 RunModel.toFirestore() - startTime value: ${json['startTime']}');
+    
     // Explicitly convert dates to Timestamps for Firestore
     if (json['startTime'] is DateTime) {
-      json['startTime'] = Timestamp.fromDate(json['startTime'] as DateTime);
+      final timestamp = Timestamp.fromDate(json['startTime'] as DateTime);
+      json['startTime'] = timestamp;
+      print('🔧 RunModel.toFirestore() - Converted startTime to Timestamp: $timestamp');
+    } else {
+      print('⚠️ RunModel.toFirestore() - startTime is not DateTime: ${json['startTime']?.runtimeType}');
     }
+    
     if (json['endTime'] is DateTime) {
-      json['endTime'] = Timestamp.fromDate(json['endTime'] as DateTime);
+      final timestamp = Timestamp.fromDate(json['endTime'] as DateTime);
+      json['endTime'] = timestamp;
+      print('🔧 RunModel.toFirestore() - Converted endTime to Timestamp: $timestamp');
     }
+    
+    print('🔧 RunModel.toFirestore() - Final startTime type: ${json['startTime']?.runtimeType}');
     return json;
   }
 }
