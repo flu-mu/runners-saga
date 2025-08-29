@@ -118,15 +118,17 @@ Timestamp _dateTimeToTimestamp(DateTime? dateTime) {
   return Timestamp.fromDate(dateTime);
 }
 
-// Ensure proper serialization for Firestore
-Map<String, dynamic> toFirestore() {
-  final json = toJson();
-  // Explicitly convert dates to Timestamps for Firestore
-  if (json['startTime'] is DateTime) {
-    json['startTime'] = Timestamp.fromDate(json['startTime'] as DateTime);
+// Extension to add Firestore serialization method
+extension RunModelFirestore on RunModel {
+  Map<String, dynamic> toFirestore() {
+    final json = toJson();
+    // Explicitly convert dates to Timestamps for Firestore
+    if (json['startTime'] is DateTime) {
+      json['startTime'] = Timestamp.fromDate(json['startTime'] as DateTime);
+    }
+    if (json['endTime'] is DateTime) {
+      json['endTime'] = Timestamp.fromDate(json['endTime'] as DateTime);
+    }
+    return json;
   }
-  if (json['endTime'] is DateTime) {
-    json['endTime'] = Timestamp.fromDate(json['endTime'] as DateTime);
-  }
-  return json;
 }
