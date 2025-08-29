@@ -239,7 +239,7 @@ class FirestoreService {
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
           // Temporarily removed orderBy to avoid index requirement
-          // .orderBy('startTime', descending: true)
+          // .orderBy('createdAt', descending: true)
           .limit(limit);
       
       if (startAfter != null) {
@@ -268,7 +268,7 @@ class FirestoreService {
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
           .where('status', isEqualTo: status.name)
-          .orderBy('startTime', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();
       
@@ -292,7 +292,7 @@ class FirestoreService {
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
           .where('seasonId', isEqualTo: seasonId)
-          .orderBy('startTime', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();
 
@@ -316,7 +316,7 @@ class FirestoreService {
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
           .where('missionId', isEqualTo: missionId)
-          .orderBy('startTime', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();
       
@@ -340,7 +340,7 @@ class FirestoreService {
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
           .where('status', isEqualTo: RunStatus.completed.name)
-          .orderBy('startTime', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();
       
@@ -500,7 +500,7 @@ class FirestoreService {
       return _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
-          .orderBy('startTime', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(limit)
           .snapshots()
           .map((snapshot) {
@@ -540,7 +540,7 @@ class FirestoreService {
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
           .where('status', isEqualTo: RunStatus.completed.name)
-          .orderBy('startTime', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(limit)
           .snapshots()
           .map((snapshot) {
@@ -661,40 +661,40 @@ class FirestoreService {
       
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        final startTime = data['startTime'];
+        final createdAt = data['createdAt'];
         
-        if (startTime == null) {
-          print('⚠️ FirestoreService: Run ${doc.id} has no startTime field');
+        if (createdAt == null) {
+          print('⚠️ FirestoreService: Run ${doc.id} has no createdAt field');
           continue;
         }
         
-        if (startTime is String) {
+        if (createdAt is String) {
           stringTimestamps++;
-          if (startTime.contains('T')) {
+          if (createdAt.contains('T')) {
             try {
               // Parse the ISO string and convert to Timestamp
-              final dateTime = DateTime.parse(startTime);
+              final dateTime = DateTime.parse(createdAt);
               final timestamp = Timestamp.fromDate(dateTime);
               
               // Update the document
               final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
-              batch.update(docRef, {'startTime': timestamp});
+              batch.update(docRef, {'createdAt': timestamp});
               fixedCount++;
               
-              print('🔧 FirestoreService: Fixed timestamp for run ${doc.id}: $startTime -> ${timestamp.toDate()}');
+              print('🔧 FirestoreService: Fixed timestamp for run ${doc.id}: $createdAt -> ${timestamp.toDate()}');
             } catch (e) {
               final error = 'Failed to fix timestamp for run ${doc.id}: $e';
               print('⚠️ FirestoreService: $error');
               errors.add(error);
             }
           } else {
-            print('🔍 FirestoreService: Run ${doc.id} has non-ISO string timestamp: $startTime');
+            print('🔍 FirestoreService: Run ${doc.id} has non-ISO string timestamp: $createdAt');
           }
-        } else if (startTime is Timestamp) {
+        } else if (createdAt is Timestamp) {
           validTimestamps++;
           print('✅ FirestoreService: Run ${doc.id} already has valid Timestamp');
         } else {
-          print('⚠️ FirestoreService: Run ${doc.id} has unknown timestamp type: ${startTime.runtimeType}');
+          print('⚠️ FirestoreService: Run ${doc.id} has unknown timestamp type: ${createdAt.runtimeType}');
         }
       }
       
@@ -754,39 +754,39 @@ class FirestoreService {
       for (final doc in snapshot.docs) {
         try {
           final data = doc.data();
-          final startTime = data['startTime'];
+          final createdAt = data['createdAt'];
           
-          if (startTime == null) {
-            print('⚠️ FirestoreService: Run ${doc.id} has no startTime field');
+          if (createdAt == null) {
+            print('⚠️ FirestoreService: Run ${doc.id} has no createdAt field');
             continue;
           }
           
           Timestamp? newTimestamp;
           
-          if (startTime is String) {
+          if (createdAt is String) {
             // Parse ISO string
             try {
-              final dateTime = DateTime.parse(startTime);
+              final dateTime = DateTime.parse(createdAt);
               newTimestamp = Timestamp.fromDate(dateTime);
-              print('🔧 FirestoreService: Converting string to timestamp: $startTime -> ${newTimestamp.toDate()}');
+              print('🔧 FirestoreService: Converting string to timestamp: $createdAt -> ${newTimestamp.toDate()}');
             } catch (e) {
               final error = 'Failed to parse string timestamp for run ${doc.id}: $e';
               print('⚠️ FirestoreService: $error');
               errors.add(error);
               continue;
             }
-          } else if (startTime is Timestamp) {
+          } else if (createdAt is Timestamp) {
             // Already a timestamp, but let's ensure it's properly formatted
-            newTimestamp = startTime;
+            newTimestamp = createdAt;
             print('✅ FirestoreService: Run ${doc.id} already has valid Timestamp');
           } else {
-            print('⚠️ FirestoreService: Run ${doc.id} has unknown timestamp type: ${startTime.runtimeType}');
+            print('⚠️ FirestoreService: Run ${doc.id} has unknown timestamp type: ${createdAt.runtimeType}');
             continue;
           }
           
           // Update the document with the proper timestamp
           final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
-          batch.update(docRef, {'startTime': newTimestamp});
+          batch.update(docRef, {'createdAt': newTimestamp});
           updatedCount++;
           
         } catch (e) {
@@ -839,7 +839,7 @@ class FirestoreService {
       final snapshot = await _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
-          .orderBy('startTime', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(limit)
           .get(const GetOptions(source: Source.server));
       
