@@ -259,27 +259,23 @@ class SettingsScreen extends ConsumerWidget {
               context.go('/workouts');
               break;
             case 3: // Run
-              context.go('/run');
+              context.go('/settings');
               break;
           }
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
+            icon: Icon(Icons.history),
             label: 'Workouts',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.directions_run),
-            label: 'Run',
-          ),
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          )
         ],
       ),
     );

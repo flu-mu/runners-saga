@@ -274,7 +274,7 @@ class FirestoreService {
       final querySnapshot = await _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
-          .where('seasonId', isEqualTo: seasonId)
+          .where('episodeId', isEqualTo: seasonId)
           .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();
@@ -298,7 +298,7 @@ class FirestoreService {
       final querySnapshot = await _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
-          .where('missionId', isEqualTo: missionId)
+          .where('episodeId', isEqualTo: missionId)
           .orderBy('createdAt', descending: true)
           .limit(limit)
           .get();

@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProgressMonitorService {
   // Timer and monitoring state
   Timer? _progressTimer;
   bool _isMonitoring = false;
+  bool _isPaused = false; // Add missing paused state
   bool _timersStopped = false; // Flag to prevent timer restart
   bool _globallyStopped = false; // Global flag to prevent any restart
   bool _forceStopped = false; // Additional force stop flag
@@ -28,6 +30,10 @@ class ProgressMonitorService {
   StreamSubscription<Position>? _positionStream;
   Timer? _gpsBackupTimer;
   
+  // App lifecycle tracking
+  bool _isAppInBackground = false;
+  DateTime? _lastGpsUpdate;
+  
   // Targets
   Duration _targetTime = Duration.zero;
   double _targetDistance = 0.0;
@@ -41,6 +47,7 @@ class ProgressMonitorService {
   
   // Getters
   bool get isMonitoring => _isMonitoring;
+  bool get isPaused => _isPaused;
   double get currentDistance => _currentDistance;
   Duration get elapsedTime => _elapsedTime;
   double get currentPace => _currentPace;
@@ -409,6 +416,7 @@ class ProgressMonitorService {
     
     // Update last position
     _lastPosition = position;
+    _lastGpsUpdate = DateTime.now(); // Update last GPS update time
     
     // Notify listeners
     onDistanceUpdate?.call(_currentDistance);
@@ -512,4 +520,104 @@ class ProgressMonitorService {
   void dispose() {
     stop();
   }
+
+  /// Handle app lifecycle changes
+  void onAppLifecycleChanged(bool isInBackground) {
+    if (_isAppInBackground == isInBackground) return;
+    
+    _isAppInBackground = isInBackground;
+    
+    if (isInBackground) {
+      _handleAppBackgrounded();
+    } else {
+      _handleAppForegrounded();
+    }
+    
+    debugPrint('📱 ProgressMonitorService: App ${isInBackground ? 'backgrounded' : 'foregrounded'}');
+  }
+  
+  /// Handle app going to background
+  void _handleAppBackgrounded() {
+    debugPrint('📱 ProgressMonitorService: App backgrounded, ensuring GPS continues...');
+    
+    // Ensure GPS tracking continues in background
+    if (_isMonitoring && !_isPaused) {
+      _ensureGpsTrackingActive();
+      _persistCurrentState();
+    }
+  }
+  
+  /// Handle app coming to foreground
+  void _handleAppForegrounded() {
+    debugPrint('📱 ProgressMonitorService: App foregrounded, checking GPS continuity...');
+    
+    // Check if GPS tracking continued while in background
+    _validateGpsContinuity();
+    
+    // Restore real-time updates
+    if (_isMonitoring && !_isPaused) {
+      _startLocationTracking();
+    }
+  }
+  
+  /// Ensure GPS tracking is active in background
+  void _ensureGpsTrackingActive() {
+    if (_positionStream?.isPaused == true) {
+      _positionStream?.resume();
+      debugPrint('📍 ProgressMonitorService: GPS stream resumed for background');
+    }
+    
+    // Ensure backup timer is running
+    if (_gpsBackupTimer?.isActive != true) {
+      _startGpsBackupTimer();
+    }
+  }
+  
+  /// Validate GPS continuity after app returns from background
+  void _validateGpsContinuity() {
+    if (_lastGpsUpdate == null) return;
+    
+    final timeSinceLastUpdate = DateTime.now().difference(_lastGpsUpdate!);
+    if (timeSinceLastUpdate > const Duration(minutes: 2)) {
+      debugPrint('⚠️ ProgressMonitorService: GPS update gap detected: $timeSinceLastUpdate');
+      
+      // Try to get a fresh position immediately
+      _getImmediatePosition();
+    }
+  }
+  
+  /// Get immediate position to fill any gaps
+  void _getImmediatePosition() {
+    Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 10),
+    ).then((position) {
+      _onPositionUpdate(position);
+      debugPrint('📍 ProgressMonitorService: Immediate position captured after background gap');
+    }).catchError((e) {
+      debugPrint('❌ ProgressMonitorService: Failed to get immediate position: $e');
+    });
+  }
+  
+  /// Persist current state to SharedPreferences
+  Future<void> _persistCurrentState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      await prefs.setString(_monitoringStateKey, _isMonitoring.toString());
+      if (_startTime != null) {
+        await prefs.setString(_startTimeKey, _startTime!.toIso8601String());
+      }
+      
+      debugPrint('💾 ProgressMonitorService: Monitoring state persisted');
+    } catch (e) {
+      debugPrint('❌ ProgressMonitorService: Failed to persist monitoring state: $e');
+    }
+  }
+
+  // Background GPS persistence
+  static const String _routeKey = 'gps_route';
+  static const String _lastPositionKey = 'last_position';
+  static const String _monitoringStateKey = 'monitoring_state';
+  static const String _startTimeKey = 'monitor_start_time';
 }

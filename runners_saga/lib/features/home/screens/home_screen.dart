@@ -42,89 +42,91 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     // App logo, title, and settings/login status
                     Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // App logo placeholder
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: kElectricAqua,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: kElectricAqua.withOpacity(0.3),
-                                  blurRadius: 20,
-                                  spreadRadius: 5,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.directions_run,
-                              size: 40,
-                              color: kMidnightNavy,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'THE RUNNER\'S SAGA',
-                            style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 2.0,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Embark on an epic journey through time and space',
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: kTextHigh,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          // User status indicator
-                          InkWell(
-                            onTap: () {
-                              if (authState != AuthState.authenticated) {
-                                context.push('/login');
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(999),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // App logo placeholder
+                            Container(
+                              width: 80,
+                              height: 80,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(color: kElectricAqua.withOpacity(0.5)),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    authState == AuthState.authenticated ? Icons.verified_user : Icons.person_outline,
-                                    size: 18,
-                                    color: authState == AuthState.authenticated ? kMeadowGreen : kElectricAqua,
-                                  ),
-                                  const SizedBox(width: 8),
-                    Text(
-                                    authState == AuthState.authenticated
-                                        ? (user?.email ?? 'Signed in')
-                                        : 'Not signed in',
-                                    style: const TextStyle(
-                                      color: kTextHigh, 
-                                      fontSize: 14, 
-                                      fontWeight: FontWeight.w500,
-                                      decoration: TextDecoration.underline,
-                                    ),
+                                color: kElectricAqua,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: kElectricAqua.withOpacity(0.3),
+                                    blurRadius: 20,
+                                    spreadRadius: 5,
                                   ),
                                 ],
                               ),
+                              child: Icon(
+                                Icons.directions_run,
+                                size: 40,
+                                color: kMidnightNavy,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 20),
+                            Text(
+                              'THE RUNNER\'S SAGA',
+                              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 2.0,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Embark on an epic journey through time and space',
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: kTextHigh,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            // User status indicator
+                            InkWell(
+                              onTap: () {
+                                if (authState != AuthState.authenticated) {
+                                  context.push('/login');
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(999),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(color: kElectricAqua.withOpacity(0.5)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      authState == AuthState.authenticated ? Icons.verified_user : Icons.person_outline,
+                                      size: 18,
+                                      color: authState == AuthState.authenticated ? kMeadowGreen : kElectricAqua,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      authState == AuthState.authenticated
+                                          ? (user?.email ?? 'Signed in')
+                                          : 'Not signed in',
+                                      style: const TextStyle(
+                                        color: kTextHigh, 
+                                        fontSize: 14, 
+                                        fontWeight: FontWeight.w500,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

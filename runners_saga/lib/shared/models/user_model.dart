@@ -19,7 +19,7 @@ class UserModel with _$UserModel {
     @Default([]) List<String> completedSeasons,
     @Default([]) List<String> achievements,
     @Default({}) Map<String, dynamic> preferences,
-    @Default('S01E01') String lastEpisode,
+    @Default('X01Y01') String lastEpisode,
     @JsonKey(fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
     required DateTime createdAt,
     @JsonKey(fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)

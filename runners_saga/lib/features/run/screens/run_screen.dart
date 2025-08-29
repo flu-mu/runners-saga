@@ -1313,9 +1313,9 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
         // Create run summary data
         final summaryData = RunSummaryData(
           totalTime: _elapsedTime,
-          totalDistance: distance,
-          averagePace: _elapsedTime.inSeconds > 0 && distance > 0 ? (_elapsedTime.inSeconds / 60) / distance : 0.0,
-          caloriesBurned: _calculateCalories(distance, _elapsedTime),
+          totalDistance: _totalDistance,
+          averagePace: _currentPace > 0 ? _currentPace : 0.0,
+          caloriesBurned: _calculateCalories(_totalDistance, _elapsedTime),
           episode: EpisodeModel(
             id: 'S01E01',
             title: 'First Contact',
@@ -1330,10 +1330,10 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
             targetTime: 15 * 60 * 1000, // 15 minutes in milliseconds
             audioFiles: [],
           ),
-          achievements: _generateAchievements(distance, _elapsedTime),
+          achievements: _generateAchievements(_totalDistance, _elapsedTime),
           route: gpsPoints.map((point) => LocationPoint(
-            latitude: point['latitude'],
-            longitude: point['longitude'],
+            latitude: point['latitude']?.toDouble() ?? 0.0,
+            longitude: point['longitude']?.toDouble() ?? 0.0,
             accuracy: point['accuracy']?.toDouble() ?? 0.0,
             altitude: point['altitude']?.toDouble() ?? 0.0,
             speed: point['speed']?.toDouble() ?? 0.0,
@@ -1341,8 +1341,8 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
             heading: point['heading']?.toDouble() ?? 0.0,
             elapsedTimeFormatted: point['elapsedTimeFormatted'] ?? '0:00',
           )).toList(),
-          startTime: now.subtract(Duration(seconds: _elapsedTime.inSeconds)),
-          endTime: now,
+          createdAt: now.subtract(Duration(seconds: _elapsedTime.inSeconds)),
+          completedAt: now,
         );
         
         // Set the summary data in the provider
