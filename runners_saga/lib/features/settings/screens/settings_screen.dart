@@ -20,6 +20,17 @@ class SettingsScreen extends ConsumerWidget {
         foregroundColor: Colors.white,
         title: const Text('Settings', style: TextStyle(color: Colors.white)),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.white),
+            onPressed: () => context.go('/'),
+            tooltip: 'Go Home',
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -228,6 +239,46 @@ class SettingsScreen extends ConsumerWidget {
             ),
               ],
             ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: kMidnightNavy,
+        selectedItemColor: kElectricAqua,
+        unselectedItemColor: Colors.white70,
+        currentIndex: 0, // Settings is selected
+        onTap: (index) {
+          switch (index) {
+            case 0: // Settings (current)
+              break;
+            case 1: // Home
+              context.go('/');
+              break;
+            case 2: // Workouts
+              context.go('/workouts');
+              break;
+            case 3: // Run
+              context.go('/run');
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: 'Workouts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.directions_run),
+            label: 'Run',
           ),
         ],
       ),
