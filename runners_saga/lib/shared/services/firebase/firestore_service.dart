@@ -572,15 +572,18 @@ class FirestoreService {
     try {
       print('🧹 FirestoreService: Clearing cache...');
       
-      // Clear Firestore cache
-      await _firestoreInstance.clearPersistence();
+      // Try to clear Firestore cache (may fail if indexes are missing)
+      try {
+        await _firestoreInstance.clearPersistence();
+        print('🧹 FirestoreService: Persistence cleared');
+      } catch (e) {
+        print('⚠️ FirestoreService: Could not clear persistence (indexes may be missing): $e');
+        // Continue with other cache clearing methods
+      }
       
       // Force a fresh connection
       await _firestoreInstance.enableNetwork();
-      
-      // Also clear any in-memory cache
-      await _firestoreInstance.disableNetwork();
-      await _firestoreInstance.enableNetwork();
+      print('🧹 FirestoreService: Network re-enabled');
       
       print('✅ FirestoreService: Cache cleared successfully');
     } catch (e) {
@@ -632,7 +635,7 @@ class FirestoreService {
   }
   
   /// Fix timestamp format for existing runs (migration helper)
-  Future<void> fixTimestampFormats() async {
+  Future<Map<String, dynamic>> fixTimestampFormats() async {
     try {
       print('🔧 FirestoreService: Starting timestamp format fix...');
       
@@ -648,37 +651,77 @@ class FirestoreService {
           .get();
       
       int fixedCount = 0;
+      int totalRuns = snapshot.docs.length;
+      int stringTimestamps = 0;
+      int validTimestamps = 0;
       final batch = _firestoreInstance.batch();
+      final errors = <String>[];
+      
+      print('🔧 FirestoreService: Found $totalRuns total runs to check');
       
       for (final doc in snapshot.docs) {
         final data = doc.data();
         final startTime = data['startTime'];
         
-        // Check if startTime is a string (needs fixing)
-        if (startTime is String && startTime.contains('T')) {
-          try {
-            // Parse the ISO string and convert to Timestamp
-            final dateTime = DateTime.parse(startTime);
-            final timestamp = Timestamp.fromDate(dateTime);
-            
-            // Update the document
-            final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
-            batch.update(docRef, {'startTime': timestamp});
-            fixedCount++;
-            
-            print('🔧 FirestoreService: Fixed timestamp for run ${doc.id}: $startTime -> ${timestamp.toDate()}');
-          } catch (e) {
-            print('⚠️ FirestoreService: Failed to fix timestamp for run ${doc.id}: $e');
+        if (startTime == null) {
+          print('⚠️ FirestoreService: Run ${doc.id} has no startTime field');
+          continue;
+        }
+        
+        if (startTime is String) {
+          stringTimestamps++;
+          if (startTime.contains('T')) {
+            try {
+              // Parse the ISO string and convert to Timestamp
+              final dateTime = DateTime.parse(startTime);
+              final timestamp = Timestamp.fromDate(dateTime);
+              
+              // Update the document
+              final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
+              batch.update(docRef, {'startTime': timestamp});
+              fixedCount++;
+              
+              print('🔧 FirestoreService: Fixed timestamp for run ${doc.id}: $startTime -> ${timestamp.toDate()}');
+            } catch (e) {
+              final error = 'Failed to fix timestamp for run ${doc.id}: $e';
+              print('⚠️ FirestoreService: $error');
+              errors.add(error);
+            }
+          } else {
+            print('🔍 FirestoreService: Run ${doc.id} has non-ISO string timestamp: $startTime');
           }
+        } else if (startTime is Timestamp) {
+          validTimestamps++;
+          print('✅ FirestoreService: Run ${doc.id} already has valid Timestamp');
+        } else {
+          print('⚠️ FirestoreService: Run ${doc.id} has unknown timestamp type: ${startTime.runtimeType}');
         }
       }
       
+      print('🔧 FirestoreService: Summary - Total: $totalRuns, String: $stringTimestamps, Valid: $validTimestamps, Fixed: $fixedCount');
+      
       if (fixedCount > 0) {
         await batch.commit();
-        print('✅ FirestoreService: Fixed $fixedCount timestamp formats');
+        print('✅ FirestoreService: Successfully fixed $fixedCount timestamp formats');
+        
+        // Force a cache refresh to ensure the fixed data is loaded
+        try {
+          await _firestoreInstance.enableNetwork();
+          print('🔄 FirestoreService: Network refreshed after timestamp fix');
+        } catch (e) {
+          print('⚠️ FirestoreService: Could not refresh network: $e');
+        }
       } else {
         print('✅ FirestoreService: No timestamp formats need fixing');
       }
+      
+      return {
+        'totalRuns': totalRuns,
+        'stringTimestamps': stringTimestamps,
+        'validTimestamps': validTimestamps,
+        'fixedCount': fixedCount,
+        'errors': errors,
+      };
     } catch (e) {
       print('❌ FirestoreService: Error fixing timestamp formats: $e');
       throw Exception('Failed to fix timestamp formats: $e');

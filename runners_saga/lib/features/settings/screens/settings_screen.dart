@@ -134,14 +134,27 @@ class SettingsScreen extends ConsumerWidget {
                 onPressed: () async {
                   try {
                     final firestoreService = FirestoreService();
-                    await firestoreService.fixTimestampFormats();
+                    final result = await firestoreService.fixTimestampFormats();
                     
                     if (context.mounted) {
+                      final fixedCount = result['fixedCount'] as int;
+                      final totalRuns = result['totalRuns'] as int;
+                      final stringTimestamps = result['stringTimestamps'] as int;
+                      
+                      String message;
+                      if (fixedCount > 0) {
+                        message = 'Fixed $fixedCount timestamp formats! Your workouts should now display correctly.';
+                      } else if (stringTimestamps > 0) {
+                        message = 'Found $stringTimestamps runs with string dates, but they may not be ISO format. Check console for details.';
+                      } else {
+                        message = 'All $totalRuns runs already have valid timestamps!';
+                      }
+                      
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Timestamp formats fixed! Run data should now display correctly.'),
-                          backgroundColor: Colors.green,
-                          duration: Duration(seconds: 3),
+                        SnackBar(
+                          content: Text(message),
+                          backgroundColor: fixedCount > 0 ? Colors.green : Colors.blue,
+                          duration: Duration(seconds: 4),
                         ),
                       );
                     }
