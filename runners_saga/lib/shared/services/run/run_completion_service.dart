@@ -217,9 +217,9 @@ class RunCompletionService {
     final achievements = <String>[];
     
     // Distance achievements
-    if (run.totalDistance >= 5.0) achievements.add('5K Runner');
-    if (run.totalDistance >= 10.0) achievements.add('10K Warrior');
-    if (run.totalDistance >= 21.1) achievements.add('Half Marathon Hero');
+    if ((run.totalDistance ?? 0) >= 5.0) achievements.add('5K Runner');
+    if ((run.totalDistance ?? 0) >= 10.0) achievements.add('10K Warrior');
+    if ((run.totalDistance ?? 0) >= 21.1) achievements.add('Half Marathon Hero');
     
     // Time achievements
     if (run.totalTime.inMinutes <= 20) achievements.add('Speed Demon');
@@ -236,8 +236,8 @@ class RunCompletionService {
     achievements.add('First Run');
     
     // Personal best achievements (could be enhanced with user history)
-    if (run.totalDistance >= 3.0) achievements.add('Distance Milestone');
-    if (run.totalTime.inMinutes >= 15) achievements.add('Endurance Runner');
+    if ((run.totalDistance ?? 0) >= 3.0) achievements.add('Distance Milestone');
+    if ((run.totalTime ?? Duration.zero).inMinutes >= 15) achievements.add('Endurance Runner');
     
     return achievements;
   }

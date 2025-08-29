@@ -21,12 +21,12 @@ final runStatsProvider = Provider<RunStats>((ref) {
   if (currentRun == null) return RunStats.initial();
   
   return RunStats(
-    distance: currentRun.totalDistance,
-    elapsedTime: currentRun.totalTime,
-    averagePace: currentRun.averagePace,
+    distance: currentRun.totalDistance ?? 0.0,
+    elapsedTime: currentRun.totalTime ?? Duration.zero,
+    averagePace: currentRun.averagePace ?? 0.0,
     currentPace: _calculateCurrentPaceFromRoute(currentRun.route ?? []),
-    maxPace: currentRun.maxPace,
-    minPace: currentRun.minPace,
+    maxPace: currentRun.maxPace ?? 0.0,
+    minPace: currentRun.minPace ?? 0.0,
     progress: 0.0, // Default progress
     playedScenes: [], // No scenes for this provider
     currentScene: null, // No current scene

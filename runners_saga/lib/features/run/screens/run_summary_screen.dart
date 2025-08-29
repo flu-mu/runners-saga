@@ -64,9 +64,9 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
         _caloriesBurned = _calculateCalories(_totalDistance, _totalTime);
       } else if (run != null) {
         print('📊 RunSummaryScreen: Using current run data');
-        _totalTime = run.totalTime;
-        _totalDistance = run.totalDistance;
-        _averagePace = run.averagePace;
+        _totalTime = run.totalTime ?? Duration.zero;
+        _totalDistance = run.totalDistance ?? 0.0;
+        _averagePace = run.averagePace ?? 0.0;
         _caloriesBurned = _calculateCalories(_totalDistance, _totalTime);
       } else {
         print('📊 RunSummaryScreen: Using default fallback data');
