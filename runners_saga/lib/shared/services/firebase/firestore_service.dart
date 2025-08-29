@@ -571,10 +571,20 @@ class FirestoreService {
               for (final doc in snapshot.docs) {
                 try {
                   final runData = _convertDocData(doc);
+                  
+                  // Debug: Print the data structure to see what fields are missing/null
+                  print('🔍 FirestoreService: Document ${doc.id} data keys: ${runData.keys.toList()}');
+                  print('🔍 FirestoreService: Document ${doc.id} totalDistance: ${runData['totalDistance']} (type: ${runData['totalDistance']?.runtimeType})');
+                  print('🔍 FirestoreService: Document ${doc.id} totalTime: ${runData['totalTime']} (type: ${runData['totalTime']?.runtimeType})');
+                  print('🔍 FirestoreService: Document ${doc.id} averagePace: ${runData['averagePace']} (type: ${runData['averagePace']?.runtimeType})');
+                  print('🔍 FirestoreService: Document ${doc.id} maxPace: ${runData['maxPace']} (type: ${runData['maxPace']?.runtimeType})');
+                  print('🔍 FirestoreService: Document ${doc.id} minPace: ${runData['minPace']} (type: ${runData['minPace']?.runtimeType})');
+                  
                   final run = RunModel.fromJson(runData);
                   validRuns.add(run);
                 } catch (e) {
                   print('⚠️ FirestoreService: Skipping invalid completed run document ${doc.id}: $e');
+                  print('⚠️ FirestoreService: Document ${doc.id} raw data: ${doc.data()}');
                   // Continue processing other documents instead of failing completely
                   continue;
                 }
@@ -609,10 +619,20 @@ class FirestoreService {
               for (final doc in snapshot.docs) {
                 try {
                   final runData = _convertDocData(doc);
+                  
+                  // Debug: Print the data structure to see what fields are missing/null
+                  print('🔍 FirestoreService: Document ${doc.id} data keys: ${runData.keys.toList()}');
+                  print('🔍 FirestoreService: Document ${doc.id} totalDistance: ${runData['totalDistance']} (type: ${runData['totalDistance']?.runtimeType})');
+                  print('🔍 FirestoreService: Document ${doc.id} totalTime: ${runData['totalTime']} (type: ${runData['totalTime']?.runtimeType})');
+                  print('🔍 FirestoreService: Document ${doc.id} averagePace: ${runData['averagePace']} (type: ${runData['averagePace']?.runtimeType})');
+                  print('🔍 FirestoreService: Document ${doc.id} maxPace: ${runData['maxPace']} (type: ${runData['maxPace']?.runtimeType})');
+                  print('🔍 FirestoreService: Document ${doc.id} minPace: ${runData['minPace']} (type: ${runData['minPace']?.runtimeType})');
+                  
                   final run = RunModel.fromJson(runData);
                   validRuns.add(run);
                 } catch (e) {
                   print('⚠️ FirestoreService: Skipping invalid completed run document ${doc.id}: $e');
+                  print('⚠️ FirestoreService: Document ${doc.id} raw data: ${doc.data()}');
                   // Continue processing other documents instead of failing completely
                   continue;
                 }
