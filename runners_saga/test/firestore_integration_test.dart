@@ -17,7 +17,7 @@ void main() {
       
       final testRun = RunModel(
         userId: 'test_user_123',
-        startTime: DateTime.now(),
+        createdAt: DateTime.now(),
         route: [
           LocationPoint(
             latitude: 37.7749,
@@ -35,8 +35,7 @@ void main() {
         averagePace: 0.0,
         maxPace: 0.0,
         minPace: 0.0,
-        seasonId: 'fantasy_quest',
-        missionId: 'S01E01',
+        episodeId: 'S01E01',
         status: RunStatus.inProgress,
         runTarget: RunTarget(
           id: 'test_target',
@@ -52,8 +51,7 @@ void main() {
       // Verify the run model can be converted to JSON
       final runJson = testRun.toJson();
       expect(runJson['userId'], equals('test_user_123'));
-      expect(runJson['seasonId'], equals('fantasy_quest'));
-      expect(runJson['missionId'], equals('S01E01'));
+      expect(runJson['episodeId'], equals('S01E01'));
       expect(runJson['status'], equals('inProgress'));
       expect(runJson['route'], isA<List>());
       expect(runJson['route'].length, equals(1));
@@ -62,8 +60,8 @@ void main() {
     test('should handle run completion data correctly', () async {
       final completedRun = RunModel(
         userId: 'test_user_123',
-        startTime: DateTime.now().subtract(Duration(minutes: 30)),
-        endTime: DateTime.now(),
+        createdAt: DateTime.now().subtract(Duration(minutes: 30)),
+        completedAt: DateTime.now(),
         route: List.generate(10, (index) => LocationPoint(
           latitude: 37.7749 + (index * 0.001),
           longitude: -122.4194 + (index * 0.001),
@@ -79,8 +77,7 @@ void main() {
         averagePace: 12.0,
         maxPace: 15.0,
         minPace: 10.0,
-        seasonId: 'fantasy_quest',
-        missionId: 'S01E01',
+        episodeId: 'S01E01',
         status: RunStatus.completed,
         runTarget: RunTarget(
           id: 'test_target_2',
@@ -95,7 +92,7 @@ void main() {
       
       // Verify completion data
       expect(completedRun.status, equals(RunStatus.completed));
-      expect(completedRun.endTime, isNotNull);
+      expect(completedRun.completedAt, isNotNull);
       expect(completedRun.route?.length, equals(10));
       expect(completedRun.totalDistance, equals(2.5));
       expect(completedRun.totalTime?.inMinutes, equals(30));

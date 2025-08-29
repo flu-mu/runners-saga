@@ -322,20 +322,14 @@ class RunSessionManager {
       final converted = route.map((e) {
         // e can be geolocator Position or our LocationPoint
         if (e is LocationPoint) return e;
-        // Calculate elapsed seconds from timestamp
-        final elapsedSeconds = e.timestamp != null 
-            ? DateTime.now().difference(e.timestamp as DateTime).inSeconds
-            : 0;
-            
         return LocationPoint(
           latitude: e.latitude as double,
           longitude: e.longitude as double,
           accuracy: (e.accuracy as num).toDouble(),
           altitude: (e.altitude as num).toDouble(),
           speed: (e.speed as num).toDouble(),
-          elapsedSeconds: elapsedSeconds,
+          elapsedSeconds: 0, // Will be calculated when saving
           heading: (e.heading as num?)?.toDouble(),
-          elapsedTimeFormatted: '${(elapsedSeconds ~/ 60)}:${(elapsedSeconds % 60).toString().padLeft(2, '0')}',
         );
       }).toList();
       onRouteUpdated?.call(converted);
@@ -515,33 +509,25 @@ class RunSessionManager {
     
     return RunModel(
       userId: currentUserId,
-      startTime: _sessionStartTime!,
-      endTime: DateTime.now(),
+      createdAt: _sessionStartTime!,
+      completedAt: DateTime.now(),
       route: route
-          .map((pos) {
-            // Convert Position to LocationPoint
-            final elapsedSeconds = pos.timestamp != null 
-                ? DateTime.now().difference(pos.timestamp).inSeconds
-                : 0;
-            return LocationPoint(
-              latitude: pos.latitude,
-              longitude: pos.longitude,
-              accuracy: pos.accuracy,
-              altitude: pos.altitude,
-              speed: pos.speed,
-              elapsedSeconds: elapsedSeconds,
-              heading: pos.heading,
-              elapsedTimeFormatted: '${(elapsedSeconds ~/ 60)}:${(elapsedSeconds % 60).toString().padLeft(2, '0')}',
-            );
-          })
+          .map((pos) => LocationPoint(
+                latitude: pos.latitude,
+                longitude: pos.longitude,
+                accuracy: pos.accuracy,
+                altitude: pos.altitude,
+                speed: pos.speed,
+                elapsedSeconds: 0, // Will be calculated when saving
+                heading: pos.heading,
+              ))
           .toList(),
       totalDistance: stats['distance'] as double,
       totalTime: stats['elapsedTime'] as Duration,
       averagePace: stats['averagePace'] as double,
       maxPace: stats['maxPace'] as double,
       minPace: stats['minPace'] as double,
-      seasonId: _currentEpisode?.seasonId ?? '',
-      missionId: _currentEpisode?.id ?? '',
+      episodeId: _currentEpisode?.id ?? '',
       status: RunStatus.completed,
       runTarget: RunTarget(
         id: 'episode_${_currentEpisode?.id ?? "unknown"}',
@@ -581,16 +567,25 @@ class RunSessionManager {
     
     return RunModel(
       userId: currentUserId,
-      startTime: _sessionStartTime!,
-      endTime: DateTime.now(),
-      route: route, // Already a List<LocationPoint>, no conversion needed
+      createdAt: _sessionStartTime!,
+      completedAt: DateTime.now(),
+      route: route
+          .map((pos) => LocationPoint(
+                latitude: pos.latitude,
+                longitude: pos.longitude,
+                accuracy: pos.accuracy,
+                altitude: pos.altitude,
+                speed: pos.speed,
+                elapsedSeconds: 0, // Will be calculated when saving
+                heading: pos.heading,
+              ))
+          .toList(),
       totalDistance: stats['distance'] as double,
       totalTime: stats['elapsedTime'] as Duration,
       averagePace: stats['averagePace'] as double,
       maxPace: stats['maxPace'] as double,
       minPace: stats['minPace'] as double,
-      seasonId: _currentEpisode?.seasonId ?? '',
-      missionId: _currentEpisode?.id ?? '',
+      episodeId: _currentEpisode?.id ?? '',
       status: RunStatus.completed,
       runTarget: RunTarget(
         id: 'episode_${_currentEpisode?.id ?? "unknown"}',
@@ -633,22 +628,15 @@ class RunSessionManager {
     print('🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has ${route.length} points');
     print('🔍 RunSessionManager: _isSessionActive: $_isSessionActive, _isPaused: $_isPaused');
     return route
-        .map((pos) {
-          // Convert Position to LocationPoint
-          final elapsedSeconds = pos.timestamp != null 
-              ? DateTime.now().difference(pos.timestamp).inSeconds
-              : 0;
-          return LocationPoint(
-            latitude: pos.latitude,
-            longitude: pos.longitude,
-            accuracy: pos.accuracy,
-            altitude: pos.altitude,
-            speed: pos.speed,
-            elapsedSeconds: elapsedSeconds,
-            heading: pos.heading,
-            elapsedTimeFormatted: '${(elapsedSeconds ~/ 60)}:${(elapsedSeconds % 60).toString().padLeft(2, '0')}',
-          );
-        })
+        .map((pos) => LocationPoint(
+              latitude: pos.latitude,
+              longitude: pos.longitude,
+              accuracy: pos.accuracy,
+              altitude: pos.altitude,
+              speed: pos.speed,
+              elapsedSeconds: 0, // Will be calculated when saving
+              heading: pos.heading,
+            ))
         .toList();
   }
 

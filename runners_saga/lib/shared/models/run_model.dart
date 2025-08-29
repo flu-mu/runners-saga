@@ -14,25 +14,39 @@ class RunModel with _$RunModel {
     String? id,
     required String userId,
     @JsonKey(fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
-    required DateTime startTime,
+    required DateTime createdAt,
     @JsonKey(name: 'completedAt', fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
-    DateTime? endTime,
+    DateTime? completedAt,
     @JsonKey(name: 'gpsPoints') // Map to the actual Firestore field name
     List<LocationPoint>? route, // Make optional since not every run has GPS
+    @JsonKey(name: 'distance') // Map to the actual Firestore field name
     double? totalDistance, // in kilometers - can be null for incomplete runs
+    @JsonKey(name: 'duration', fromJson: _intToDuration, toJson: _durationToInt) // Map to the actual Firestore field name
     Duration? totalTime, // can be null for incomplete runs
     double? averagePace, // minutes per kilometer - can be null for incomplete runs
     double? maxPace, // fastest pace achieved - can be null for incomplete runs
     double? minPace, // slowest pace achieved - can be null for incomplete runs
-    required String seasonId,
-    required String missionId,
-    required RunStatus status,
-    required RunTarget runTarget, // user's selected time or distance target
+    @JsonKey(name: 'episodeId') // Map to the actual Firestore field name
+    String? episodeId, // Make optional since it might not exist in old data
+    @JsonKey(name: 'status', fromJson: _stringToRunStatus, toJson: _runStatusToString)
+    RunStatus? status, // Make optional since it might not exist in old data
+    RunTarget? runTarget, // Make optional since it might not exist in old data
     Map<String, dynamic>? metadata, // for additional data like calories, elevation, etc.
   }) = _RunModel;
 
   factory RunModel.fromJson(Map<String, dynamic> json) => _$RunModelFromJson(json);
 }
+
+// Extension to provide startTime/endTime as aliases for createdAt/completedAt
+// These are used throughout the codebase but map to the actual Firebase fields
+extension RunModelAliases on RunModel {
+  /// Maps to createdAt for backward compatibility
+  DateTime get startTime => createdAt;
+  
+  /// Maps to completedAt for backward compatibility
+  DateTime? get endTime => completedAt;
+}
+
 
 @freezed
 class LocationPoint with _$LocationPoint {
@@ -118,31 +132,92 @@ Timestamp _dateTimeToTimestamp(DateTime? dateTime) {
   return Timestamp.fromDate(dateTime);
 }
 
+// Helper methods for Duration conversion
+Duration? _intToDuration(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return Duration(seconds: value);
+  if (value is String) {
+    try {
+      return Duration(seconds: int.parse(value));
+    } catch (e) {
+      print('⚠️ RunModel: Failed to parse duration string: $value');
+      return null;
+    }
+  }
+  print('⚠️ RunModel: Unknown duration type: ${value.runtimeType}');
+  return null;
+}
+
+int? _durationToInt(Duration? duration) {
+  if (duration == null) return null;
+  return duration.inSeconds;
+}
+
+// Helper methods for RunStatus conversion
+RunStatus? _stringToRunStatus(dynamic value) {
+  if (value == null) return null;
+  if (value is String) {
+    switch (value.toLowerCase()) {
+      case 'notstarted':
+        return RunStatus.notStarted;
+      case 'inprogress':
+        return RunStatus.inProgress;
+      case 'paused':
+        return RunStatus.paused;
+      case 'completed':
+        return RunStatus.completed;
+      case 'cancelled':
+        return RunStatus.cancelled;
+      default:
+        print('⚠️ RunModel: Unknown RunStatus string: $value');
+        return RunStatus.notStarted;
+    }
+  }
+  print('⚠️ RunModel: Unknown RunStatus type: ${value.runtimeType}');
+  return RunStatus.notStarted;
+}
+
+String _runStatusToString(RunStatus? status) {
+  if (status == null) return 'notstarted';
+  switch (status) {
+    case RunStatus.notStarted:
+      return 'notstarted';
+    case RunStatus.inProgress:
+      return 'inprogress';
+    case RunStatus.paused:
+      return 'paused';
+    case RunStatus.completed:
+      return 'completed';
+    case RunStatus.cancelled:
+      return 'cancelled';
+  }
+}
+
 // Extension to add Firestore serialization method
 extension RunModelFirestore on RunModel {
   Map<String, dynamic> toFirestore() {
     print('🔧 RunModel.toFirestore() called');
     final json = toJson();
-    print('🔧 RunModel.toFirestore() - startTime type: ${json['startTime']?.runtimeType}');
-    print('🔧 RunModel.toFirestore() - startTime value: ${json['startTime']}');
+    print('🔧 RunModel.toFirestore() - createdAt type: ${json['createdAt']?.runtimeType}');
+    print('🔧 RunModel.toFirestore() - createdAt value: ${json['createdAt']}');
     
     // Explicitly convert dates to Timestamps for Firestore
-    if (json['startTime'] is DateTime) {
-      final timestamp = Timestamp.fromDate(json['startTime'] as DateTime);
-      json['startTime'] = timestamp;
-      print('🔧 RunModel.toFirestore() - Converted startTime to Timestamp: $timestamp');
+    if (json['createdAt'] is DateTime) {
+      final timestamp = Timestamp.fromDate(json['createdAt'] as DateTime);
+      json['createdAt'] = timestamp;
+      print('🔧 RunModel.toFirestore() - Converted createdAt to Timestamp: $timestamp');
     } else {
-      print('⚠️ RunModel.toFirestore() - startTime is not DateTime: ${json['startTime']?.runtimeType}');
+      print('⚠️ RunModel.toFirestore() - createdAt is not DateTime: ${json['createdAt']?.runtimeType}');
     }
     
-    // completedAt is the Firestore field for endTime
+    // completedAt is the Firestore field for completedAt
     if (json['completedAt'] is DateTime) {
       final timestamp = Timestamp.fromDate(json['completedAt'] as DateTime);
       json['completedAt'] = timestamp;
       print('🔧 RunModel.toFirestore() - Converted completedAt to Timestamp: $timestamp');
     }
     
-    print('🔧 RunModel.toFirestore() - Final startTime type: ${json['startTime']?.runtimeType}');
+    print('🔧 RunModel.toFirestore() - Final createdAt type: ${json['createdAt']?.runtimeType}');
     return json;
   }
 }

@@ -85,13 +85,11 @@ class FirestoreService {
       final runData = run.toFirestore();
       print('💾 FirestoreService.saveRun: Firestore JSON conversion successful, ${runData.keys.length} keys');
       
-      // Add metadata - createdAt should be the run's start time, not current time
-      // The run.startTime is already converted to Timestamp by toFirestore()
-      runData['createdAt'] = runData['startTime']; // Use the run's actual start time
+      // Add metadata - createdAt is already set by the model
       runData['updatedAt'] = FieldValue.serverTimestamp();
       runData['userId'] = userId; // Ensure userId is included
       
-      print('💾 FirestoreService.saveRun: Timestamps - createdAt: ${runData['createdAt']}, startTime: ${runData['startTime']}');
+      print('💾 FirestoreService.saveRun: Timestamps - createdAt: ${runData['createdAt']}');
       
       // Save to Firestore - using top-level runs collection for easier querying
       print('💾 FirestoreService.saveRun: Saving to main runs collection...');
@@ -144,18 +142,16 @@ class FirestoreService {
         throw Exception('Run must be marked as completed');
       }
       
-      if (completedRun.endTime == null) {
-        throw Exception('Run must have an end time');
+      if (completedRun.completedAt == null) {
+        throw Exception('Run must have a completion time');
       }
       
       final runData = completedRun.toFirestore();
       runData['updatedAt'] = FieldValue.serverTimestamp();
-      // completedAt should be the run's actual end time, not current time
-      // The run.endTime is already converted to Timestamp by toFirestore()
-      runData['completedAt'] = runData['endTime']; // Use the run's actual end time
+      // completedAt is already set by the model
       runData['userId'] = userId;
       
-      print('💾 FirestoreService.completeRun: Timestamps - completedAt: ${runData['completedAt']}, endTime: ${runData['endTime']}');
+      print('💾 FirestoreService.completeRun: Timestamps - completedAt: ${runData['completedAt']}');
       
       // Add completion metadata
               runData['totalPoints'] = completedRun.route?.length ?? 0;
@@ -476,7 +472,7 @@ class FirestoreService {
   }
   
   // Stream of user runs for real-time updates
-  // Note: Requires composite index: userId (ascending) + startTime (descending)
+  // Note: Requires composite index: userId (ascending) + createdAt (descending)
   Stream<List<RunModel>> getUserRunsStream({int limit = 100}) {
     try {
       final userId = currentUserId;
@@ -505,17 +501,23 @@ class FirestoreService {
               }
             }
             
-            // Already sorted by startTime from the query
+            // Already sorted by createdAt from the query
             return validRuns;
           });
     } catch (e) {
+      final userId = currentUserId ?? 'unknown';
       print('❌ FirestoreService: Error in getUserRunsStream: $e');
+      print('🔍 INDEX ERROR DETAILS:');
+      print('   Query: userId == "$userId" ORDER BY createdAt DESC');
+      print('   Required Index: Collection "runs", Fields: userId (Ascending), createdAt (Descending)');
+      print('   Firebase Console URL: https://console.firebase.google.com/project/_/firestore/indexes');
+      print('   Error: $e');
       throw Exception('Failed to get user runs stream: $e');
     }
   }
   
   // Stream of runs with completedAt field (completed runs)
-  // Note: Requires composite index: userId (ascending) + completedAt (ascending) + startTime (descending)
+  // Note: Requires composite index: userId (ascending) + completedAt (ascending) + createdAt (descending)
   Stream<List<RunModel>> getCompletedRunsStream({int limit = 100}) {
     try {
       final userId = currentUserId;
@@ -559,9 +561,9 @@ class FirestoreService {
               
               // Sort by completedAt (most recent first)
               validRuns.sort((a, b) {
-                // Since endTime maps to completedAt in Firestore, we can use it for sorting
-                final aCompletedAt = a.endTime;
-                final bCompletedAt = b.endTime;
+                              // Since completedAt is the actual field, we can use it for sorting
+              final aCompletedAt = a.completedAt;
+              final bCompletedAt = b.completedAt;
                 if (aCompletedAt == null && bCompletedAt == null) return 0;
                 if (aCompletedAt == null) return 1;
                 if (bCompletedAt == null) return -1;
@@ -572,6 +574,11 @@ class FirestoreService {
             });
       } catch (e) {
         print('⚠️ FirestoreService: Could not query by completedAt, falling back to status: $e');
+        print('🔍 INDEX ERROR DETAILS:');
+        print('   Query: userId == "$userId" AND completedAt > null ORDER BY completedAt DESC');
+        print('   Required Index: Collection "runs", Fields: userId (Ascending), completedAt (Descending)');
+        print('   Firebase Console URL: https://console.firebase.google.com/project/_/firestore/indexes');
+        print('   Error: $e');
         
         // Fallback: query by status for backward compatibility
         return _firestoreInstance
@@ -606,13 +613,19 @@ class FirestoreService {
                 }
               }
               
-              // Sort by startTime as fallback
-              validRuns.sort((a, b) => b.startTime.compareTo(a.startTime));
+              // Sort by createdAt as fallback
+              validRuns.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               return validRuns;
             });
       }
     } catch (e) {
+      final userId = currentUserId ?? 'unknown';
       print('❌ FirestoreService: Error in getCompletedRunsStream: $e');
+      print('🔍 INDEX ERROR DETAILS:');
+      print('   Query: userId == "$userId" AND completedAt > null ORDER BY completedAt DESC');
+      print('   Required Index: Collection "runs", Fields: userId (Ascending), completedAt (Descending)');
+      print('   Firebase Console URL: https://console.firebase.google.com/project/_/firestore/indexes');
+      print('   Error: $e');
       throw Exception('Failed to get completed runs stream: $e');
     }
   }
@@ -659,7 +672,7 @@ class FirestoreService {
       final snapshot = await _firestoreInstance
           .collection(_runsCollection)
           .where('userId', isEqualTo: userId)
-          .orderBy('startTime', descending: true)
+          .orderBy('createdAt', descending: true)
           .limit(limit)
           .get(const GetOptions(source: Source.server));
       
@@ -679,7 +692,13 @@ class FirestoreService {
       print('✅ FirestoreService: Force refresh completed - ${validRuns.length} runs loaded');
       return validRuns;
     } catch (e) {
+      final userId = currentUserId ?? 'unknown';
       print('❌ FirestoreService: Error in force refresh: $e');
+      print('🔍 INDEX ERROR DETAILS:');
+      print('   Query: userId == "$userId" ORDER BY createdAt DESC');
+      print('   Required Index: Collection "runs", Fields: userId (Ascending), createdAt (Descending)');
+      print('   Firebase Console URL: https://console.firebase.google.com/project/_/firestore/indexes');
+      print('   Error: $e');
       throw Exception('Failed to force refresh runs: $e');
     }
   }
@@ -934,6 +953,72 @@ class FirestoreService {
     } catch (e) {
       print('❌ FirestoreService: Error force updating timestamps: $e');
       throw Exception('Failed to force update timestamps: $e');
+    }
+  }
+
+  /// Test all required indexes and show detailed error information
+  Future<void> testIndexes() async {
+    try {
+      print('🔍 FirestoreService: Testing all required indexes...');
+      final userId = currentUserId;
+      if (userId == null) {
+        print('❌ Cannot test indexes: User not authenticated');
+        return;
+      }
+      
+      print('🔍 Testing Index 1: userId + createdAt (for getUserRunsStream)');
+      try {
+        await _firestoreInstance
+            .collection(_runsCollection)
+            .where('userId', isEqualTo: userId)
+            .orderBy('createdAt', descending: true)
+            .limit(1)
+            .get(const GetOptions(source: Source.server));
+        print('✅ Index 1 PASSED: userId + createdAt');
+      } catch (e) {
+        print('❌ Index 1 FAILED: userId + createdAt');
+        print('   Required Index: Collection "runs", Fields: userId (Ascending), createdAt (Descending)');
+        print('   Firebase Console URL: https://console.firebase.google.com/project/_/firestore/indexes');
+        print('   Error: $e');
+      }
+      
+      print('🔍 Testing Index 2: userId + completedAt (for getCompletedRunsStream)');
+      try {
+        await _firestoreInstance
+            .collection(_runsCollection)
+            .where('userId', isEqualTo: userId)
+            .where('completedAt', isGreaterThan: null)
+            .orderBy('completedAt', descending: true)
+            .limit(1)
+            .get(const GetOptions(source: Source.server));
+        print('✅ Index 2 PASSED: userId + completedAt');
+      } catch (e) {
+        print('❌ Index 2 FAILED: userId + completedAt');
+        print('   Required Index: Collection "runs", Fields: userId (Ascending), completedAt (Descending)');
+        print('   Firebase Console URL: https://console.firebase.google.com/project/_/firestore/indexes');
+        print('   Error: $e');
+      }
+      
+      print('🔍 Testing Index 3: userId + status + createdAt (fallback for getCompletedRunsStream)');
+      try {
+        await _firestoreInstance
+            .collection(_runsCollection)
+            .where('userId', isEqualTo: userId)
+            .where('status', isEqualTo: 'completed')
+            .orderBy('createdAt', descending: true)
+            .limit(1)
+            .get(const GetOptions(source: Source.server));
+        print('✅ Index 3 PASSED: userId + status + createdAt');
+      } catch (e) {
+        print('❌ Index 3 FAILED: userId + status + createdAt');
+        print('   Required Index: Collection "runs", Fields: userId (Ascending), status (Ascending), createdAt (Descending)');
+        print('   Firebase Console URL: https://console.firebase.google.com/project/_/firestore/indexes');
+        print('   Error: $e');
+      }
+      
+      print('🔍 Index testing completed. Check the errors above to see which indexes need to be created.');
+    } catch (e) {
+      print('❌ Error testing indexes: $e');
     }
   }
 

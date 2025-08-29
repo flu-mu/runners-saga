@@ -10,6 +10,11 @@ class RunHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Test indexes when the screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _testIndexes(ref);
+    });
+    
     final runsAsync = ref.watch(userRunsProvider);
     final statsAsync = ref.watch(userRunStatsProvider);
 
@@ -22,6 +27,20 @@ class RunHistoryScreen extends ConsumerWidget {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report, color: Colors.white),
+            onPressed: () {
+              // Test indexes manually
+              _testIndexes(ref);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Testing indexes... Check console for results'),
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            },
+            tooltip: 'Test Indexes',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
@@ -56,9 +75,39 @@ class RunHistoryScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                error.toString(),
-                style: TextStyle(color: kEmberCoral),
+                'This is likely due to missing Firestore indexes.',
+                style: TextStyle(color: Colors.white70, fontSize: 16),
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.symmetric(horizontal: 32),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Required Indexes:',
+                      style: TextStyle(color: kElectricAqua, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '• Collection: runs\n• Fields: userId (Ascending), createdAt (Descending)',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '• Collection: runs\n• Fields: userId (Ascending), completedAt (Descending)',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
@@ -68,6 +117,18 @@ class RunHistoryScreen extends ConsumerWidget {
                   foregroundColor: kMidnightNavy,
                 ),
                 child: const Text('Retry'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () {
+                  // Copy the Firebase Console URL to clipboard
+                  // You can implement clipboard functionality here
+                  print('Firebase Console URL: https://console.firebase.google.com/project/_/firestore/indexes');
+                },
+                child: Text(
+                  'Open Firebase Console',
+                  style: TextStyle(color: kElectricAqua),
+                ),
               ),
             ],
           ),
@@ -93,6 +154,25 @@ class RunHistoryScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  /// Test all required indexes and show detailed error information
+  void _testIndexes(WidgetRef ref) {
+    try {
+      print('🔍 RunHistoryScreen: Testing all required indexes...');
+      
+      // Get the firestore service
+      final firestoreService = ref.read(firestoreServiceProvider);
+      
+      // Test the indexes asynchronously
+      firestoreService.testIndexes().catchError((e) {
+        print('❌ Error testing indexes: $e');
+      });
+      
+      print('🔍 Index testing initiated. Check console for results.');
+    } catch (e) {
+      print('❌ Error initiating index test: $e');
+    }
   }
 
   Widget _buildRunHistory(BuildContext context, WidgetRef ref, List<RunModel> runs, AsyncValue<Map<String, dynamic>> statsAsync) {
@@ -133,7 +213,7 @@ class RunHistoryScreen extends ConsumerWidget {
     }
 
     // Ensure consistent ordering: most recent first
-    final sortedRuns = [...runs]..sort((a, b) => b.startTime.compareTo(a.startTime));
+    final sortedRuns = [...runs]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Column(
       children: [
@@ -247,8 +327,8 @@ class RunHistoryScreen extends ConsumerWidget {
   }
 
   Widget _buildRunCard(BuildContext context, RunModel run) {
-    final statusColor = _getStatusColor(run.status);
-    final statusIcon = _getStatusIcon(run.status);
+    final statusColor = _getStatusColor(run.status ?? RunStatus.notStarted);
+    final statusIcon = _getStatusIcon(run.status ?? RunStatus.notStarted);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -272,7 +352,7 @@ class RunHistoryScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: Text(
-                '${run.seasonId.replaceAll('_', ' ').toUpperCase()} - ${run.missionId.replaceAll('_', ' ').toUpperCase()}',
+                '${run.episodeId?.replaceAll('_', ' ').toUpperCase() ?? 'EPISODE'}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -287,7 +367,7 @@ class RunHistoryScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                run.status.name.toUpperCase(),
+                (run.status ?? RunStatus.notStarted).name.toUpperCase(),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -312,13 +392,13 @@ class RunHistoryScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Started: ${_formatDateTime(run.startTime)}',
+              'Started: ${_formatDateTime(run.createdAt)}',
               style: TextStyle(fontSize: 12, color: Colors.white70),
             ),
-            // Show completion time if available (endTime maps to completedAt in Firestore)
-            if (run.endTime != null)
+            // Show completion time if available (completedAt maps to completedAt in Firestore)
+            if (run.completedAt != null)
               Text(
-                'Completed: ${_formatDateTime(run.endTime!)}',
+                'Completed: ${_formatDateTime(run.completedAt!)}',
                 style: TextStyle(fontSize: 12, color: Colors.white70),
               ),
           ],
@@ -445,8 +525,8 @@ class RunHistoryScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildDetailCard(
-                        'Mission',
-                        '${run.seasonId.replaceAll('_', ' ').toUpperCase()} - ${run.missionId.replaceAll('_', ' ').toUpperCase()}',
+                        'Episode',
+                        '${run.episodeId?.replaceAll('_', ' ').toUpperCase() ?? 'UNKNOWN'}',
                         Icons.flag,
                       ),
                       const SizedBox(height: 8),
@@ -476,15 +556,15 @@ class RunHistoryScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       _buildDetailCard(
                         'Started',
-                        _formatDateTime(run.startTime),
+                        _formatDateTime(run.createdAt),
                         Icons.play_arrow,
                       ),
-                                  // Show completion time if available (endTime maps to completedAt in Firestore)
-            if (run.endTime != null) ...[
+                                  // Show completion time if available (completedAt maps to completedAt in Firestore)
+            if (run.completedAt != null) ...[
               const SizedBox(height: 8),
               _buildDetailCard(
                 'Completed',
-                _formatDateTime(run.endTime!),
+                _formatDateTime(run.completedAt!),
                 Icons.stop,
               ),
             ],

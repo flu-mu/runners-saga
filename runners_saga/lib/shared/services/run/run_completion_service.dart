@@ -67,35 +67,34 @@ class RunCompletionService {
         caloriesBurned: _calculateCaloriesMet(totalDistance, totalTime, weightKg),
         episode: episode,
         achievements: _generateAchievements(
-          RunModel(
-            userId: 'temp', // This is just for achievements calculation, not saved
-            startTime: startTime,
-            endTime: startTime.add(totalTime),
-            totalDistance: totalDistance,
-            totalTime: totalTime,
-            averagePace: averagePace,
-            maxPace: averagePace, // placeholder; compute if available
-            minPace: averagePace,
-            status: RunStatus.completed,
-            route: route,
-            // Store full episode identifier in seasonId per request (e.g., S01E01)
-            seasonId: episode?.id ?? 'S01E01',
-            missionId: episode?.id ?? 'S01E01',
-            runTarget: RunTarget(
-              id: 'completed_time_${totalTime.inMinutes}',
-              type: RunTargetType.time,
-              value: totalTime.inMinutes.toDouble(),
-              displayName: '${totalTime.inMinutes} minutes',
-              description: 'Completed time target',
-              createdAt: DateTime.now(),
-              isCustom: true,
+                      RunModel(
+              userId: 'temp', // This is just for achievements calculation, not saved
+              createdAt: startTime,
+              completedAt: startTime.add(totalTime),
+              totalDistance: totalDistance,
+              totalTime: totalTime,
+              averagePace: averagePace,
+              maxPace: averagePace, // placeholder; compute if available
+              minPace: averagePace,
+              status: RunStatus.completed,
+              route: route,
+              // Store full episode identifier in episodeId
+              episodeId: episode?.id ?? 'S01E01',
+              runTarget: RunTarget(
+                id: 'completed_time_${totalTime.inMinutes}',
+                type: RunTargetType.time,
+                value: totalTime.inMinutes.toDouble(),
+                displayName: '${totalTime.inMinutes} minutes',
+                description: 'Completed time target',
+                createdAt: DateTime.now(),
+                isCustom: true,
+              ),
             ),
-          ),
           episode,
         ),
         route: route,
-        startTime: startTime,
-        endTime: startTime.add(totalTime),
+        createdAt: startTime,
+        completedAt: startTime.add(totalTime),
       );
       
       // Don't save run to history here - RunSessionManager already creates the run with GPS data
@@ -138,8 +137,8 @@ class RunCompletionService {
         episode: episode,
         achievements: _generateFallbackAchievements(fallbackDistance, fallbackTime, fallbackPace, episode),
         route: [], // Empty route for fallback
-        startTime: now.subtract(fallbackTime),
-        endTime: now,
+        createdAt: now.subtract(fallbackTime),
+        completedAt: now,
       );
       
       print('✅ RunCompletionService: Created fallback summary');
@@ -156,8 +155,8 @@ class RunCompletionService {
         episode: episode,
         achievements: ['First Run', 'Episode Complete'],
         route: [],
-        startTime: DateTime.now().subtract(const Duration(minutes: 15)),
-        endTime: DateTime.now(),
+        createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
+        completedAt: DateTime.now(),
       );
     }
   }
@@ -257,8 +256,8 @@ class RunCompletionService {
       // Create a RunModel from the summary data
       final runModel = RunModel(
         userId: user.uid,
-        startTime: summaryData.startTime,
-        endTime: summaryData.endTime,
+        createdAt: summaryData.createdAt,
+        completedAt: summaryData.completedAt,
         totalDistance: summaryData.totalDistance,
         totalTime: summaryData.totalTime,
         route: summaryData.route,
@@ -266,8 +265,7 @@ class RunCompletionService {
         maxPace: summaryData.averagePace, // Use average as max for now
         minPace: summaryData.averagePace, // Use average as min for now
         status: RunStatus.completed,
-        seasonId: summaryData.episode?.id ?? 'S01E01',
-        missionId: summaryData.episode?.id ?? 'S01E01',
+        episodeId: summaryData.episode?.id ?? 'S01E01',
         runTarget: RunTarget(
           id: 'completed_time_${summaryData.totalTime.inMinutes}',
           type: RunTargetType.time,
@@ -304,8 +302,8 @@ class RunSummaryData {
   final EpisodeModel? episode;
   final List<String> achievements;
   final List<LocationPoint> route; // Route points
-  final DateTime startTime;
-  final DateTime endTime;
+  final DateTime createdAt;
+  final DateTime completedAt;
   
   RunSummaryData({
     required this.totalTime,
@@ -315,8 +313,8 @@ class RunSummaryData {
     this.episode,
     required this.achievements,
     required this.route,
-    required this.startTime,
-    required this.endTime,
+    required this.createdAt,
+    required this.completedAt,
   });
   
   /// Get formatted duration string
