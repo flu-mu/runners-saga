@@ -457,13 +457,13 @@ class RunHistoryScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       _buildDetailCard(
                         'Duration',
-                        _formatDuration(run.totalTime),
+                        _formatDuration(run.totalTime ?? Duration.zero),
                         Icons.timer,
                       ),
                       const SizedBox(height: 8),
                       _buildDetailCard(
                         'Average Pace',
-                        _formatPace(run.averagePace),
+                        _formatPace(run.averagePace ?? 0.0),
                         Icons.speed,
                       ),
                       const SizedBox(height: 8),

@@ -222,12 +222,12 @@ class RunCompletionService {
     if ((run.totalDistance ?? 0) >= 21.1) achievements.add('Half Marathon Hero');
     
     // Time achievements
-    if (run.totalTime.inMinutes <= 20) achievements.add('Speed Demon');
-    if (run.totalTime.inMinutes <= 30) achievements.add('Quick Runner');
+    if ((run.totalTime ?? Duration.zero).inMinutes <= 20) achievements.add('Speed Demon');
+    if ((run.totalTime ?? Duration.zero).inMinutes <= 30) achievements.add('Quick Runner');
     
     // Pace achievements
-    if (run.averagePace <= 5.0) achievements.add('Elite Pace');
-    if (run.averagePace <= 6.0) achievements.add('Fast Runner');
+    if ((run.averagePace ?? 0) <= 5.0) achievements.add('Elite Pace');
+    if ((run.averagePace ?? 0) <= 6.0) achievements.add('Fast Runner');
     
     // Episode completion
     if (episode != null) achievements.add('Episode Complete');
