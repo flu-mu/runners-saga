@@ -218,7 +218,7 @@ class SettingsScreen extends ConsumerWidget {
                     }
                   }
                 },
-                icon: const Icon(Icons.force_update),
+                icon: const Icon(Icons.update),
                 label: const Text('Force Update All Timestamps'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
