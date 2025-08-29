@@ -256,29 +256,42 @@ class FirestoreService {
     }
   }
   
-  // Get runs by status
-  Future<List<RunModel>> getRunsByStatus(RunStatus status, {int limit = 100}) async {
-    try {
-      final userId = currentUserId;
-      if (userId == null) {
-        throw Exception('User not authenticated');
+        // Get runs by status
+      Future<List<RunModel>> getRunsByStatus(RunStatus status, {int limit = 100}) async {
+        try {
+          final userId = currentUserId;
+          if (userId == null) {
+            throw Exception('User not authenticated');
+          }
+          
+          // For completed runs, also check completedAt field
+          Query query = _firestoreInstance
+              .collection(_runsCollection)
+              .where('userId', isEqualTo: userId)
+              .where('status', isEqualTo: status.name);
+          
+          // Order by createdAt for most runs, but for completed runs also consider completedAt
+          if (status == RunStatus.completed) {
+            // Try to order by completedAt first, fallback to createdAt
+            try {
+              query = query.orderBy('completedAt', descending: true);
+            } catch (e) {
+              print('⚠️ FirestoreService: Could not order by completedAt, using createdAt: $e');
+              query = query.orderBy('createdAt', descending: true);
+            }
+          } else {
+            query = query.orderBy('createdAt', descending: true);
+          }
+          
+          final querySnapshot = await query.limit(limit).get();
+          
+          return querySnapshot.docs
+              .map((doc) => RunModel.fromJson(_convertDocData(doc)))
+              .toList();
+        } catch (e) {
+          throw Exception('Failed to get runs by status: $e');
+        }
       }
-      
-      final querySnapshot = await _firestoreInstance
-          .collection(_runsCollection)
-          .where('userId', isEqualTo: userId)
-          .where('status', isEqualTo: status.name)
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
-      
-      return querySnapshot.docs
-          .map((doc) => RunModel.fromJson(_convertDocData(doc)))
-          .toList();
-    } catch (e) {
-      throw Exception('Failed to get runs by status: $e');
-    }
-  }
   
   // Get runs by season
   Future<List<RunModel>> getRunsBySeason(String seasonId, {int limit = 100}) async {
@@ -662,39 +675,72 @@ class FirestoreService {
       for (final doc in snapshot.docs) {
         final data = doc.data();
         final createdAt = data['createdAt'];
+        final completedAt = data['completedAt'];
         
-        if (createdAt == null) {
+        // Fix createdAt field
+        if (createdAt != null) {
+          if (createdAt is String) {
+            stringTimestamps++;
+            if (createdAt.contains('T')) {
+              try {
+                // Parse the ISO string and convert to Timestamp
+                final dateTime = DateTime.parse(createdAt);
+                final timestamp = Timestamp.fromDate(dateTime);
+                
+                // Update the document
+                final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
+                batch.update(docRef, {'createdAt': timestamp});
+                fixedCount++;
+                
+                print('🔧 FirestoreService: Fixed createdAt timestamp for run ${doc.id}: $createdAt -> ${timestamp.toDate()}');
+              } catch (e) {
+                final error = 'Failed to fix createdAt timestamp for run ${doc.id}: $e';
+                print('⚠️ FirestoreService: $error');
+                errors.add(error);
+              }
+            } else {
+              print('🔍 FirestoreService: Run ${doc.id} has non-ISO createdAt string: $createdAt');
+            }
+          } else if (createdAt is Timestamp) {
+            validTimestamps++;
+            print('✅ FirestoreService: Run ${doc.id} already has valid createdAt Timestamp');
+          } else {
+            print('⚠️ FirestoreService: Run ${doc.id} has unknown createdAt type: ${createdAt.runtimeType}');
+          }
+        } else {
           print('⚠️ FirestoreService: Run ${doc.id} has no createdAt field');
-          continue;
         }
         
-        if (createdAt is String) {
-          stringTimestamps++;
-          if (createdAt.contains('T')) {
-            try {
-              // Parse the ISO string and convert to Timestamp
-              final dateTime = DateTime.parse(createdAt);
-              final timestamp = Timestamp.fromDate(dateTime);
-              
-              // Update the document
-              final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
-              batch.update(docRef, {'createdAt': timestamp});
-              fixedCount++;
-              
-              print('🔧 FirestoreService: Fixed timestamp for run ${doc.id}: $createdAt -> ${timestamp.toDate()}');
-            } catch (e) {
-              final error = 'Failed to fix timestamp for run ${doc.id}: $e';
-              print('⚠️ FirestoreService: $error');
-              errors.add(error);
+        // Fix completedAt field
+        if (completedAt != null) {
+          if (completedAt is String) {
+            stringTimestamps++;
+            if (completedAt.contains('T')) {
+              try {
+                // Parse the ISO string and convert to Timestamp
+                final dateTime = DateTime.parse(completedAt);
+                final timestamp = Timestamp.fromDate(dateTime);
+                
+                // Update the document
+                final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
+                batch.update(docRef, {'completedAt': timestamp});
+                fixedCount++;
+                
+                print('🔧 FirestoreService: Fixed completedAt timestamp for run ${doc.id}: $completedAt -> ${timestamp.toDate()}');
+              } catch (e) {
+                final error = 'Failed to fix completedAt timestamp for run ${doc.id}: $e';
+                print('⚠️ FirestoreService: $error');
+                errors.add(error);
+              }
+            } else {
+              print('🔍 FirestoreService: Run ${doc.id} has non-ISO completedAt string: $completedAt');
             }
+          } else if (completedAt is Timestamp) {
+            validTimestamps++;
+            print('✅ FirestoreService: Run ${doc.id} already has valid completedAt Timestamp');
           } else {
-            print('🔍 FirestoreService: Run ${doc.id} has non-ISO string timestamp: $createdAt');
+            print('⚠️ FirestoreService: Run ${doc.id} has unknown completedAt type: ${completedAt.runtimeType}');
           }
-        } else if (createdAt is Timestamp) {
-          validTimestamps++;
-          print('✅ FirestoreService: Run ${doc.id} already has valid Timestamp');
-        } else {
-          print('⚠️ FirestoreService: Run ${doc.id} has unknown timestamp type: ${createdAt.runtimeType}');
         }
       }
       
@@ -755,39 +801,71 @@ class FirestoreService {
         try {
           final data = doc.data();
           final createdAt = data['createdAt'];
+          final completedAt = data['completedAt'];
           
-          if (createdAt == null) {
-            print('⚠️ FirestoreService: Run ${doc.id} has no createdAt field');
-            continue;
-          }
-          
-          Timestamp? newTimestamp;
-          
-          if (createdAt is String) {
-            // Parse ISO string
-            try {
-              final dateTime = DateTime.parse(createdAt);
-              newTimestamp = Timestamp.fromDate(dateTime);
-              print('🔧 FirestoreService: Converting string to timestamp: $createdAt -> ${newTimestamp.toDate()}');
-            } catch (e) {
-              final error = 'Failed to parse string timestamp for run ${doc.id}: $e';
-              print('⚠️ FirestoreService: $error');
-              errors.add(error);
+          // Update createdAt field
+          if (createdAt != null) {
+            Timestamp? newCreatedAt;
+            
+            if (createdAt is String) {
+              // Parse ISO string
+              try {
+                final dateTime = DateTime.parse(createdAt);
+                newCreatedAt = Timestamp.fromDate(dateTime);
+                print('🔧 FirestoreService: Converting createdAt string to timestamp: $createdAt -> ${newCreatedAt.toDate()}');
+              } catch (e) {
+                final error = 'Failed to parse createdAt string timestamp for run ${doc.id}: $e';
+                print('⚠️ FirestoreService: $error');
+                errors.add(error);
+                continue;
+              }
+            } else if (createdAt is Timestamp) {
+              // Already a timestamp, but let's ensure it's properly formatted
+              newCreatedAt = createdAt;
+              print('✅ FirestoreService: Run ${doc.id} already has valid createdAt Timestamp');
+            } else {
+              print('⚠️ FirestoreService: Run ${doc.id} has unknown createdAt type: ${createdAt.runtimeType}');
               continue;
             }
-          } else if (createdAt is Timestamp) {
-            // Already a timestamp, but let's ensure it's properly formatted
-            newTimestamp = createdAt;
-            print('✅ FirestoreService: Run ${doc.id} already has valid Timestamp');
+            
+            // Update the document with the proper timestamp
+            final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
+            batch.update(docRef, {'createdAt': newCreatedAt});
+            updatedCount++;
           } else {
-            print('⚠️ FirestoreService: Run ${doc.id} has unknown timestamp type: ${createdAt.runtimeType}');
-            continue;
+            print('⚠️ FirestoreService: Run ${doc.id} has no createdAt field');
           }
           
-          // Update the document with the proper timestamp
-          final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
-          batch.update(docRef, {'createdAt': newTimestamp});
-          updatedCount++;
+          // Update completedAt field
+          if (completedAt != null) {
+            Timestamp? newCompletedAt;
+            
+            if (completedAt is String) {
+              // Parse ISO string
+              try {
+                final dateTime = DateTime.parse(completedAt);
+                newCompletedAt = Timestamp.fromDate(dateTime);
+                print('🔧 FirestoreService: Converting completedAt string to timestamp: $completedAt -> ${newCompletedAt.toDate()}');
+              } catch (e) {
+                final error = 'Failed to parse completedAt string timestamp for run ${doc.id}: $e';
+                print('⚠️ FirestoreService: $error');
+                errors.add(error);
+                continue;
+              }
+            } else if (completedAt is Timestamp) {
+              // Already a timestamp, but let's ensure it's properly formatted
+              newCompletedAt = completedAt;
+              print('✅ FirestoreService: Run ${doc.id} already has valid completedAt Timestamp');
+            } else {
+              print('⚠️ FirestoreService: Run ${doc.id} has unknown completedAt type: ${completedAt.runtimeType}');
+              continue;
+            }
+            
+            // Update the document with the proper timestamp
+            final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
+            batch.update(docRef, {'completedAt': newCompletedAt});
+            updatedCount++;
+          }
           
         } catch (e) {
           final error = 'Error processing run ${doc.id}: $e';
