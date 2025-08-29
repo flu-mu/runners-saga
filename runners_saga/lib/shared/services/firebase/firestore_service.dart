@@ -100,15 +100,8 @@ class FirestoreService {
           .add(runData);
       print('✅ FirestoreService.saveRun: Saved to main collection with ID: ${docRef.id}');
       
-      // Also save to user's subcollection for user-specific queries
-      print('💾 FirestoreService.saveRun: Saving to user subcollection...');
-      await _firestoreInstance
-          .collection(_usersCollection)
-          .doc(userId)
-          .collection(_runsCollection)
-          .doc(docRef.id)
-          .set(runData);
-      print('✅ FirestoreService.saveRun: Saved to user subcollection');
+      // Only save to main runs collection - no user subcollections needed
+      print('✅ FirestoreService.saveRun: Run saved to main collection only');
       
       return docRef.id;
     } catch (e) {
@@ -131,22 +124,8 @@ class FirestoreService {
       runData['updatedAt'] = FieldValue.serverTimestamp();
       runData['userId'] = userId; // Ensure userId is included
       
-      // Update in both collections for consistency
-      final batch = _firestoreInstance.batch();
-      
-      // Update in top-level runs collection
-      final runDocRef = _firestoreInstance.collection(_runsCollection).doc(runId);
-      batch.update(runDocRef, runData);
-      
-      // Update in user's subcollection
-      final userRunDocRef = _firestoreInstance
-          .collection(_usersCollection)
-          .doc(userId)
-          .collection(_runsCollection)
-          .doc(runId);
-      batch.update(userRunDocRef, runData);
-      
-      await batch.commit();
+      // Update only in top-level runs collection
+      await _firestoreInstance.collection(_runsCollection).doc(runId).update(runData);
     } catch (e) {
       throw Exception('Failed to update run: $e');
     }
@@ -184,20 +163,8 @@ class FirestoreService {
       runData['finalTime'] = completedRun.totalTime?.inSeconds ?? 0;
       runData['finalPace'] = completedRun.averagePace ?? 0.0;
       
-      // Update in both collections
-      final batch = _firestoreInstance.batch();
-      
-      final runDocRef = _firestoreInstance.collection(_runsCollection).doc(runId);
-      batch.update(runDocRef, runData);
-      
-      final userRunDocRef = _firestoreInstance
-          .collection(_usersCollection)
-          .doc(userId)
-          .collection(_runsCollection)
-          .doc(runId);
-      batch.update(userRunDocRef, runData);
-      
-      await batch.commit();
+      // Update only in top-level runs collection
+      await _firestoreInstance.collection(_runsCollection).doc(runId).update(runData);
     } catch (e) {
       throw Exception('Failed to complete run: $e');
     }
