@@ -85,10 +85,13 @@ class FirestoreService {
       final runData = run.toFirestore();
       print('💾 FirestoreService.saveRun: Firestore JSON conversion successful, ${runData.keys.length} keys');
       
-      // Add metadata
-      runData['createdAt'] = FieldValue.serverTimestamp();
+      // Add metadata - createdAt should be the run's start time, not current time
+      // The run.startTime is already converted to Timestamp by toFirestore()
+      runData['createdAt'] = runData['startTime']; // Use the run's actual start time
       runData['updatedAt'] = FieldValue.serverTimestamp();
       runData['userId'] = userId; // Ensure userId is included
+      
+      print('💾 FirestoreService.saveRun: Timestamps - createdAt: ${runData['createdAt']}, startTime: ${runData['startTime']}');
       
       // Save to Firestore - using top-level runs collection for easier querying
       print('💾 FirestoreService.saveRun: Saving to main runs collection...');
@@ -168,8 +171,12 @@ class FirestoreService {
       
       final runData = completedRun.toFirestore();
       runData['updatedAt'] = FieldValue.serverTimestamp();
-      runData['completedAt'] = FieldValue.serverTimestamp();
+      // completedAt should be the run's actual end time, not current time
+      // The run.endTime is already converted to Timestamp by toFirestore()
+      runData['completedAt'] = runData['endTime']; // Use the run's actual end time
       runData['userId'] = userId;
+      
+      print('💾 FirestoreService.completeRun: Timestamps - completedAt: ${runData['completedAt']}, endTime: ${runData['endTime']}');
       
       // Add completion metadata
               runData['totalPoints'] = completedRun.route?.length ?? 0;
