@@ -303,11 +303,11 @@ class RunHistoryScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                _buildRunStat('Distance', '${run.totalDistance.toStringAsFixed(2)} km'),
+                _buildRunStat('Distance', '${(run.totalDistance ?? 0.0).toStringAsFixed(2)} km'),
                 const SizedBox(width: 24),
-                _buildRunStat('Time', _formatDuration(run.totalTime)),
+                                  _buildRunStat('Time', _formatDuration(run.totalTime ?? Duration.zero)),
                 const SizedBox(width: 24),
-                _buildRunStat('Pace', _formatPace(run.averagePace)),
+                                  _buildRunStat('Pace', _formatPace(run.averagePace ?? 0.0)),
               ],
             ),
             const SizedBox(height: 8),
@@ -451,7 +451,7 @@ class RunHistoryScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       _buildDetailCard(
                         'Distance',
-                        '${run.totalDistance.toStringAsFixed(2)} km',
+                        '${(run.totalDistance ?? 0.0).toStringAsFixed(2)} km',
                         Icons.straighten,
                       ),
                       const SizedBox(height: 8),

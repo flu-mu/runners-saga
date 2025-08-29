@@ -19,11 +19,11 @@ class RunModel with _$RunModel {
     DateTime? endTime,
     @JsonKey(name: 'gpsPoints') // Map to the actual Firestore field name
     List<LocationPoint>? route, // Make optional since not every run has GPS
-    required double totalDistance, // in kilometers
-    required Duration totalTime,
-    required double averagePace, // minutes per kilometer
-    required double maxPace, // fastest pace achieved
-    required double minPace, // slowest pace achieved
+    double? totalDistance, // in kilometers - can be null for incomplete runs
+    Duration? totalTime, // can be null for incomplete runs
+    double? averagePace, // minutes per kilometer - can be null for incomplete runs
+    double? maxPace, // fastest pace achieved - can be null for incomplete runs
+    double? minPace, // slowest pace achieved - can be null for incomplete runs
     required String seasonId,
     required String missionId,
     required RunStatus status,

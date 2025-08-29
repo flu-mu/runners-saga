@@ -180,9 +180,9 @@ class FirestoreService {
       
       // Add completion metadata
               runData['totalPoints'] = completedRun.route?.length ?? 0;
-      runData['finalDistance'] = completedRun.totalDistance;
-      runData['finalTime'] = completedRun.totalTime.inSeconds;
-      runData['finalPace'] = completedRun.averagePace;
+      runData['finalDistance'] = completedRun.totalDistance ?? 0.0;
+      runData['finalTime'] = completedRun.totalTime?.inSeconds ?? 0;
+      runData['finalPace'] = completedRun.averagePace ?? 0.0;
       
       // Update in both collections
       final batch = _firestoreInstance.batch();
@@ -437,17 +437,17 @@ class FirestoreService {
       int totalPoints = 0;
       
       for (final run in completedRuns) {
-        totalDistance += run.totalDistance;
-        totalTime += run.totalTime;
-        totalPace += run.averagePace;
+        totalDistance += run.totalDistance ?? 0.0;
+        totalTime += run.totalTime ?? Duration.zero;
+        totalPace += run.averagePace ?? 0.0;
         totalPoints += run.route?.length ?? 0;
         
-        if (run.averagePace > 0 && run.averagePace < bestPace) {
-          bestPace = run.averagePace;
+        if ((run.averagePace ?? 0) > 0 && (run.averagePace ?? 0) < bestPace) {
+          bestPace = run.averagePace ?? 0;
         }
         
-        if (run.totalDistance > longestRun) {
-          longestRun = run.totalDistance;
+        if ((run.totalDistance ?? 0) > longestRun) {
+          longestRun = run.totalDistance ?? 0;
         }
       }
       
