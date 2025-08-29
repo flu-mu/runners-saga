@@ -80,10 +80,10 @@ class FirestoreService {
         throw Exception('User not authenticated');
       }
       
-      // Convert run to JSON
-      print('💾 FirestoreService.saveRun: Converting run to JSON...');
-      final runData = run.toJson();
-      print('💾 FirestoreService.saveRun: JSON conversion successful, ${runData.keys.length} keys');
+      // Convert run to Firestore-compatible JSON
+      print('💾 FirestoreService.saveRun: Converting run to Firestore JSON...');
+      final runData = run.toFirestore();
+      print('💾 FirestoreService.saveRun: Firestore JSON conversion successful, ${runData.keys.length} keys');
       
       // Add metadata
       runData['createdAt'] = FieldValue.serverTimestamp();
@@ -631,6 +631,60 @@ class FirestoreService {
     }
   }
   
+  /// Fix timestamp format for existing runs (migration helper)
+  Future<void> fixTimestampFormats() async {
+    try {
+      print('🔧 FirestoreService: Starting timestamp format fix...');
+      
+      final userId = currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      // Get all runs for the user
+      final snapshot = await _firestoreInstance
+          .collection(_runsCollection)
+          .where('userId', isEqualTo: userId)
+          .get();
+      
+      int fixedCount = 0;
+      final batch = _firestoreInstance.batch();
+      
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final startTime = data['startTime'];
+        
+        // Check if startTime is a string (needs fixing)
+        if (startTime is String && startTime.contains('T')) {
+          try {
+            // Parse the ISO string and convert to Timestamp
+            final dateTime = DateTime.parse(startTime);
+            final timestamp = Timestamp.fromDate(dateTime);
+            
+            // Update the document
+            final docRef = _firestoreInstance.collection(_runsCollection).doc(doc.id);
+            batch.update(docRef, {'startTime': timestamp});
+            fixedCount++;
+            
+            print('🔧 FirestoreService: Fixed timestamp for run ${doc.id}: $startTime -> ${timestamp.toDate()}');
+          } catch (e) {
+            print('⚠️ FirestoreService: Failed to fix timestamp for run ${doc.id}: $e');
+          }
+        }
+      }
+      
+      if (fixedCount > 0) {
+        await batch.commit();
+        print('✅ FirestoreService: Fixed $fixedCount timestamp formats');
+      } else {
+        print('✅ FirestoreService: No timestamp formats need fixing');
+      }
+    } catch (e) {
+      print('❌ FirestoreService: Error fixing timestamp formats: $e');
+      throw Exception('Failed to fix timestamp formats: $e');
+    }
+  }
+
   /// Get runs with server-only source (bypasses cache)
   /// Note: This method forces a fresh fetch by clearing cache first
   Future<List<RunModel>> getRunsFromServer({int limit = 100}) async {

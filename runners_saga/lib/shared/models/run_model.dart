@@ -99,15 +99,34 @@ DateTime _timestampToDateTime(dynamic timestamp) {
     return timestamp.toDate();
   }
   if (timestamp is String) {
-    return DateTime.parse(timestamp);
+    try {
+      return DateTime.parse(timestamp);
+    } catch (e) {
+      print('⚠️ RunModel: Failed to parse timestamp string: $timestamp');
+      return DateTime.now();
+    }
   }
   if (timestamp is int) {
     return DateTime.fromMillisecondsSinceEpoch(timestamp);
   }
+  print('⚠️ RunModel: Unknown timestamp type: ${timestamp.runtimeType}');
   return DateTime.now();
 }
 
 Timestamp _dateTimeToTimestamp(DateTime? dateTime) {
   if (dateTime == null) return Timestamp.now();
   return Timestamp.fromDate(dateTime);
+}
+
+// Ensure proper serialization for Firestore
+Map<String, dynamic> toFirestore() {
+  final json = toJson();
+  // Explicitly convert dates to Timestamps for Firestore
+  if (json['startTime'] is DateTime) {
+    json['startTime'] = Timestamp.fromDate(json['startTime'] as DateTime);
+  }
+  if (json['endTime'] is DateTime) {
+    json['endTime'] = Timestamp.fromDate(json['endTime'] as DateTime);
+  }
+  return json;
 }

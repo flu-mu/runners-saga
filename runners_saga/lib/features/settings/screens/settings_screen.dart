@@ -90,43 +90,81 @@ class SettingsScreen extends ConsumerWidget {
                   style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      try {
-                        final firestoreService = FirestoreService();
-                        await firestoreService.clearCache();
-                        
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Cache cleared successfully!'),
-                              backgroundColor: Colors.green,
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Failed to clear cache: $e'),
-                              backgroundColor: Colors.red,
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.cleaning_services),
-                    label: const Text('Clear Cache'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kElectricAqua,
-                      foregroundColor: kMidnightNavy,
-                    ),
-                  ),
+                            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  try {
+                    final firestoreService = FirestoreService();
+                    await firestoreService.clearCache();
+                    
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Cache cleared successfully!'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to clear cache: $e'),
+                          backgroundColor: Colors.red,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.cleaning_services),
+                label: const Text('Clear Cache'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kElectricAqua,
+                  foregroundColor: kMidnightNavy,
                 ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  try {
+                    final firestoreService = FirestoreService();
+                    await firestoreService.fixTimestampFormats();
+                    
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Timestamp formats fixed! Run data should now display correctly.'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to fix timestamps: $e'),
+                          backgroundColor: Colors.red,
+                          duration: Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.schedule),
+                label: const Text('Fix Run Timestamps'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kElectricAqua,
+                  foregroundColor: kMidnightNavy,
+                ),
+              ),
+            ),
               ],
             ),
           ),
