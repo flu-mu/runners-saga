@@ -315,9 +315,10 @@ class RunHistoryScreen extends ConsumerWidget {
               'Started: ${_formatDateTime(run.startTime)}',
               style: TextStyle(fontSize: 12, color: Colors.white70),
             ),
+            // Show completion time if available (endTime maps to completedAt in Firestore)
             if (run.endTime != null)
               Text(
-                'Ended: ${_formatDateTime(run.endTime!)}',
+                'Completed: ${_formatDateTime(run.endTime!)}',
                 style: TextStyle(fontSize: 12, color: Colors.white70),
               ),
           ],
@@ -478,14 +479,15 @@ class RunHistoryScreen extends ConsumerWidget {
                         _formatDateTime(run.startTime),
                         Icons.play_arrow,
                       ),
-                      if (run.endTime != null) ...[
-                        const SizedBox(height: 8),
-                        _buildDetailCard(
-                          'Ended',
-                          _formatDateTime(run.endTime!),
-                          Icons.stop,
-                        ),
-                      ],
+                                  // Show completion time if available (endTime maps to completedAt in Firestore)
+            if (run.endTime != null) ...[
+              const SizedBox(height: 8),
+              _buildDetailCard(
+                'Completed',
+                _formatDateTime(run.endTime!),
+                Icons.stop,
+              ),
+            ],
                       const SizedBox(height: 16),
                       
                       // Route visualization placeholder

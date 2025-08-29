@@ -559,6 +559,7 @@ class FirestoreService {
               
               // Sort by completedAt (most recent first)
               validRuns.sort((a, b) {
+                // Since endTime maps to completedAt in Firestore, we can use it for sorting
                 final aCompletedAt = a.endTime;
                 final bCompletedAt = b.endTime;
                 if (aCompletedAt == null && bCompletedAt == null) return 0;
