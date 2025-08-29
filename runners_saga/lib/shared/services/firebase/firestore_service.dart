@@ -547,8 +547,8 @@ class FirestoreService {
     }
   }
   
-  // Stream of completed runs only
-  // Note: Requires composite index: userId (ascending) + status (ascending) + startTime (descending)
+  // Stream of runs with completedAt field (completed runs)
+  // Note: Requires composite index: userId (ascending) + completedAt (ascending) + startTime (descending)
   Stream<List<RunModel>> getCompletedRunsStream({int limit = 100}) {
     try {
       final userId = currentUserId;
@@ -556,31 +556,73 @@ class FirestoreService {
         throw Exception('User not authenticated');
       }
       
-      return _firestoreInstance
-          .collection(_runsCollection)
-          .where('userId', isEqualTo: userId)
-          .where('status', isEqualTo: RunStatus.completed.name)
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .snapshots()
-          .map((snapshot) {
-            final validRuns = <RunModel>[];
-            
-            for (final doc in snapshot.docs) {
-              try {
-                final runData = _convertDocData(doc);
-                final run = RunModel.fromJson(runData);
-                validRuns.add(run);
-              } catch (e) {
-                print('⚠️ FirestoreService: Skipping invalid completed run document ${doc.id}: $e');
-                // Continue processing other documents instead of failing completely
-                continue;
+      // First try to query by completedAt field (most accurate)
+      try {
+        return _firestoreInstance
+            .collection(_runsCollection)
+            .where('userId', isEqualTo: userId)
+            .where('completedAt', isGreaterThan: null) // Only runs with completedAt field
+            .orderBy('completedAt', descending: true)
+            .limit(limit)
+            .snapshots()
+            .map((snapshot) {
+              final validRuns = <RunModel>[];
+              
+              for (final doc in snapshot.docs) {
+                try {
+                  final runData = _convertDocData(doc);
+                  final run = RunModel.fromJson(runData);
+                  validRuns.add(run);
+                } catch (e) {
+                  print('⚠️ FirestoreService: Skipping invalid completed run document ${doc.id}: $e');
+                  // Continue processing other documents instead of failing completely
+                  continue;
+                }
               }
-            }
-            
-            // Already sorted by startTime from the query
-            return validRuns;
-          });
+              
+              // Sort by completedAt (most recent first)
+              validRuns.sort((a, b) {
+                final aCompletedAt = a.endTime;
+                final bCompletedAt = b.endTime;
+                if (aCompletedAt == null && bCompletedAt == null) return 0;
+                if (aCompletedAt == null) return 1;
+                if (bCompletedAt == null) return -1;
+                return bCompletedAt.compareTo(aCompletedAt);
+              });
+              
+              return validRuns;
+            });
+      } catch (e) {
+        print('⚠️ FirestoreService: Could not query by completedAt, falling back to status: $e');
+        
+        // Fallback: query by status for backward compatibility
+        return _firestoreInstance
+            .collection(_runsCollection)
+            .where('userId', isEqualTo: userId)
+            .where('status', isEqualTo: RunStatus.completed.name)
+            .orderBy('createdAt', descending: true)
+            .limit(limit)
+            .snapshots()
+            .map((snapshot) {
+              final validRuns = <RunModel>[];
+              
+              for (final doc in snapshot.docs) {
+                try {
+                  final runData = _convertDocData(doc);
+                  final run = RunModel.fromJson(runData);
+                  validRuns.add(run);
+                } catch (e) {
+                  print('⚠️ FirestoreService: Skipping invalid completed run document ${doc.id}: $e');
+                  // Continue processing other documents instead of failing completely
+                  continue;
+                }
+              }
+              
+              // Sort by startTime as fallback
+              validRuns.sort((a, b) => b.startTime.compareTo(a.startTime));
+              return validRuns;
+            });
+      }
     } catch (e) {
       print('❌ FirestoreService: Error in getCompletedRunsStream: $e');
       throw Exception('Failed to get completed runs stream: $e');

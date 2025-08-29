@@ -66,20 +66,20 @@ final firestoreServiceProvider = Provider<FirestoreService>((ref) {
   }
 });
 
-// Provider for user's run history - waits for Firebase to be ready
+// Provider for user's completed runs (runs with completedAt field) - waits for Firebase to be ready
 final userRunsProvider = StreamProvider<List<RunModel>>((ref) {
   try {
     // Wait for Firebase to be ready
     final firebaseStatus = ref.watch(firebaseStatusProvider);
     
     if (firebaseStatus == FirebaseStatus.ready) {
-      print('✅ userRunsProvider: Firebase ready, loading runs');
+      print('✅ userRunsProvider: Firebase ready, loading completed runs');
       final firestoreService = ref.watch(firestoreServiceProvider);
-      return firestoreService.getUserRunsStream().map((runs) {
+      return firestoreService.getCompletedRunsStream().map((runs) {
         final sortedRuns = [...runs]..sort((a, b) => b.startTime.compareTo(a.startTime));
         return sortedRuns;
       }).handleError((error, stackTrace) {
-        print('⚠️ userRunsProvider: Error loading runs: $error');
+        print('⚠️ userRunsProvider: Error loading completed runs: $error');
         print('⚠️ userRunsProvider: Stack trace: $stackTrace');
         // Return empty list instead of crashing
         return <RunModel>[];
