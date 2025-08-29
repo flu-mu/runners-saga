@@ -96,9 +96,9 @@ void main() {
       // Verify completion data
       expect(completedRun.status, equals(RunStatus.completed));
       expect(completedRun.endTime, isNotNull);
-      expect(completedRun.route.length, equals(10));
+      expect(completedRun.route?.length, equals(10));
       expect(completedRun.totalDistance, equals(2.5));
-      expect(completedRun.totalTime.inMinutes, equals(30));
+      expect(completedRun.totalTime?.inMinutes, equals(30));
     });
     
     test('should calculate pace correctly', () {
