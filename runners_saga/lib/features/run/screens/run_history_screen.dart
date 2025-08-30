@@ -1,15 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../shared/providers/run_providers.dart';
 import '../../../shared/models/run_model.dart';
 import '../../../core/constants/app_theme.dart';
+import 'dart:math';
 
-class RunHistoryScreen extends ConsumerWidget {
+class RunHistoryScreen extends ConsumerStatefulWidget {
   const RunHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RunHistoryScreen> createState() => _RunHistoryScreenState();
+}
+
+class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Test indexes when the screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _testIndexes(ref);
@@ -485,8 +508,8 @@ class RunHistoryScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.black,
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
+        initialChildSize: 0.9, // Make it larger to show more content
+        minChildSize: 0.7,
         maxChildSize: 0.95,
         builder: (context, scrollController) => Container(
           padding: const EdgeInsets.all(16),
@@ -506,109 +529,42 @@ class RunHistoryScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               
-              // Title
-              Text(
-                'Run Details',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              // Title and workout summary
+              _buildWorkoutSummary(run),
+              
+              const SizedBox(height: 20),
+              
+              // Tab bar for switching between map and stats
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    color: kElectricAqua,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  labelColor: Colors.black,
+                  unselectedLabelColor: Colors.white70,
+                  tabs: const [
+                    Tab(text: 'Map'),
+                    Tab(text: 'Pace Details'),
+                  ],
                 ),
               ),
+              
               const SizedBox(height: 16),
               
-              // Run information
+              // Tab content
               Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildDetailCard(
-                        'Episode',
-                        '${run.episodeId?.replaceAll('_', ' ').toUpperCase() ?? 'UNKNOWN'}',
-                        Icons.flag,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDetailCard(
-                        'Distance',
-                        '${(run.totalDistance ?? 0.0).toStringAsFixed(2)} km',
-                        Icons.straighten,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDetailCard(
-                        'Duration',
-                        _formatDuration(run.totalTime ?? Duration.zero),
-                        Icons.timer,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDetailCard(
-                        'Average Pace',
-                        _formatPace(run.averagePace ?? 0.0),
-                        Icons.speed,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDetailCard(
-                        'Route Points',
-                        '${run.route?.length ?? 0}',
-                        Icons.map,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildDetailCard(
-                        'Started',
-                        _formatDateTime(run.createdAt),
-                        Icons.play_arrow,
-                      ),
-                                  // Show completion time if available (completedAt maps to completedAt in Firestore)
-            if (run.completedAt != null) ...[
-              const SizedBox(height: 8),
-              _buildDetailCard(
-                'Completed',
-                _formatDateTime(run.completedAt!),
-                Icons.stop,
-              ),
-            ],
-                      const SizedBox(height: 16),
-                      
-                      // Route visualization placeholder
-                      Container(
-                        width: double.infinity,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                        ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.map,
-                                size: 48,
-                                color: Colors.white.withValues(alpha: 0.5),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Route Map',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Text(
-                                '${run.route?.length ?? 0} GPS points recorded',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildMapTab(run),
+                    _buildPaceDetailsTab(run),
+                  ],
                 ),
               ),
             ],
@@ -657,4 +613,663 @@ class RunHistoryScreen extends ConsumerWidget {
       ),
     );
   }
+
+  /// Build workout summary section
+  Widget _buildWorkoutSummary(RunModel run) {
+    final totalDistance = run.totalDistance ?? 0.0;
+    final totalTime = run.totalTime ?? Duration.zero;
+    final averagePace = run.averagePace ?? 0.0;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title
+        Text(
+          'Outdoor Run',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        // User info and workout summary
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              // User info row
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: kElectricAqua.withValues(alpha: 0.2),
+                    child: Icon(Icons.person, color: kElectricAqua, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your Run',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          _formatDateTime(run.createdAt),
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '${totalDistance.toStringAsFixed(2)} km',
+                    style: TextStyle(
+                      color: kElectricAqua,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Stats grid
+              Row(
+                children: [
+                  Expanded(child: _buildSummaryStat('Workout Time', _formatDuration(totalTime), Icons.timer)),
+                  Expanded(child: _buildSummaryStat('Calories', '${_calculateCalories(totalDistance, totalTime)}', Icons.local_fire_department)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildSummaryStat('Avg Pace', _formatPace(averagePace), Icons.speed)),
+                  Expanded(child: _buildSummaryStat('Route Points', '${run.route?.length ?? 0}', Icons.map)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build summary stat item
+  Widget _buildSummaryStat(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: kElectricAqua, size: 20),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build map tab
+  Widget _buildMapTab(RunModel run) {
+    if (run.route == null || run.route!.isEmpty) {
+      return _buildNoRoutePlaceholder();
+    }
+    
+    final route = run.route!;
+    final polylinePoints = route.map((p) => LatLng(p.latitude, p.longitude)).toList();
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: polylinePoints.isNotEmpty ? polylinePoints.first : const LatLng(0, 0),
+            initialZoom: 15,
+            maxZoom: 18,
+            minZoom: 10,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              subdomains: const ['a', 'b', 'c'],
+              userAgentPackageName: 'runners_saga',
+            ),
+            // Route polyline
+            if (polylinePoints.length > 1)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: polylinePoints,
+                    color: kElectricAqua,
+                    strokeWidth: 4,
+                  ),
+                ],
+              ),
+            // Start and end markers
+            if (polylinePoints.isNotEmpty)
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point: polylinePoints.first,
+                    width: 20,
+                    height: 20,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: kMeadowGreen,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.play_arrow, color: Colors.white, size: 12),
+                    ),
+                  ),
+                  if (polylinePoints.length > 1)
+                    Marker(
+                      point: polylinePoints.last,
+                      width: 20,
+                      height: 20,
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: kEmberCoral,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.flag, color: Colors.white, size: 12),
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build pace details tab
+  Widget _buildPaceDetailsTab(RunModel run) {
+    final segments = _calculateKilometerSegments(run);
+    
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Details per km',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  // TODO: Show options for customizing details
+                },
+                icon: Icon(Icons.add_circle_outline, color: kElectricAqua),
+              ),
+            ],
+          ),
+          
+          Text(
+            '${segments.length} records',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Distance filter buttons
+          Row(
+            children: [
+              _buildFilterButton('1 km', true),
+              const SizedBox(width: 12),
+              _buildFilterButton('5 km', false),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Pace table
+          if (segments.isNotEmpty) ...[
+            _buildPaceTableHeader(),
+            ...segments.map((segment) => _buildPaceTableRow(segment)),
+          ] else ...[
+            _buildNoDataPlaceholder(),
+          ],
+          
+          const SizedBox(height: 24),
+          
+          // Feedback section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Any problem with the data?',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    // TODO: Show feedback form
+                  },
+                  child: Text(
+                    'Tap to send feedback',
+                    style: TextStyle(
+                      color: kElectricAqua,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Calculate kilometer segments from GPS route
+  List<KilometerSegment> _calculateKilometerSegments(RunModel run) {
+    if (run.route == null || run.route!.isEmpty) return [];
+    
+    final route = run.route!;
+    final totalDistance = run.totalDistance ?? 0.0;
+    final totalTime = run.totalTime ?? Duration.zero;
+    
+    if (totalDistance <= 0 || totalTime.inSeconds <= 0) return [];
+    
+    final segments = <KilometerSegment>[];
+    double accumulatedDistance = 0.0;
+    int startIndex = 0;
+    
+    for (int i = 1; i < route.length; i++) {
+      final prev = route[i - 1];
+      final curr = route[i];
+      
+      // Calculate distance between consecutive points
+      final segmentDistance = _calculateDistance(
+        prev.latitude, prev.longitude,
+        curr.latitude, curr.longitude,
+      );
+      
+      accumulatedDistance += segmentDistance;
+      
+      // Check if we've reached a kilometer boundary
+      if (accumulatedDistance >= 1.0 || i == route.length - 1) {
+        // Calculate time for this kilometer
+        final startTime = route[startIndex].elapsedSeconds;
+        final endTime = curr.elapsedSeconds;
+        final segmentTime = endTime - startTime;
+        
+        // Calculate pace for this kilometer (minutes per km)
+        final pace = segmentTime > 0 ? (segmentTime / 60.0) : 0.0;
+        
+        // Simulate heart rate based on pace
+        final simulatedHeartRate = 120 + (pace * 10).round();
+        
+        segments.add(KilometerSegment(
+          kilometer: segments.length + 1,
+          pace: pace,
+          heartRate: simulatedHeartRate,
+          cumulativeTime: Duration(seconds: endTime),
+          distance: accumulatedDistance,
+        ));
+        
+        // Reset for next kilometer
+        accumulatedDistance = 0.0;
+        startIndex = i;
+      }
+    }
+    
+    return segments;
+  }
+
+  /// Calculate distance between two points in kilometers
+  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double earthRadius = 6371; // Earth's radius in kilometers
+    
+    final dLat = _degreesToRadians(lat2 - lat1);
+    final dLon = _degreesToRadians(lon2 - lon1);
+    
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_degreesToRadians(lat1)) * cos(_degreesToRadians(lat2)) *
+        sin(dLon / 2) * sin(dLon / 2);
+    
+    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    
+    return earthRadius * c;
+  }
+
+  double _degreesToRadians(double degrees) {
+    return degrees * (pi / 180);
+  }
+
+  /// Build filter button
+  Widget _buildFilterButton(String label, bool isSelected) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? kElectricAqua : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? kElectricAqua : Colors.white70.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.black : Colors.white70,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  /// Build pace table header
+  Widget _buildPaceTableHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: Text(
+              'km',
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              'Pace (km)',
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: Text(
+              'Heart Rate',
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: Text(
+              'Time',
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build pace table row
+  Widget _buildPaceTableRow(KilometerSegment segment) {
+    final paceZone = _getPaceZone(segment.pace);
+    final zoneColor = _getPaceZoneColor(paceZone);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          // Kilometer number
+          SizedBox(
+            width: 40,
+            child: Text(
+              '${segment.kilometer}',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          
+          // Pace with visual indicator
+          Expanded(
+            child: Row(
+              children: [
+                Text(
+                  _formatPace(segment.pace),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 60,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: zoneColor,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Heart rate
+          SizedBox(
+            width: 80,
+            child: Text(
+              '${segment.heartRate}',
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          ),
+          
+          // Cumulative time
+          SizedBox(
+            width: 80,
+            child: Text(
+              _formatDuration(segment.cumulativeTime),
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build no route placeholder
+  Widget _buildNoRoutePlaceholder() {
+    return Container(
+      height: 300,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.map,
+              size: 48,
+              color: Colors.white70.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Route Data',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              'GPS route data not available for this run',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build no data placeholder
+  Widget _buildNoDataPlaceholder() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(
+              Icons.analytics,
+              size: 48,
+              color: Colors.white70.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Pace Data',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              'Pace data not available for this run',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Get pace zone for color coding
+  String _getPaceZone(double pace) {
+    if (pace <= 5.0) return 'fast';
+    if (pace <= 6.5) return 'good';
+    if (pace <= 8.0) return 'moderate';
+    return 'slow';
+  }
+
+  /// Get color for pace zone
+  Color _getPaceZoneColor(String zone) {
+    switch (zone) {
+      case 'fast':
+        return kEmberCoral;
+      case 'good':
+        return kMeadowGreen;
+      case 'moderate':
+        return kElectricAqua;
+      case 'slow':
+      default:
+        return Colors.white70;
+    }
+  }
+
+  /// Calculate calories burned
+  int _calculateCalories(double distance, Duration time) {
+    final minutes = time.inSeconds / 60.0;
+    if (minutes <= 0) return 0;
+    
+    // Assume average person burns ~100 calories per km
+    final baseCalories = distance * 100;
+    
+    // Adjust based on pace (faster pace = more calories)
+    final pace = distance > 0 ? minutes / distance : 0.0;
+    final paceMultiplier = pace < 5.0 ? 1.3 : pace < 7.0 ? 1.1 : 1.0;
+    
+    return (baseCalories * paceMultiplier).round();
+  }
+
+}
+
+/// Data class for kilometer segments
+class KilometerSegment {
+  final int kilometer;
+  final double pace; // minutes per kilometer
+  final int heartRate;
+  final Duration cumulativeTime;
+  final double distance;
+  
+  const KilometerSegment({
+    required this.kilometer,
+    required this.pace,
+    required this.heartRate,
+    required this.cumulativeTime,
+    required this.distance,
+  });
 }
