@@ -98,6 +98,7 @@ class AppLifecycleManager {
     // Notify all services about app backgrounding
     _backgroundTimerManager.onAppLifecycleChanged(true);
     _progressMonitorService.onAppLifecycleChanged(true);
+    _sceneTriggerService.onAppLifecycleChanged(AppLifecycleState.paused);
     
     // Ensure background services are running
     _ensureBackgroundServicesRunning();
@@ -122,6 +123,10 @@ class AppLifecycleManager {
     // Notify all services about app foregrounding
     _backgroundTimerManager.onAppLifecycleChanged(false);
     _progressMonitorService.onAppLifecycleChanged(false);
+    _sceneTriggerService.onAppLifecycleChanged(AppLifecycleState.resumed);
+    
+    // Resume any background scenes that were queued
+    _sceneTriggerService.resumeBackgroundScenes();
     
     // Check background service status
     _checkBackgroundServiceStatus();

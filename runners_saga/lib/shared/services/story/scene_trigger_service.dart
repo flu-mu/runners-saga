@@ -1,19 +1,25 @@
 import 'dart:async';
-import 'package:audioplayers/audioplayers.dart';
+import 'dart:collection';
+import 'dart:io';
+
+import 'package:audio_session/audio_session.dart' as audio_session;
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
-import '../firebase/firebase_storage_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:runners_saga/shared/models/story_segment_model.dart';
+import 'package:runners_saga/shared/services/audio/audio_manager.dart';
 
 enum SceneType {
-  missionBriefing, // Scene 1: 0%
-  theJourney,      // Scene 2: 20%
-  firstContact,    // Scene 3: 40%
-  theCrisis,       // Scene 4: 70%
-  extractionDebrief, // Scene 5: 90%
+  missionBriefing,
+  theJourney,
+  firstContact,
+  theCrisis,
+  extractionDebrief,
 }
 
 class SceneTriggerService {
-  static const Map<SceneType, double> _sceneTriggers = {
+  static const Map<SceneType, double> _sceneTriggerPercentages = {
     SceneType.missionBriefing: 0.0,
     SceneType.theJourney: 0.2,
     SceneType.firstContact: 0.4,
@@ -21,497 +27,373 @@ class SceneTriggerService {
     SceneType.extractionDebrief: 0.9,
   };
 
-  // Dynamic array of available audio files for the current episode
-  static List<String> _availableAudioFiles = [];
+  static const Map<SceneType, String> _sceneTitles = {
+    SceneType.missionBriefing: 'Mission Briefing',
+    SceneType.theJourney: 'The Journey',
+    SceneType.firstContact: 'First Contact',
+    SceneType.theCrisis: 'The Crisis',
+    SceneType.extractionDebrief: 'Extraction & Debrief',
+  };
 
+  static const Map<SceneType, String> _sceneAudioFiles = {
+    SceneType.missionBriefing: 'scene_1_mission_briefing.wav',
+    SceneType.theJourney: 'scene_2_the_journey.wav',
+    SceneType.firstContact: 'scene_3_first_contact.wav',
+    SceneType.theCrisis: 'scene_4_the_crisis.wav',
+    SceneType.extractionDebrief: 'scene_5_extraction_debrief.wav',
+  };
+
+  // Audio session and background handling
+  audio_session.AudioSession? _audioSession;
+  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final Queue<SceneType> _backgroundSceneQueue = Queue<SceneType>();
+  bool _isInBackground = false;
+  bool _backgroundSystemInitialized = false;
+
+  // Core properties
   final AudioPlayer _audioPlayer = AudioPlayer();
   final Set<SceneType> _playedScenes = <SceneType>{};
-  
-  bool _isRunning = false;
-  
-  // Progress tracking
-  double _currentProgress = 0.0;
-  Duration _elapsedTime = Duration.zero;
-  double _totalDistance = 0.0;
-  Duration _targetTime = Duration.zero;
-  double _targetDistance = 0.0;
-  
-  // Scene management
   SceneType? _currentScene;
-  bool _isScenePlaying = false;
-  
+  double _currentProgress = 0.0;
+  Duration? _targetTime;
+  double? _targetDistance;
+  bool _isRunning = false;
+
   // Callbacks
-  Function(SceneType scene)? onSceneStart;
-  Function(SceneType scene)? onSceneComplete;
-  Function(double progress)? onProgressUpdate;
-  
-  // Episode tracking
-  String _currentEpisodeId = '';
-  
+  Function(SceneType)? onSceneStart;
+  Function(SceneType)? onSceneComplete;
+  Function(double)? onProgressUpdate;
+
   // Getters
-  bool get isRunning => _isRunning;
-  bool get isScenePlaying => _isScenePlaying;
+  Set<SceneType> get playedScenes => Set.unmodifiable(_playedScenes);
   SceneType? get currentScene => _currentScene;
   double get currentProgress => _currentProgress;
-  Set<SceneType> get playedScenes => Set.unmodifiable(_playedScenes);
+  bool get isRunning => _isRunning;
+  bool get isScenePlaying => _currentScene != null;
 
-  /// Initialize the service with run targets
-  void initialize({
-    required Duration targetTime,
-    required double targetDistance,
-    String episodeId = '',
-    Function(SceneType scene)? onSceneStart,
-    Function(SceneType scene)? onSceneComplete,
-    Function(double progress)? onProgressUpdate,
-  }) {
+  // Static methods
+  static double getSceneTriggerPercentage(SceneType sceneType) {
+    return _sceneTriggerPercentages[sceneType] ?? 0.0;
+  }
+
+  void loadAudioFilesFromDatabase(List<String> audioFiles) {
+    if (kDebugMode) {
+      debugPrint('🎵 Loading ${audioFiles.length} audio files from database');
+      for (final file in audioFiles) {
+        debugPrint('  📁 $file');
+      }
+    }
+    // This method is a placeholder for future audio file loading logic
+    // For now, we just log the files that would be loaded
+  }
+
+  static String getSceneTitle(SceneType sceneType) {
+    return _sceneTitles[sceneType] ?? 'Unknown Scene';
+  }
+
+  static String getSceneAudioFile(SceneType sceneType) {
+    return _sceneAudioFiles[sceneType] ?? '';
+  }
+
+  // Initialization
+  Future<void> initialize({
+    Duration? targetTime,
+    double? targetDistance,
+  }) async {
     _targetTime = targetTime;
     _targetDistance = targetDistance;
-    _currentEpisodeId = episodeId;
-    this.onSceneStart = onSceneStart;
-    this.onSceneComplete = onSceneComplete;
-    this.onProgressUpdate = onProgressUpdate;
-    
-    // Initialize the audio player
-    _audioPlayer.setReleaseMode(ReleaseMode.stop);
-    _audioPlayer.setVolume(1.0);
-    _audioPlayer.onPlayerComplete.listen((_) {
-      if (_currentScene != null) {
-        _onSceneAudioComplete(_currentScene!);
-      }
-    });
-    
-    _resetState();
-  }
-
-  /// Start the scene trigger system
-  void start() {
-    if (_isRunning) return;
-    
-    _isRunning = true;
-    _startProgressTracking();
-    
-    // Play mission briefing immediately and mark it as played
-    _playedScenes.add(SceneType.missionBriefing);
-    _currentScene = SceneType.missionBriefing;
-    
-    if (kDebugMode) {
-      print('🎬 First scene (Mission Briefing) marked as played');
-      print('📊 Played scenes: $_playedScenes');
-    }
-    
-    // Notify listeners immediately for the first scene
-    onSceneStart?.call(SceneType.missionBriefing);
-    
-    // Audio is handled by run_session_manager.dart via onSceneStarted callback
-    print('🎵 Audio will be handled by run_session_manager via callback');
-  }
-
-  /// Stop the scene trigger system
-  void stop() {
+    _currentProgress = 0.0;
+    _playedScenes.clear();
+    _currentScene = null;
     _isRunning = false;
-    _stopProgressTracking();
-    _stopCurrentScene();
-    _resetState();
-    
-    // Clear callbacks to prevent further updates
-    onSceneStart = null;
-    onSceneComplete = null;
-    onProgressUpdate = null;
-    
-    print('🛑 SceneTriggerService: Stopped and callbacks cleared');
+
+    await _initializeBackgroundAudio();
+    await _initializeNotifications();
   }
 
-  /// Pause the scene trigger system
-  void pause() {
-    _isRunning = false;
-    _stopProgressTracking();
-    _pauseCurrentScene();
-  }
+  Future<void> _initializeBackgroundAudio() async {
+    try {
+      _audioSession = await audio_session.AudioSession.instance;
+      
+      final config = audio_session.AudioSessionConfiguration(
+        avAudioSessionCategory: audio_session.AVAudioSessionCategory.playback,
+        avAudioSessionCategoryOptions: audio_session.AVAudioSessionCategoryOptions.allowBluetooth,
+        avAudioSessionMode: audio_session.AVAudioSessionMode.defaultMode,
+        avAudioSessionRouteSharingPolicy: audio_session.AVAudioSessionRouteSharingPolicy.defaultPolicy,
+        avAudioSessionSetActiveOptions: audio_session.AVAudioSessionSetActiveOptions.none,
+        androidAudioAttributes: const audio_session.AndroidAudioAttributes(
+          contentType: audio_session.AndroidAudioContentType.music,
+          flags: audio_session.AndroidAudioFlags.none,
+          usage: audio_session.AndroidAudioUsage.media,
+        ),
+        androidAudioFocusGainType: audio_session.AndroidAudioFocusGainType.gain,
+        androidWillPauseWhenDucked: true,
+      );
 
-  /// Resume the scene trigger system
-  void resume() {
-    if (_isRunning) return;
-    
-    _isRunning = true;
-    _startProgressTracking();
-    _resumeCurrentScene();
-  }
-
-  /// Update progress from main timer
-  void updateProgress({
-    Duration? elapsedTime,
-    double? distance,
-    double? progress,
-  }) {
-    if (elapsedTime != null) _elapsedTime = elapsedTime;
-    if (distance != null) _totalDistance = distance;
-    if (progress != null) {
-      _currentProgress = progress.clamp(0.0, 1.0);
-    } else {
-      _calculateProgress();
-    }
-    
-    if (kDebugMode) {
-      print('📈 SceneTriggerService: Progress updated to ${(_currentProgress * 100).toStringAsFixed(1)}%');
-      print('⏰ Elapsed time: ${_elapsedTime.inSeconds}s');
-      print('📏 Distance: ${_totalDistance.toStringAsFixed(2)} km');
-    }
-    
-    // Only check scene triggers if we're running
-    if (_isRunning) {
-      _checkSceneTriggers();
-    }
-    
-    // Don't call onProgressUpdate here - that would create a loop!
-    // The main timer already handles progress updates
-  }
-
-  /// Start progress tracking timer
-  void _startProgressTracking() {
-    // REMOVED: We don't need a separate timer here
-    // The scene trigger service will receive progress updates from the main timer
-    print('🔄 SceneTriggerService: Progress tracking started (no separate timer)');
-  }
-
-  /// Stop progress tracking timer
-  void _stopProgressTracking() {
-    // REMOVED: No timer to stop
-    print('🛑 SceneTriggerService: Progress tracking stopped (no separate timer)');
-  }
-
-  /// Calculate current progress based on time and distance
-  void _calculateProgress() {
-    double timeProgress = _elapsedTime.inSeconds / _targetTime.inSeconds;
-    double distanceProgress = _totalDistance / _targetDistance;
-    
-    // Use the higher progress value to ensure scenes trigger appropriately
-    _currentProgress = (timeProgress > distanceProgress ? timeProgress : distanceProgress).clamp(0.0, 1.0);
-  }
-
-  /// Check if any scenes should be triggered
-  void _checkSceneTriggers() {
-    if (kDebugMode) {
-      print('🔍 Checking scene triggers at ${(_currentProgress * 100).toStringAsFixed(1)}%');
-      print('📊 Current progress: $_currentProgress');
-      print('🎬 Played scenes: $_playedScenes');
-      print('🎭 Current scene: $_currentScene');
-    }
-    
-    for (final entry in _sceneTriggers.entries) {
-      final sceneType = entry.key;
-      final triggerPoint = entry.value;
+      await _audioSession!.configure(config);
+      _backgroundSystemInitialized = true;
       
       if (kDebugMode) {
-        print('🎯 Checking scene ${SceneTriggerService.getSceneTitle(sceneType)} at ${(triggerPoint * 100).toStringAsFixed(1)}%');
+        debugPrint('🎵 Background audio system initialized');
       }
-      
-      // Skip if scene already played or is currently playing
-      if (_playedScenes.contains(sceneType) || _currentScene == sceneType) {
-        if (kDebugMode) {
-          print('⏭️ Skipping scene ${SceneTriggerService.getSceneTitle(sceneType)} - already played or currently playing');
-        }
-        continue;
-      }
-      
-      // Check if we've reached the trigger point
-      if (_currentProgress >= triggerPoint) {
-        if (kDebugMode) {
-          print('🎬 Triggering scene ${SceneTriggerService.getSceneTitle(sceneType)} at ${(triggerPoint * 100).toStringAsFixed(1)}%');
-        }
-        _triggerScene(sceneType);
-        break; // Only trigger one scene at a time
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Failed to initialize background audio: $e');
       }
     }
   }
 
-  /// Trigger a specific scene
+  Future<void> _initializeNotifications() async {
+    try {
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosSettings = DarwinInitializationSettings();
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
+
+      await _notifications.initialize(initSettings);
+      
+      if (kDebugMode) {
+        debugPrint('🔔 Notification system initialized');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Failed to initialize notifications: $e');
+      }
+    }
+  }
+
+  // App lifecycle management
+  void onAppLifecycleChanged(AppLifecycleState state) {
+    _isInBackground = state == AppLifecycleState.paused || 
+                     state == AppLifecycleState.inactive ||
+                     state == AppLifecycleState.detached;
+    
+    if (kDebugMode) {
+      debugPrint('🔄 App lifecycle changed: $state, background: $_isInBackground');
+    }
+  }
+
+  // Progress tracking
+  void updateProgress({double? progress, Duration? elapsedTime, double? distance}) {
+    if (!_isRunning) return;
+
+    if (progress != null) {
+      _currentProgress = progress.clamp(0.0, 1.0);
+    } else if (_targetTime != null && elapsedTime != null) {
+      _currentProgress = (elapsedTime.inMilliseconds / _targetTime!.inMilliseconds).clamp(0.0, 1.0);
+    } else if (_targetDistance != null && distance != null) {
+      _currentProgress = (distance / _targetDistance!).clamp(0.0, 1.0);
+    }
+
+    _checkSceneTriggers();
+  }
+
+  void _checkSceneTriggers() {
+    for (final sceneType in SceneType.values) {
+      final triggerPercentage = getSceneTriggerPercentage(sceneType);
+      if (_currentProgress >= triggerPercentage && !_playedScenes.contains(sceneType)) {
+        _triggerScene(sceneType);
+      }
+    }
+  }
+
   Future<void> _triggerScene(SceneType sceneType) async {
     if (_playedScenes.contains(sceneType)) return;
     
-    // Stop current scene if playing
     await _stopCurrentScene();
-    
-    // Mark scene as played
     _playedScenes.add(sceneType);
     _currentScene = sceneType;
     
     if (kDebugMode) {
-      print('🎬 Scene triggered: ${SceneTriggerService.getSceneTitle(sceneType)}');
-      print('📊 Played scenes: $_playedScenes');
+      debugPrint('�� Scene triggered: ${SceneTriggerService.getSceneTitle(sceneType)}');
+      debugPrint('📊 Played scenes: $_playedScenes');
     }
     
-    // Notify listeners
     onSceneStart?.call(sceneType);
     
-    // Play audio
-    await _playSceneAudio(sceneType);
+    if (_isInBackground) {
+      await _handleBackgroundScene(sceneType);
+    } else {
+      await _playSceneAudio(sceneType);
+    }
   }
 
-  /// Play the audio for a specific scene
   Future<void> _playSceneAudio(SceneType sceneType) async {
     try {
-      // Get the audio file from the database array
-      final audioFile = getSceneAudioFile(sceneType);
-      if (audioFile.isEmpty) {
-        print('⚠️ No audio file found for scene: $sceneType');
-        print('📋 Available audio files: $_availableAudioFiles');
+      if (_audioSession != null) {
+        await _audioSession!.setActive(true);
+      }
+      
+      final audioPath = _getAudioPathForScene(sceneType);
+      if (audioPath == null) {
+        if (kDebugMode) {
+          debugPrint('❌ No audio path found for scene: $sceneType');
+        }
+        _onSceneAudioComplete(sceneType);
         return;
       }
-      
-      _isScenePlaying = true;
-      
-      print('🎵 Playing audio for scene $sceneType: $audioFile');
-      print('📋 Total available audio files: ${_availableAudioFiles.length}');
-      
-      // Add a small delay for smooth scene transition
-      await Future.delayed(const Duration(milliseconds: 300));
-      
-      // Ensure any previous audio is stopped before starting new
-      try {
-        await _audioPlayer.stop();
-      } catch (_) {}
 
-      // Play the actual audio file - TRY BUNDLED ASSETS FIRST
-      final episodeId = _getCurrentEpisodeId();
-      if (episodeId.isNotEmpty) {
-        final fileName = FirebaseStorageService.getFileNameFromUrl(audioFile);
-        final assetPath = 'audio/episodes/$episodeId/$fileName';
-        print('🎵 Trying bundled asset first: $assetPath');
-        print('🎵 Episode ID: $episodeId, File name: $fileName');
-        
-        try {
-          await _audioPlayer.setSource(AssetSource(assetPath));
-          await _audioPlayer.resume();
-          print('✅ Audio playing from bundled asset: $assetPath');
-        } catch (assetError) {
-          print('⚠️ Bundled asset failed ($assetPath): $assetError');
-          print('🎵 Falling back to remote URL: $audioFile');
-          try {
-            await _audioPlayer.setSourceUrl(audioFile);
-            await _audioPlayer.resume();
-            print('✅ Audio playing from remote URL: $audioFile');
-          } catch (urlError) {
-            print('❌ Both asset and URL failed. Asset error: $assetError, URL error: $urlError');
-          }
-        }
-      } else {
-        print('⚠️ No episode ID available, trying direct URL: $audioFile');
-        try {
-          await _audioPlayer.setSourceUrl(audioFile);
-          await _audioPlayer.resume();
-          print('✅ Audio playing from direct URL: $audioFile');
-        } catch (urlError) {
-          print('❌ Direct URL failed: $urlError');
-        }
+      await _audioPlayer.setFilePath(audioPath);
+      await _audioPlayer.play();
+      
+      if (kDebugMode) {
+        debugPrint('🎵 Playing audio for scene: ${SceneTriggerService.getSceneTitle(sceneType)}');
+        debugPrint('📁 Audio path: $audioPath');
       }
       
-      // Completion handled by onPlayerComplete set in initialize()
-      
-      // Fallback timer in case audio doesn't complete properly
-      Timer(const Duration(seconds: 10), () {
-        if (_isScenePlaying && _currentScene == sceneType) {
-          print('⏰ Fallback timer triggered for scene $sceneType');
+      _audioPlayer.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed) {
           _onSceneAudioComplete(sceneType);
         }
       });
       
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error playing scene audio: $e');
+        debugPrint('❌ Error playing scene audio: $e');
       }
-      // Mark scene as complete even if there's an error
       _onSceneAudioComplete(sceneType);
     }
   }
 
-  /// Build a web asset URL; if the original is WAV, try MP3 for broader browser support
-  String _toWebAssetUrl(String assetPath) {
-    var p = assetPath;
-    if (!p.startsWith('assets/')) {
-      p = 'assets/$p';
-    }
-    if (p.toLowerCase().endsWith('.wav')) {
-      // Many browsers handle MP3 better; use parallel .mp3 if present
-      final mp3 = p.substring(0, p.length - 4) + '.mp3';
-      return mp3;
-    }
-    return p;
-  }
-
-  /// Return true if the provided path looks like a remote URL
-  bool _looksLikeUrl(String path) {
-    final lower = path.toLowerCase();
-    return lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('gs://');
-  }
-
-  /// Return true if the provided path looks like an asset path
-  bool _looksLikeAssetPath(String path) {
-    return path.startsWith('assets/') || path.startsWith('audio/');
-  }
-
-  /// Remove leading 'assets/' from a path for use with AssetSource
-  String _stripAssetsPrefix(String path) {
-    return path.startsWith('assets/') ? path.substring(7) : path;
-  }
-
-  /// Normalize a possibly relative asset path to include 'assets/' prefix for web URL usage
-  String _normalizeToAssetPath(String path) {
-    if (_looksLikeUrl(path)) return path;
-    if (path.startsWith('assets/')) return path;
-    if (path.startsWith('audio/')) return 'assets/$path';
-    return 'assets/$path';
-  }
-
-  /// Handle scene audio completion
-  void _onSceneAudioComplete(SceneType sceneType) {
-    _isScenePlaying = false;
-    _currentScene = null;
-    
-    onSceneComplete?.call(sceneType);
-  }
-
-  /// Stop the currently playing scene
-  Future<void> _stopCurrentScene() async {
-    if (!_isScenePlaying) return;
-    
-    try {
-      // await _audioPlayer.stop();
-      _isScenePlaying = false;
-      _currentScene = null;
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error stopping scene audio: $e');
-      }
-    }
-  }
-
-  /// Pause the currently playing scene
-  Future<void> _pauseCurrentScene() async {
-    if (!_isScenePlaying) return;
-    
-    try {
-      // await _audioPlayer.pause();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error pausing scene audio: $e');
-      }
-    }
-  }
-
-  /// Resume the currently paused scene
-  Future<void> _resumeCurrentScene() async {
-    if (!_isScenePlaying || _currentScene == null) return;
-    
-    try {
-      // await _audioPlayer.resume();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error resuming scene audio: $e');
-      }
-    }
-  }
-
-  /// Reset the service state
-  void _resetState() {
-    _currentProgress = 0.0;
-    _elapsedTime = Duration.zero;
-    _totalDistance = 0.0;
-    _playedScenes.clear();
-    _currentScene = null;
-    _isScenePlaying = false;
-  }
-
-  /// Dispose resources
-  void dispose() {
-    stop();
-    // _audioPlayer.dispose();
-  }
-
-  /// Get scene info for a specific scene type
-  static String getSceneTitle(SceneType sceneType) {
-    switch (sceneType) {
-      case SceneType.missionBriefing:
-        return 'Mission Briefing';
-      case SceneType.theJourney:
-        return 'The Journey';
-      case SceneType.firstContact:
-        return 'First Contact';
-      case SceneType.theCrisis:
-        return 'The Crisis';
-      case SceneType.extractionDebrief:
-        return 'Extraction & Debrief';
-    }
-  }
-
-  /// Get trigger percentage for a specific scene type
-  static double getSceneTriggerPercentage(SceneType sceneType) {
-    return _sceneTriggers[sceneType] ?? 0.0;
-  }
-
-  /// Get audio file for a specific scene type
-  static String getSceneAudioFile(SceneType sceneType) {
-    // Get scene index based on scene type
-    final sceneIndex = _getSceneIndex(sceneType);
-    
-    // Return the audio file from the database array if available
-    if (sceneIndex < _availableAudioFiles.length) {
-      return _availableAudioFiles[sceneIndex];
-    }
-    
-    // Fallback to empty string if scene not found
-    return '';
-  }
-  
-  /// Get the scene index based on scene type
-  static int _getSceneIndex(SceneType sceneType) {
-    switch (sceneType) {
-      case SceneType.missionBriefing:
-        return 0; // scene_1
-      case SceneType.theJourney:
-        return 1; // scene_2
-      case SceneType.firstContact:
-        return 2; // scene_3
-      case SceneType.theCrisis:
-        return 3; // scene_4
-      case SceneType.extractionDebrief:
-        return 4; // scene_5
-    }
-  }
-  
-  /// Load audio files from the database for the current episode
-  static void loadAudioFilesFromDatabase(List<String> audioFiles) {
-    _availableAudioFiles = List.from(audioFiles);
+  Future<void> _handleBackgroundScene(SceneType sceneType) async {
+    // Add to background queue
+    _backgroundSceneQueue.add(sceneType);
     
     if (kDebugMode) {
-      print('🎵 Audio files loaded from database:');
-      for (int i = 0; i < _availableAudioFiles.length; i++) {
-        print('  ${i + 1}. ${_availableAudioFiles[i]}');
-      }
-      print('Total: ${_availableAudioFiles.length} audio files loaded');
-      print('📋 All files: $_availableAudioFiles');
+      debugPrint('🔄 Scene queued for background: ${SceneTriggerService.getSceneTitle(sceneType)}');
     }
-  }
-  
-  /// Get all available audio files
-  static List<String> getAvailableAudioFiles() {
-    return List.unmodifiable(_availableAudioFiles);
-  }
-  
-  /// Get the current episode ID
-  String _getCurrentEpisodeId() {
-    return _currentEpisodeId;
-  }
-  
-  /// Play the first available scene (mission briefing)
-  static String getFirstSceneAudioFile() {
-    if (_availableAudioFiles.isNotEmpty) {
-      final firstFile = _availableAudioFiles.first;
+    
+    // Show notification
+    await _showSceneNotification(sceneType);
+    
+    // Try to play audio in background
+    try {
+      await _playSceneAudio(sceneType);
+    } catch (e) {
       if (kDebugMode) {
-        print('🎬 First scene audio file: $firstFile');
-        print('📋 All available files: $_availableAudioFiles');
+        debugPrint('❌ Background audio failed: $e');
       }
-      return firstFile;
     }
-    return ''; // No fallback - use database data only
+  }
+
+  Future<void> _showSceneNotification(SceneType sceneType) async {
+    if (!_backgroundSystemInitialized) return;
+    
+    final sceneTitle = SceneTriggerService.getSceneTitle(sceneType);
+    
+    const androidDetails = AndroidNotificationDetails(
+      'scene_triggers',
+      'Scene Triggers',
+      channelDescription: 'Notifications for story scene triggers',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    
+    const notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+    
+    await _notifications.show(
+      sceneType.index,
+      'Story Progress',
+      'New scene: $sceneTitle',
+      notificationDetails,
+    );
+    
+    if (kDebugMode) {
+      debugPrint('🔔 Notification sent for scene: $sceneTitle');
+    }
+  }
+
+  Future<void> resumeBackgroundScenes() async {
+    if (_backgroundSceneQueue.isEmpty) return;
+    
+    if (kDebugMode) {
+      debugPrint('🔄 Resuming ${_backgroundSceneQueue.length} background scenes');
+    }
+    
+    while (_backgroundSceneQueue.isNotEmpty) {
+      final sceneType = _backgroundSceneQueue.removeFirst();
+      await _playSceneAudio(sceneType);
+    }
+  }
+
+  String? _getAudioPathForScene(SceneType sceneType) {
+    final audioFile = getSceneAudioFile(sceneType);
+    if (audioFile.isEmpty) return null;
+    
+    // This would typically come from your asset management system
+    // For now, returning a placeholder path
+    return 'assets/audio/$audioFile';
+  }
+
+  void _onSceneAudioComplete(SceneType sceneType) {
+    if (kDebugMode) {
+      debugPrint('✅ Scene audio completed: ${SceneTriggerService.getSceneTitle(sceneType)}');
+    }
+    
+    onSceneComplete?.call(sceneType);
+    _currentScene = null;
+  }
+
+  Future<void> _stopCurrentScene() async {
+    if (_currentScene != null) {
+      await _audioPlayer.stop();
+      _currentScene = null;
+    }
+  }
+
+  // Control methods
+  void start() {
+    _isRunning = true;
+    if (kDebugMode) {
+      debugPrint('🚀 Scene trigger service started');
+    }
+  }
+
+  void pause() {
+    _isRunning = false;
+    if (kDebugMode) {
+      debugPrint('⏸️ Scene trigger service paused');
+    }
+  }
+
+  void resume() {
+    _isRunning = true;
+    if (kDebugMode) {
+      debugPrint('▶️ Scene trigger service resumed');
+    }
+  }
+
+  void stop() {
+    _isRunning = false;
+    _currentProgress = 0.0;
+    _playedScenes.clear();
+    _currentScene = null;
+    if (kDebugMode) {
+      debugPrint('⏹️ Scene trigger service stopped');
+    }
+  }
+
+  void reset() {
+    stop();
+    if (kDebugMode) {
+      debugPrint('🔄 Scene trigger service reset');
+    }
+  }
+
+  // Cleanup
+  void dispose() {
+    _audioPlayer.dispose();
+    if (kDebugMode) {
+      debugPrint('🗑️ Scene trigger service disposed');
+    }
   }
 }

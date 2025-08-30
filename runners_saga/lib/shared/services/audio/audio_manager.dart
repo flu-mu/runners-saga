@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter/foundation.dart';
 
 enum AudioType {
@@ -55,9 +55,7 @@ class AudioManager {
   /// Initialize the audio manager
   Future<void> initialize() async {
     // Set up audio players
-    await _backgroundMusicPlayer.setReleaseMode(ReleaseMode.loop);
-    await _storyAudioPlayer.setReleaseMode(ReleaseMode.stop);
-    await _sfxPlayer.setReleaseMode(ReleaseMode.stop);
+    await _backgroundMusicPlayer.setLoopMode(LoopMode.all);
     
     // Set initial volumes
     await _backgroundMusicPlayer.setVolume(_backgroundMusicVolume);
@@ -65,16 +63,24 @@ class AudioManager {
     await _sfxPlayer.setVolume(_sfxVolume);
     
     // Set up completion handlers
-    _storyAudioPlayer.onPlayerComplete.listen((_) => _onStoryAudioComplete());
-    _sfxPlayer.onPlayerComplete.listen((_) => _onSfxComplete());
+    _storyAudioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        _onStoryAudioComplete();
+      }
+    });
+    _sfxPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        _onSfxComplete();
+      }
+    });
   }
   
   /// Play background music
   Future<void> playBackgroundMusic(String audioFile, {double? volume}) async {
     try {
-      await _backgroundMusicPlayer.setSource(AssetSource(audioFile));
+      await _backgroundMusicPlayer.setAsset(audioFile);
       await _backgroundMusicPlayer.setVolume(volume ?? _backgroundMusicVolume);
-      await _backgroundMusicPlayer.resume();
+      await _backgroundMusicPlayer.play();
       
       _isBackgroundMusicPlaying = true;
       onAudioStart?.call(audioFile);
@@ -95,9 +101,9 @@ class AudioManager {
         await _fadeOutStoryAudio();
       }
       
-      await _storyAudioPlayer.setSource(AssetSource(audioFile));
+      await _storyAudioPlayer.setAsset(audioFile);
       await _storyAudioPlayer.setVolume(volume ?? _storyAudioVolume);
-      await _storyAudioPlayer.resume();
+      await _storyAudioPlayer.play();
       
       _isStoryAudioPlaying = true;
       onAudioStart?.call(audioFile);
@@ -121,9 +127,9 @@ class AudioManager {
         await _sfxPlayer.stop();
       }
       
-      await _sfxPlayer.setSource(AssetSource(audioFile));
+      await _sfxPlayer.setAsset(audioFile);
       await _sfxPlayer.setVolume(volume ?? _sfxVolume);
-      await _sfxPlayer.resume();
+      await _sfxPlayer.play();
       
       _isSfxPlaying = true;
       
@@ -163,9 +169,9 @@ class AudioManager {
   
   /// Resume all audio
   Future<void> resumeAll() async {
-    if (_isBackgroundMusicPlaying) await _backgroundMusicPlayer.resume();
-    if (_isStoryAudioPlaying) await _storyAudioPlayer.resume();
-    if (_isSfxPlaying) await _sfxPlayer.resume();
+    if (_isBackgroundMusicPlaying) await _backgroundMusicPlayer.play();
+    if (_isStoryAudioPlaying) await _storyAudioPlayer.play();
+    if (_isSfxPlaying) await _sfxPlayer.play();
   }
   
   /// Stop all audio

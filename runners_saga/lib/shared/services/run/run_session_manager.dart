@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import 'progress_monitor_service.dart';
 import '../story/scene_trigger_service.dart';
 import '../audio/audio_manager.dart';
@@ -53,10 +53,7 @@ class RunSessionManager {
   Future<void> initialize() async {
     await _audioManager.initialize();
     
-    // Set up scene trigger callbacks
-    _sceneTrigger.onSceneStart = _onSceneStart;
-    _sceneTrigger.onSceneComplete = _onSceneComplete;
-    _sceneTrigger.onProgressUpdate = _onProgressUpdate;
+    // Scene trigger callbacks will be set up in startSession
   }
 
   /// Check if a new session can be started
@@ -95,14 +92,15 @@ class RunSessionManager {
       );
       
       // Initialize scene trigger service with user's selected targets
-      _sceneTrigger.initialize(
+      await _sceneTrigger.initialize(
         targetTime: userTargetTime,
         targetDistance: userTargetDistance,
-        episodeId: episode.id,
-        onSceneStart: _onSceneStart,
-        onSceneComplete: _onSceneComplete,
-        onProgressUpdate: _onProgressUpdate,
       );
+      
+      // Set up scene trigger callbacks
+      _sceneTrigger.onSceneStart = _onSceneStart;
+      _sceneTrigger.onSceneComplete = _onSceneComplete;
+      _sceneTrigger.onProgressUpdate = _onProgressUpdate;
       
       // Load audio files from the database for this episode
       // Force debug logging for testing
@@ -110,7 +108,7 @@ class RunSessionManager {
       print('📋 Episode audio files: ${episode.audioFiles}');
       print('📊 Audio files count: ${episode.audioFiles.length}');
       
-      SceneTriggerService.loadAudioFilesFromDatabase(episode.audioFiles);
+      _sceneTrigger.loadAudioFilesFromDatabase(episode.audioFiles);
       
       // Start progress monitoring (but without blocking timers)
       if (kDebugMode) {
@@ -392,17 +390,19 @@ class RunSessionManager {
             final player = AudioPlayer();
             
             // Set up completion listener
-            player.onPlayerComplete.listen((_) {
-              if (kDebugMode) {
-                print('🎵 Audio completed: $sceneLocalFile');
+            player.playerStateStream.listen((state) {
+              if (state.processingState == ProcessingState.completed) {
+                if (kDebugMode) {
+                  print('🎵 Audio completed: $sceneLocalFile');
+                }
+                // Notify scene completion
+                onSceneCompleted?.call(scene);
+                player.dispose();
               }
-              // Notify scene completion
-              onSceneCompleted?.call(scene);
-              player.dispose();
             });
             
-            await player.setSourceDeviceFile(sceneLocalFile);
-            await player.resume();
+            await player.setFilePath(sceneLocalFile);
+            await player.play();
             
             if (kDebugMode) {
               print('✅ Audio playing from local file: $sceneLocalFile');
