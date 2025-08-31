@@ -22,7 +22,7 @@ class EpisodeModel with _$EpisodeModel {
     required int targetTime, // in milliseconds
     @JsonKey(fromJson: _audioFilesFromJson) required List<String> audioFiles,
     // New single audio file support
-    String? audioFile,
+    @JsonKey(fromJson: _audioFileFromJson) String? audioFile,
     @JsonKey(fromJson: _sceneTimestampsFromJson) List<Map<String, dynamic>>? sceneTimestamps,
     Map<String, dynamic>? requirements,
     Map<String, dynamic>? rewards,
@@ -72,6 +72,23 @@ List<String> _audioFilesFromJson(dynamic audioFiles) {
   }
   // Handle case where audioFiles might be other types
   return [];
+}
+
+// Helper method to safely parse single audio file
+String? _audioFileFromJson(dynamic audioFile) {
+  if (audioFile == null) return null;
+  if (audioFile is String) return audioFile;
+  if (audioFile is List) {
+    // If it's a list, take the first string item
+    for (final item in audioFile) {
+      if (item is String && item.isNotEmpty) {
+        return item;
+      }
+    }
+  }
+  // Log unexpected type for debugging
+  print('⚠️ EpisodeModel: Unexpected audioFile type: ${audioFile.runtimeType}, value: $audioFile');
+  return null;
 }
 
 // Helper method to parse scene timestamps

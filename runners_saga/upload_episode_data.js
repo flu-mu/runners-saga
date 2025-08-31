@@ -15,6 +15,7 @@ const db = admin.firestore();
 
 // Your episode data
 const episodeData = {
+  audioFile: 'https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E02%2FS01E02.mp3?alt=media&token=923b2927-1ca7-4388-b466-0e8c9d7b683c',
   sceneTimestamps: [
     {
       sceneType: "missionBriefing",

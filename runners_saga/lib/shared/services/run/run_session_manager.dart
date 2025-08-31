@@ -476,43 +476,46 @@ class RunSessionManager {
         final isDownloaded = await downloadService.isEpisodeDownloaded(episodeId);
         
         if (isDownloaded) {
-          // Get local files and find the correct scene file
+          // Get local files
           final localFiles = await downloadService.getLocalEpisodeFiles(episodeId);
           if (localFiles.isNotEmpty) {
-            // Find the file for the specific scene
-            final sceneAudioFile = SceneTriggerService.getSceneAudioFile(scene);
-            final fileName = FirebaseStorageService.getFileNameFromUrl(sceneAudioFile);
-            final sceneLocalFile = localFiles.firstWhere(
-              (file) => file.endsWith(fileName),
-              orElse: () => localFiles.first, // Fallback to first file if scene not found
-            );
-            
-            if (kDebugMode) {
-              print('🎵 Scene: ${SceneTriggerService.getSceneTitle(scene)}');
-              print('🎵 Target file: $fileName');
-              print('🎵 Playing from local file: $sceneLocalFile');
-            }
-            
-            // Create a local player variable to handle completion
-            final player = AudioPlayer();
-            
-            // Set up completion listener
-            player.playerStateStream.listen((state) {
-              if (state.processingState == ProcessingState.completed) {
-                if (kDebugMode) {
-                  print('🎵 Audio completed: $sceneLocalFile');
-                }
-                // Notify scene completion
-                onSceneCompleted?.call(scene);
-                player.dispose();
+            // Check if this episode uses single audio file mode
+            if (_currentEpisode?.audioFile != null && _currentEpisode!.audioFile!.isNotEmpty) {
+              // Single audio file mode - use the first (and only) local file
+              final sceneLocalFile = localFiles.first;
+              
+              if (kDebugMode) {
+                print('🎵 Scene: ${SceneTriggerService.getSceneTitle(scene)}');
+                print('🎵 Single audio file mode - using: $sceneLocalFile');
               }
-            });
-            
-            await player.setFilePath(sceneLocalFile);
-            await player.play();
-            
-            if (kDebugMode) {
-              print('✅ Audio playing from local file: $sceneLocalFile');
+              
+              // Create a local player variable to handle completion
+              final player = AudioPlayer();
+              
+              // Set up completion listener
+              player.playerStateStream.listen((state) {
+                if (state.processingState == ProcessingState.completed) {
+                  if (kDebugMode) {
+                    print('🎵 Audio completed: $sceneLocalFile');
+                  }
+                  // Notify scene completion
+                  onSceneCompleted?.call(scene);
+                  player.dispose();
+                }
+              });
+              
+              await player.setFilePath(sceneLocalFile);
+              await player.play();
+              
+              if (kDebugMode) {
+                print('✅ Audio playing from single audio file: $sceneLocalFile');
+              }
+            } else {
+              // Multiple audio files mode (legacy) - find specific scene file
+              if (kDebugMode) {
+                print('⚠️ Multiple audio files mode not supported in RunSessionManager');
+                print('💡 Use SceneTriggerService for audio playback instead');
+              }
             }
           } else {
             if (kDebugMode) {

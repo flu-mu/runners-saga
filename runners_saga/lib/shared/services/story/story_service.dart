@@ -1188,6 +1188,20 @@ class StoryService {
           print('🔍 StoryService: Processing episode ${i + 1}: ${doc.id}');
           print('🔍 StoryService: Episode data keys: ${data.keys.toList()}');
           
+          // Log specific fields that might cause issues
+          if (data.containsKey('audioFile')) {
+            print('🔍 StoryService: audioFile field type: ${data['audioFile'].runtimeType}');
+            print('🔍 StoryService: audioFile field value: ${data['audioFile']}');
+          }
+          if (data.containsKey('audioFiles')) {
+            print('🔍 StoryService: audioFiles field type: ${data['audioFiles'].runtimeType}');
+            print('🔍 StoryService: audioFiles field value: ${data['audioFiles']}');
+          }
+          if (data.containsKey('sceneTimestamps')) {
+            print('🔍 StoryService: sceneTimestamps field type: ${data['sceneTimestamps'].runtimeType}');
+            print('🔍 StoryService: sceneTimestamps field value: ${data['sceneTimestamps']}');
+          }
+          
           final episode = EpisodeModel.fromJson(data);
           episodes.add(episode);
           print('🔍 StoryService: Successfully parsed episode ${doc.id}');

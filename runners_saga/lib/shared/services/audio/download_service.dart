@@ -28,6 +28,8 @@ class DownloadService {
     final p = '${dir.path}/$_episodeDirName/$episodeId';
     final d = Directory(p);
     if (!d.existsSync()) d.createSync(recursive: true);
+    
+    print('🔍 _episodeDir created: $p');
     return p;
   }
   
@@ -40,7 +42,15 @@ class DownloadService {
       
       // Check if any audio files exist
       final files = episodeDir.listSync();
-      return files.any((file) => file.path.endsWith('.mp3') || file.path.endsWith('.wav'));
+      final hasAudioFiles = files.any((file) => file.path.endsWith('.mp3') || file.path.endsWith('.wav'));
+      
+      if (hasAudioFiles) {
+        print('✅ Episode $episodeId is downloaded with ${files.where((file) => file.path.endsWith('.mp3') || file.path.endsWith('.wav')).length} audio files');
+      } else {
+        print('❌ Episode $episodeId is not downloaded - no audio files found');
+      }
+      
+      return hasAudioFiles;
     } catch (e) {
       print('Error checking if episode is downloaded: $e');
       return false;
@@ -54,14 +64,17 @@ class DownloadService {
       final episodeDir = Directory(dir);
       if (!episodeDir.existsSync()) return [];
       
+      print('🔍 getLocalEpisodeFiles scanning directory: $dir');
+      
       final files = episodeDir.listSync()
           .where((file) => file.path.endsWith('.mp3') || file.path.endsWith('.wav'))
           .map((file) => file.path)
           .toList();
       
+      print('🔍 Found local files: $files');
       return files;
     } catch (e) {
-      print('Error getting local episode files: $e');
+      print('❌ Error getting local episode files: $e');
       return [];
     }
   }
@@ -252,19 +265,64 @@ class DownloadService {
   /// Extract filename from URL
   String _getFileNameFromUrl(String url) {
     try {
+      print('🔍 _getFileNameFromUrl called with: $url');
+      
+      // Handle Firebase Storage URLs specifically
+      if (url.contains('firebasestorage.app')) {
+        // For Firebase Storage URLs like:
+        // https://firebasestorage.googleapis.com/v0/b/bucket/o/audio%2Fepisodes%2FS01E02%2FS01E02.mp3?alt=media&token=...
+        // We need to extract the filename from the encoded path
+        
+        // First, try to find the encoded path part
+        final encodedPathMatch = RegExp(r'/o/([^?]+)').firstMatch(url);
+        if (encodedPathMatch != null) {
+          final encodedPath = encodedPathMatch.group(1)!;
+          // Decode the URL-encoded path
+          final decodedPath = Uri.decodeComponent(encodedPath);
+          print('🔍 Decoded Firebase path: $decodedPath');
+          
+          // Extract filename from the decoded path
+          final pathParts = decodedPath.split('/');
+          if (pathParts.isNotEmpty) {
+            final filename = pathParts.last;
+            print('🔍 Firebase Storage filename extracted: $filename');
+            return filename;
+          }
+        }
+        
+        // Fallback: try to extract from the last part before query parameters
+        final beforeQuery = url.split('?').first;
+        final lastSlash = beforeQuery.lastIndexOf('/');
+        if (lastSlash != -1 && lastSlash < beforeQuery.length - 1) {
+          final filename = beforeQuery.substring(lastSlash + 1);
+          print('🔍 Firebase Storage fallback filename: $filename');
+          return filename;
+        }
+      }
+      
+      // General URL parsing
       final uri = Uri.parse(url);
       final pathSegments = uri.pathSegments;
+      print('🔍 Path segments: $pathSegments');
+      
       if (pathSegments.isNotEmpty) {
-        return pathSegments.last;
+        final filename = pathSegments.last;
+        print('🔍 Extracted filename: $filename');
+        return filename;
       }
+      
       // Fallback: get filename from URL
       final lastSlash = url.lastIndexOf('/');
       if (lastSlash != -1 && lastSlash < url.length - 1) {
-        return url.substring(lastSlash + 1);
+        final filename = url.substring(lastSlash + 1);
+        print('🔍 Fallback filename: $filename');
+        return filename;
       }
+      
+      print('🔍 No filename found, returning original URL');
       return url;
     } catch (e) {
-      print('Error parsing URL: $e');
+      print('❌ Error parsing URL: $e');
       return url;
     }
   }
@@ -283,6 +341,73 @@ class DownloadService {
     } catch (e) {
       print('Error deleting episode: $e');
       return false;
+    }
+  }
+  
+  /// Download a single audio file for an episode
+  Future<DownloadResult> downloadSingleAudioFile(
+    String episodeId, 
+    String audioFileUrl, {
+    Function(double)? onProgress,
+  }) async {
+    try {
+      print('🔍 downloadSingleAudioFile called with:');
+      print('  - episodeId: $episodeId');
+      print('  - audioFileUrl: $audioFileUrl');
+      
+      final dest = await _episodeDir(episodeId);
+      print('  - destination directory: $dest');
+      
+      final fileName = _getFileNameFromUrl(audioFileUrl);
+      print('  - extracted filename: $fileName');
+      
+      final out = File('$dest/$fileName');
+      print('  - output file path: ${out.path}');
+      
+      // Skip if file already exists
+      if (out.existsSync()) {
+        print('✅ File already exists: $fileName');
+        onProgress?.call(1.0);
+        return DownloadResult(
+          success: true, 
+          localPaths: [out.path],
+          progress: 1.0,
+        );
+      }
+      
+      print('📥 Downloading single audio file: $fileName');
+      onProgress?.call(0.1);
+      
+      // Download file
+      final res = await http.get(Uri.parse(audioFileUrl));
+      if (res.statusCode == 200) {
+        await out.writeAsBytes(res.bodyBytes);
+        print('✅ Downloaded single audio file: $fileName');
+        print('✅ File saved to: ${out.path}');
+        onProgress?.call(1.0);
+        
+        return DownloadResult(
+          success: true, 
+          localPaths: [out.path],
+          progress: 1.0,
+        );
+      } else {
+        print('❌ HTTP ${res.statusCode} for $fileName');
+        return DownloadResult(
+          success: false, 
+          localPaths: [], 
+          error: 'HTTP ${res.statusCode} for $fileName',
+          progress: 0.0,
+        );
+      }
+    } catch (e) {
+      print('❌ Download error for single audio file: $e');
+      return DownloadResult(
+        success: false, 
+        localPaths: [], 
+        error: e.toString(),
+        progress: 0.0,
+      );
     }
   }
   

@@ -86,6 +86,50 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     try {
       final service = DownloadService();
       
+      // Check if this episode uses single audio file mode
+      if (episode.audioFile != null && episode.audioFile!.isNotEmpty) {
+        // Single audio file mode - download the single file
+        print('🎵 Downloading single audio file: ${episode.audioFile}');
+        
+        final result = await service.downloadSingleAudioFile(
+          widget.episodeId,
+          episode.audioFile!,
+          onProgress: (progress) {
+            if (mounted) {
+              setState(() { _progress = progress; });
+            }
+          },
+        );
+        
+        setState(() { 
+          _downloading = false; 
+          _cached = result.success; 
+          _progress = result.success ? 1 : 0; 
+        });
+        
+        if (!mounted) return;
+        
+        final snack = SnackBar(
+          content: Text(
+            result.success ? 'Episode downloaded successfully!' : 'Download failed: ${result.error}'
+          ),
+          backgroundColor: result.success ? kMeadowGreen : kEmberCoral,
+          duration: const Duration(seconds: 5),
+          action: result.success ? null : SnackBarAction(
+            label: 'Help',
+            textColor: Colors.white,
+            onPressed: () {
+              _showDownloadHelpDialog(context);
+            },
+          ),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snack);
+        return;
+      }
+      
+      // Multiple audio files mode (legacy) - download individual scene files
+      print('🎵 Downloading multiple audio files: ${episode.audioFiles.length} files');
+      
       // Extract file names from the audio file paths
       final fileNames = episode.audioFiles.map((path) {
         // Handle both asset paths and Firebase URLs
@@ -192,7 +236,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // (Placeholder) Listen Again list – show file names and stub duration text
+                // Listen Again section - show scenes based on episode type
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -205,38 +249,79 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                     children: [
                       Text('Listen Again', style: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
-                      ...List.generate(episode.audioFiles.length, (i) {
-                        final label = episode.audioFiles[i].split('/').last.replaceAll('_', ' ');
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 28,
-                                height: 28,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: kElectricAqua.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: kElectricAqua.withOpacity(0.4)),
+                      if (episode.audioFile != null && episode.audioFile!.isNotEmpty && episode.sceneTimestamps != null) ...[
+                        // Single audio file mode - show scenes with timestamps
+                        ...List.generate(episode.sceneTimestamps!.length, (i) {
+                          final sceneData = episode.sceneTimestamps![i];
+                          final sceneName = sceneData['scene'] ?? 'Scene ${i + 1}';
+                          final startTime = sceneData['start'] ?? '0:00';
+                          final endTime = sceneData['end'] ?? '0:00';
+                          
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: kElectricAqua.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: kElectricAqua.withOpacity(0.4)),
+                                  ),
+                                  child: Text('${i + 1}', style: const TextStyle(color: Colors.white)),
                                 ),
-                                child: Text('${i + 1}', style: const TextStyle(color: Colors.white)),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  label,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.white),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    sceneName,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text('—', style: TextStyle(color: kTextMid)),
-                            ],
-                          ),
-                        );
-                      })
+                                const SizedBox(width: 12),
+                                Text('$startTime-$endTime', style: TextStyle(color: kTextMid, fontSize: 12)),
+                              ],
+                            ),
+                          );
+                        }),
+                      ] else ...[
+                        // Multiple audio files mode (legacy) - show individual file names
+                        ...List.generate(episode.audioFiles.length, (i) {
+                          final label = episode.audioFiles[i].split('/').last.replaceAll('_', ' ');
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: kElectricAqua.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: kElectricAqua.withOpacity(0.4)),
+                                  ),
+                                  child: Text('${i + 1}', style: const TextStyle(color: Colors.white)),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    label,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text('—', style: TextStyle(color: kTextMid)),
+                              ],
+                            ),
+                          );
+                        }),
+                      ]
                     ],
                   ),
                 ),
