@@ -899,66 +899,51 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   
   /// Start a simple, controllable timer
   void _startSimpleTimer() async {
-    if (_simpleTimer != null) {
-      _simpleTimer!.cancel();
-    }
+    // Timer management now handled by ProgressMonitorService
+    print('🚀 RunScreen: Timer management delegated to ProgressMonitorService');
     
+    // Start GPS tracking for real distance calculation
+    _startGpsTracking();
+    
+    // Start GPS signal loss detection
+    _startGpsSignalLossDetection();
+    
+    // Start real-time pace calculation
+    _startPaceCalculation();
+    
+    // Start network monitoring
+    _startNetworkMonitoring();
+    
+    // Audio will be handled by the background session (SceneTriggerService)
+    print('🎵 Audio will be managed by background session');
+    
+    // Set timer state for UI
     _isTimerRunning = true;
     _isPaused = false;
     
-    // If resuming from pause, use the paused time, otherwise start from 0
-    if (_pausedTime > Duration.zero) {
-      _elapsedTime = _pausedTime;
-      print('🔄 Simple timer resumed from: ${_elapsedTime.inSeconds}s');
-    } else {
-      _elapsedTime = Duration.zero;
-      print('🚀 Simple timer started from 0');
-      
-      // Start GPS tracking for real distance calculation
-      _startGpsTracking();
-      
-      // Start GPS signal loss detection
-      _startGpsSignalLossDetection();
-      
-      // Start real-time pace calculation
-      _startPaceCalculation();
-      
-      // Start network monitoring
-      _startNetworkMonitoring();
-      
-      // Audio will be handled by the background session (SceneTriggerService)
-      print('🎵 Audio will be managed by background session');
-    }
+    // Start listening to elapsed time updates from ProgressMonitorService
+    _startListeningToServiceUpdates();
+  }
+  
+  /// Start listening to updates from ProgressMonitorService
+  void _startListeningToServiceUpdates() {
+    // Get the run session manager to access ProgressMonitorService
+    final runSessionManager = ref.read(runSessionControllerProvider.notifier);
     
-    // Create a robust timer that continues running in background
-    _simpleTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      // Check if we should stop the timer
-      if (!_isTimerRunning || _timerStopped || _isPaused) {
-        timer.cancel();
-        _simpleTimer = null;
-        return;
-      }
+    // Listen for time updates from the service
+    // This will be called every second by ProgressMonitorService
+    runSessionManager.onTimeUpdated = (Duration elapsedTime) {
+      if (_disposed) return;
       
-      // Update elapsed time
-      _elapsedTime += const Duration(seconds: 1);
+      _elapsedTime = elapsedTime;
       
-      // Log timer progress (less frequently to avoid spam)
-      if (_elapsedTime.inSeconds % 30 == 0) {
-        print('⏱️ Simple timer tick: ${_elapsedTime.inSeconds}s');
-      }
-      
-      // Update UI only if mounted and not disposed
-      if (mounted && !_disposed) {
+      // Update UI if mounted
+      if (mounted) {
         setState(() {});
       }
-      
-      // Save timer state periodically for background persistence
-      if (_elapsedTime.inSeconds % 60 == 0) {
-        _saveTimerState();
-      }
-    });
+    };
     
-    print('🚀 Simple timer started - will continue running in background');
+    print('👂 RunScreen: Now listening to ProgressMonitorService time updates');
   }
   
   /// Save timer state for background persistence
@@ -1569,11 +1554,7 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
         targetDistance: 5.0,
         targetTime: 1800000, // 30 minutes
         audioFiles: [
-          'assets/audio/episodes/S01E01/scene_1_quick.mp3',
-          'assets/audio/episodes/S01E01/scene_2_mission_briefing.mp3',
-          'assets/audio/episodes/S01E01/scene_3_the_journey.mp3',
-          'assets/audio/episodes/S01E01/scene_4_first_contact.mp3',
-          'assets/audio/episodes/S01E01/scene_5_the_crisis.mp3'
+          // Audio files should come from episode data, not hardcoded
         ],
         requirements: {},
         rewards: {},
@@ -1623,6 +1604,12 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           print('🎯 RunScreen: Audio files count: ${currentEpisode!.audioFiles.length}');
           
           print('🎯 RunScreen: About to start session...');
+          
+          // Set up time update callback BEFORE starting the session
+          // This ensures we don't miss any time updates
+          print('🔗 RunScreen: Setting up time update callback before starting session...');
+          _startListeningToServiceUpdates();
+          
           await ref.read(runSessionControllerProvider.notifier).startSession(
             currentEpisode!,
             userTargetTime: targetTime ?? const Duration(minutes: 30),
@@ -1658,8 +1645,8 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
         _isInitializing = false;
       });
       
-      // Start our simple timer
-      _startSimpleTimer();
+      // Note: Timer callback is now set up before starting the session
+      // No need to call _startSimpleTimer() here
       
     } catch (e) {
       print('Error starting run: $e');
@@ -2048,6 +2035,19 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
                   Text(
                     _isPaused ? 'Paused Time' : 'Elapsed Time',
                     style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 16),
+                  // Debug button to check timer status
+                  ElevatedButton(
+                    onPressed: () {
+                      final runSessionManager = ref.read(runSessionControllerProvider.notifier);
+                      print('🔍 Debug: Session active: ${runSessionManager.isSessionActive}');
+                      print('🔍 Debug: Session state: ${runSessionManager.sessionState}');
+                      print('🔍 Debug: Current elapsed time: ${_elapsedTime.inSeconds}s');
+                      print('🔍 Debug: Timer running: $_isTimerRunning');
+                      print('🔍 Debug: Timer paused: $_isPaused');
+                    },
+                    child: const Text('Debug Timer Status'),
                   ),
                 ],
               ),

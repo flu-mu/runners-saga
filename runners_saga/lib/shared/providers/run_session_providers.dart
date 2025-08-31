@@ -190,7 +190,16 @@ class RunSessionController extends _$RunSessionController {
       // Mark the scene as completed in the played scenes list
       ref.read(playedScenesProvider.notifier).addScene(scene);
     };
+    
+    // Store onTimeUpdated callback for external access
+    _onTimeUpdated = manager.onTimeUpdated;
   }
+  
+  // Store the callback for external access
+  Function(Duration time)? _onTimeUpdated;
+  
+  // Expose session state getter
+  RunSessionState get sessionState => state.sessionState;
   
   /// Start a new run session
   Future<void> startSession(
@@ -331,5 +340,17 @@ class RunSessionController extends _$RunSessionController {
   
   /// Get played scenes
   List<SceneType> get playedScenes => state.playedScenes;
+
+  // Expose the callback setter
+  set onTimeUpdated(Function(Duration time)? callback) {
+    _onTimeUpdated = callback;
+    // Ensure the callback is set on the underlying manager
+    if (state != null) {
+      state.onTimeUpdated = callback;
+      print('🔗 RunSessionController: onTimeUpdated callback set on manager: ${callback != null ? 'connected' : 'disconnected'}');
+    } else {
+      print('⚠️ RunSessionController: Cannot set onTimeUpdated - state is null');
+    }
+  }
 }
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart'; // Add this import for AppLifecycleState
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:just_audio/just_audio.dart';
@@ -39,6 +40,7 @@ class RunSessionManager {
   Function(double progress)? onProgressUpdated;
   Function(RunStats stats)? onStatsUpdated;
   Function(List<LocationPoint> route)? onRouteUpdated;
+  Function(Duration time)? onTimeUpdated; // New callback for elapsed time updates
   
   // Getters
   bool get isSessionActive => _isSessionActive;
@@ -91,10 +93,11 @@ class RunSessionManager {
         onRouteUpdate: _onRouteUpdate,
       );
       
-      // Initialize scene trigger service with user's selected targets
+      // Initialize scene trigger service with user's selected targets and episode data
       await _sceneTrigger.initialize(
         targetTime: userTargetTime,
         targetDistance: userTargetDistance,
+        episode: episode,
       );
       
       // Set up scene trigger callbacks
@@ -311,6 +314,9 @@ class RunSessionManager {
     
     // Update stats to reflect the new time
     _updateStats();
+    
+    // NEW: Notify listeners of time updates
+    onTimeUpdated?.call(time);
   }
 
   /// Handle route updates
@@ -462,6 +468,12 @@ class RunSessionManager {
   RunSessionState _getSessionState() {
     print('🎯 _getSessionState: _isPaused=$_isPaused, _isSessionActive=$_isSessionActive, _sceneTrigger.isScenePlaying=${_sceneTrigger.isScenePlaying}');
     print('🎯 _getSessionState: _globallyStopped=$_globallyStopped, _timersStopped=$_timersStopped');
+    
+    // Fix session state mismatch: if progress monitor is running, session should be active
+    if (!_isSessionActive && _progressMonitor.isMonitoring) {
+      print('🎯 _getSessionState: Fixing session state mismatch - progress monitor is running');
+      _isSessionActive = true;
+    }
     
     if (_isPaused) {
       print('🎯 Returning paused state');

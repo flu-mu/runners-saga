@@ -1317,11 +1317,8 @@ class StoryService {
           targetDistance: 5.0,
           targetTime: 1800000, // 30 minutes
           audioFiles: [
-            'scene_1_quick.mp3',
-            'scene_2_mission_briefing.mp3', 
-            'scene_3_the_journey.mp3',
-            'scene_4_first_contact.mp3',
-            'scene_5_the_crisis.mp3'
+            // Audio files should be loaded from Firebase, not hardcoded
+            // These are placeholder names that should match actual downloaded files
           ],
           requirements: {},
           rewards: {},
@@ -1339,11 +1336,8 @@ class StoryService {
           targetDistance: 7.0,
           targetTime: 2400000, // 40 minutes
           audioFiles: [
-            'scene_1_quick.mp3',
-            'scene_2_mission_briefing.mp3', 
-            'scene_3_the_journey.mp3',
-            'scene_4_first_contact.mp3',
-            'scene_5_the_crisis.mp3'
+            // Audio files should be loaded from Firebase, not hardcoded
+            // These are placeholder names that should match actual downloaded files
           ],
           requirements: {},
           rewards: {},
@@ -1361,11 +1355,8 @@ class StoryService {
           targetDistance: 10.0,
           targetTime: 3600000, // 60 minutes
           audioFiles: [
-            'scene_1_quick.mp3',
-            'scene_2_mission_briefing.mp3', 
-            'scene_3_the_journey.mp3',
-            'scene_4_first_contact.mp3',
-            'scene_5_the_crisis.mp3'
+            // Audio files should be loaded from Firebase, not hardcoded
+            // These are placeholder names that should match actual downloaded files
           ],
           requirements: {},
           rewards: {},

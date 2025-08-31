@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert'; // Added for jsonEncode
+import '../story/scene_trigger_service.dart'; // Add scene trigger service import
 
 class ProgressMonitorService {
   // Timer and monitoring state
@@ -33,6 +35,10 @@ class ProgressMonitorService {
   // App lifecycle tracking
   bool _isAppInBackground = false;
   DateTime? _lastGpsUpdate;
+  
+  // Scene trigger integration
+  SceneTriggerService? _sceneTriggerService;
+  Timer? _backgroundProgressTimer;
   
   // Targets
   Duration _targetTime = Duration.zero;
@@ -544,6 +550,9 @@ class ProgressMonitorService {
     if (_isMonitoring && !_isPaused) {
       _ensureGpsTrackingActive();
       _persistCurrentState();
+      
+      // Start background progress monitoring for scene triggers
+      _startBackgroundProgressMonitoring();
     }
   }
   
@@ -553,6 +562,9 @@ class ProgressMonitorService {
     
     // Check if GPS tracking continued while in background
     _validateGpsContinuity();
+    
+    // Stop background progress monitoring
+    _stopBackgroundProgressMonitoring();
     
     // Restore real-time updates
     if (_isMonitoring && !_isPaused) {
@@ -620,4 +632,97 @@ class ProgressMonitorService {
   static const String _lastPositionKey = 'last_position';
   static const String _monitoringStateKey = 'monitoring_state';
   static const String _startTimeKey = 'monitor_start_time';
+
+  /// NEW: Persist GPS data for background survival
+  Future<void> _persistGpsData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Save route data every 10 GPS points
+      final routeJson = _route.map((pos) => {
+        'latitude': pos.latitude,
+        'longitude': pos.longitude,
+        'accuracy': pos.accuracy,
+        'timestamp': pos.timestamp?.toIso8601String(),
+        'speed': pos.speed,
+        'heading': pos.heading,
+        'altitude': pos.altitude,
+      }).toList();
+      
+      await prefs.setString('gps_route_${DateTime.now().millisecondsSinceEpoch}', 
+                           jsonEncode(routeJson));
+      
+      if (kDebugMode) {
+        print('💾 GPS route persisted: ${_route.length} points, Distance: ${_currentDistance.toStringAsFixed(3)}km');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to persist GPS data: $e');
+      }
+    }
+  }
+
+  /// Set the scene trigger service for background integration
+  void setSceneTriggerService(SceneTriggerService service) {
+    _sceneTriggerService = service;
+    if (kDebugMode) {
+      print('🎬 ProgressMonitorService: Scene trigger service connected for background integration');
+    }
+  }
+  
+  /// Start background progress monitoring for scene triggers
+  void _startBackgroundProgressMonitoring() {
+    if (_backgroundProgressTimer != null) return;
+    
+    debugPrint('🎬 ProgressMonitorService: Starting background progress monitoring for scene triggers...');
+    
+    // Monitor progress every 5 seconds in background to check scene triggers
+    _backgroundProgressTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!_isMonitoring || _isPaused) {
+        timer.cancel();
+        _backgroundProgressTimer = null;
+        return;
+      }
+      
+      // Update progress and check scene triggers
+      _updateProgressForBackground();
+    });
+  }
+  
+  /// Stop background progress monitoring
+  void _stopBackgroundProgressMonitoring() {
+    if (_backgroundProgressTimer != null) {
+      _backgroundProgressTimer!.cancel();
+      _backgroundProgressTimer = null;
+      debugPrint('🎬 ProgressMonitorService: Background progress monitoring stopped');
+    }
+  }
+  
+  /// Update progress for background scene trigger checking
+  void _updateProgressForBackground() {
+    if (!_isMonitoring || _isPaused) return;
+    
+    // Calculate current progress
+    final progress = _calculateProgress();
+    
+    // Update scene trigger service if available
+    if (_sceneTriggerService != null) {
+      try {
+        // Update scene trigger service with current progress and elapsed time
+        _sceneTriggerService!.updateProgress(
+          progress: progress,
+          elapsedTime: _elapsedTime,
+          distance: _currentDistance,
+        );
+        
+        if (kDebugMode) {
+          print('🎬 Background progress update: ${(progress * 100).toStringAsFixed(1)}%, elapsedTime: ${_elapsedTime.inSeconds}s');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('❌ Background scene trigger update failed: $e');
+        }
+      }
+    }
+  }
 }
