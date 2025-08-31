@@ -58,6 +58,23 @@ class SceneTriggerService {
   
   // Download service for local file access
   final DownloadService _downloadService = DownloadService();
+  
+  // Single Audio File Architecture
+  String? _episodeAudioFile;
+  bool _isSingleFileMode = false;
+  
+  // Scene timestamps within the single audio file (to be provided by user)
+  final Map<SceneType, Duration> _sceneTimestamps = {
+    SceneType.missionBriefing: Duration.zero,
+    SceneType.theJourney: Duration(seconds: 120),      // 2:00 - placeholder
+    SceneType.firstContact: Duration(seconds: 240),    // 4:00 - placeholder
+    SceneType.theCrisis: Duration(seconds: 420),       // 7:00 - placeholder
+    SceneType.extractionDebrief: Duration(seconds: 540), // 9:00 - placeholder
+  };
+  
+  // Audio state management
+  bool _isAudioLoaded = false;
+  bool _isAudioPaused = false;
 
   // Callbacks
   Function(SceneType)? onSceneStart;
@@ -74,6 +91,58 @@ class SceneTriggerService {
   // Static methods
   static double getSceneTriggerPercentage(SceneType sceneType) {
     return _sceneTriggerPercentages[sceneType] ?? 0.0;
+  }
+  
+  // Single Audio File Methods
+  void setSingleAudioFile(String audioFilePath) {
+    _episodeAudioFile = audioFilePath;
+    _isSingleFileMode = true;
+    if (kDebugMode) {
+      debugPrint('🎵 Single audio file mode enabled: $audioFilePath');
+    }
+  }
+  
+  void updateSceneTimestamps(Map<SceneType, Duration> timestamps) {
+    _sceneTimestamps.clear();
+    _sceneTimestamps.addAll(timestamps);
+    if (kDebugMode) {
+      debugPrint('🎵 Scene timestamps updated:');
+      for (final entry in _sceneTimestamps.entries) {
+        debugPrint('  ${entry.key}: ${entry.value}');
+      }
+    }
+  }
+  
+  bool get isSingleFileMode => _isSingleFileMode;
+  
+  // Start single audio file playback from beginning
+  Future<void> startSingleAudioFilePlayback() async {
+    if (!_isSingleFileMode || !_isAudioLoaded) {
+      if (kDebugMode) {
+        debugPrint('❌ Cannot start single audio file: mode=$_isSingleFileMode, loaded=$_isAudioLoaded');
+      }
+      return;
+    }
+    
+    try {
+      if (kDebugMode) {
+        debugPrint('🎵 Starting single audio file playback from beginning');
+      }
+      
+      // Seek to the beginning
+      await _audioPlayer.seek(Duration.zero);
+      
+      // Start playback
+      await _audioPlayer.play();
+      
+      if (kDebugMode) {
+        debugPrint('✅ Single audio file playback started');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Failed to start single audio file playback: $e');
+      }
+    }
   }
 
   void loadAudioFilesFromDatabase(List<String> audioFiles) {
@@ -102,6 +171,8 @@ class SceneTriggerService {
     Duration? targetTime,
     double? targetDistance,
     EpisodeModel? episode,
+    String? singleAudioFile,
+    Map<SceneType, Duration>? sceneTimestamps,
   }) async {
     _targetTime = targetTime;
     _targetDistance = targetDistance;
@@ -118,6 +189,15 @@ class SceneTriggerService {
       } else {
         debugPrint('⚠️ SceneTriggerService: Initialized without episode data');
       }
+    }
+
+    // Initialize single audio file mode if provided
+    if (singleAudioFile != null) {
+      setSingleAudioFile(singleAudioFile);
+      if (sceneTimestamps != null) {
+        updateSceneTimestamps(sceneTimestamps);
+      }
+      await _initializeSingleAudioFile();
     }
 
     await _initializeBackgroundAudio();
@@ -176,6 +256,75 @@ class SceneTriggerService {
         debugPrint('❌ Failed to initialize notifications: $e');
       }
     }
+  }
+
+  // Single Audio File Initialization
+  Future<void> _initializeSingleAudioFile() async {
+    if (!_isSingleFileMode || _episodeAudioFile == null) return;
+    
+    try {
+      if (kDebugMode) {
+        debugPrint('🎵 Initializing single audio file: $_episodeAudioFile');
+      }
+      
+      // Set the audio file path
+      await _audioPlayer.setFilePath(_episodeAudioFile!);
+      
+      // Set up audio player listeners
+      _audioPlayer.playerStateStream.listen((state) {
+        if (kDebugMode) {
+          debugPrint('🎵 Audio player state: ${state.processingState}');
+        }
+        
+        if (state.processingState == ProcessingState.completed) {
+          if (kDebugMode) {
+            debugPrint('🎵 Single audio file playback completed');
+          }
+        }
+      });
+      
+      _audioPlayer.positionStream.listen((position) {
+        if (kDebugMode) {
+          debugPrint('🎵 Audio position: ${position.inSeconds}s');
+        }
+        
+        // Check if we need to pause at scene boundaries
+        _checkSceneBoundaryPause(position);
+      });
+      
+      _isAudioLoaded = true;
+      
+      if (kDebugMode) {
+        debugPrint('✅ Single audio file initialized successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Failed to initialize single audio file: $e');
+      }
+    }
+  }
+  
+  void _checkSceneBoundaryPause(Duration position) {
+    // Check if we're approaching the next scene boundary
+    for (final sceneType in SceneType.values) {
+      final timestamp = _sceneTimestamps[sceneType];
+      if (timestamp != null && !_playedScenes.contains(sceneType)) {
+        // Pause 1 second before the scene starts
+        final pauseTime = timestamp - const Duration(seconds: 1);
+        if (position >= pauseTime && position < timestamp && !_isAudioPaused) {
+          _pauseAtSceneBoundary(sceneType);
+        }
+      }
+    }
+  }
+  
+  void _pauseAtSceneBoundary(SceneType sceneType) {
+    if (kDebugMode) {
+      debugPrint('🎵 Pausing at scene boundary: ${SceneTriggerService.getSceneTitle(sceneType)}');
+    }
+    
+    _audioPlayer.pause();
+    _isAudioPaused = true;
   }
 
   // App lifecycle management
@@ -277,49 +426,15 @@ class SceneTriggerService {
           debugPrint('✅ Audio session activated');
         }
       } else {
-        if (kDebugMode) {
-          debugPrint('⚠️ No audio session available');
-        }
+        debugPrint('⚠️ No audio session available');
       }
       
-      if (kDebugMode) {
-        debugPrint('🎵 Getting audio path for scene: $sceneType');
+      // Check if we're in single file mode
+      if (_isSingleFileMode) {
+        await _playSceneFromSingleFile(sceneType);
+      } else {
+        await _playSceneFromMultipleFiles(sceneType);
       }
-      
-      final audioPath = await _getAudioPathForScene(sceneType);
-      if (audioPath == null) {
-        if (kDebugMode) {
-          debugPrint('❌ No audio path found for scene: $sceneType');
-        }
-        _onSceneAudioComplete(sceneType);
-        return;
-      }
-
-      if (kDebugMode) {
-        debugPrint('🎵 Setting audio file path: $audioPath');
-      }
-      
-      await _audioPlayer.setFilePath(audioPath);
-      
-      if (kDebugMode) {
-        debugPrint('🎵 Starting audio playback...');
-      }
-      
-      await _audioPlayer.play();
-      
-      if (kDebugMode) {
-        debugPrint('🎵 Playing audio for scene: ${SceneTriggerService.getSceneTitle(sceneType)}');
-        debugPrint('📁 Audio path: $audioPath');
-      }
-      
-      _audioPlayer.playerStateStream.listen((state) {
-        if (kDebugMode) {
-          debugPrint('🎵 Audio player state: ${state.processingState}');
-        }
-        if (state.processingState == ProcessingState.completed) {
-          _onSceneAudioComplete(sceneType);
-        }
-      });
       
     } catch (e) {
       if (kDebugMode) {
@@ -328,6 +443,95 @@ class SceneTriggerService {
       }
       _onSceneAudioComplete(sceneType);
     }
+  }
+  
+  Future<void> _playSceneFromSingleFile(SceneType sceneType) async {
+    if (!_isAudioLoaded || _episodeAudioFile == null) {
+      if (kDebugMode) {
+        debugPrint('❌ Single audio file not loaded or available');
+      }
+      _onSceneAudioComplete(sceneType);
+      return;
+    }
+    
+    try {
+      final timestamp = _sceneTimestamps[sceneType];
+      if (timestamp == null) {
+        if (kDebugMode) {
+          debugPrint('❌ No timestamp found for scene: $sceneType');
+        }
+        _onSceneAudioComplete(sceneType);
+        return;
+      }
+      
+      if (kDebugMode) {
+        debugPrint('🎵 Seeking to timestamp: $timestamp for scene: ${SceneTriggerService.getSceneTitle(sceneType)}');
+      }
+      
+      // Seek to the scene timestamp
+      await _audioPlayer.seek(timestamp);
+      
+      // Resume playback if it was paused
+      if (_isAudioPaused) {
+        if (kDebugMode) {
+          debugPrint('🎵 Resuming paused audio playback');
+        }
+        _isAudioPaused = false;
+      }
+      
+      await _audioPlayer.play();
+      
+      if (kDebugMode) {
+        debugPrint('🎵 Playing scene from single file: ${SceneTriggerService.getSceneTitle(sceneType)} at $timestamp');
+      }
+      
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Error playing scene from single file: $e');
+      }
+      _onSceneAudioComplete(sceneType);
+    }
+  }
+  
+  Future<void> _playSceneFromMultipleFiles(SceneType sceneType) async {
+    if (kDebugMode) {
+      debugPrint('🎵 Getting audio path for scene: $sceneType');
+    }
+    
+    final audioPath = await _getAudioPathForScene(sceneType);
+    if (audioPath == null) {
+      if (kDebugMode) {
+        debugPrint('❌ No audio path found for scene: $sceneType');
+      }
+      _onSceneAudioComplete(sceneType);
+      return;
+    }
+
+    if (kDebugMode) {
+      debugPrint('🎵 Setting audio file path: $audioPath');
+    }
+    
+    await _audioPlayer.setFilePath(audioPath);
+    
+    if (kDebugMode) {
+      debugPrint('🎵 Starting audio playback...');
+    }
+    
+    await _audioPlayer.play();
+    
+    if (kDebugMode) {
+      debugPrint('🎵 Playing audio for scene: ${SceneTriggerService.getSceneTitle(sceneType)}');
+      debugPrint('📁 Audio path: $audioPath');
+    }
+    
+    _audioPlayer.playerStateStream.listen((state) {
+      if (kDebugMode) {
+        debugPrint('🎵 Audio player state: ${state.processingState}');
+      }
+      if (state.processingState == ProcessingState.completed) {
+        _onSceneAudioComplete(sceneType);
+      }
+    });
   }
 
   Future<void> _handleBackgroundScene(SceneType sceneType) async {

@@ -33,6 +33,10 @@ class RunSessionManager {
   bool _timersStopped = false; // Flag to prevent timer restart
   bool _globallyStopped = false; // Global stop flag
   
+  // Target values for the current session
+  Duration? _userTargetTime;
+  double? _userTargetDistance;
+  
   // Callbacks
   Function(RunSessionState state)? onSessionStateChanged;
   Function(SceneType scene)? onSceneStarted;
@@ -78,6 +82,8 @@ class RunSessionManager {
     
     try {
       _currentEpisode = episode;
+      _userTargetTime = userTargetTime;
+      _userTargetDistance = userTargetDistance;
       _sessionStartTime = DateTime.now();
       _isSessionActive = true;
       _isPaused = false;
@@ -187,6 +193,47 @@ class RunSessionManager {
     
     // Notify state change
     onSessionStateChanged?.call(sessionState);
+  }
+  
+  /// Enable single audio file mode for the current session
+  Future<void> enableSingleAudioFileMode({
+    required String audioFilePath,
+    required Map<SceneType, Duration> sceneTimestamps,
+  }) async {
+    if (!_isSessionActive) {
+      if (kDebugMode) {
+        print('❌ Cannot enable single audio file mode: session not active');
+      }
+      return;
+    }
+    
+    try {
+      if (kDebugMode) {
+        print('🎵 Enabling single audio file mode: $audioFilePath');
+        print('🎵 Scene timestamps: $sceneTimestamps');
+      }
+      
+      // Update the scene trigger service with single audio file
+      _sceneTrigger.setSingleAudioFile(audioFilePath);
+      _sceneTrigger.updateSceneTimestamps(sceneTimestamps);
+      
+      // Re-initialize with single audio file mode
+      await _sceneTrigger.initialize(
+        targetTime: _userTargetTime,
+        targetDistance: _userTargetDistance,
+        episode: _currentEpisode,
+        singleAudioFile: audioFilePath,
+        sceneTimestamps: sceneTimestamps,
+      );
+      
+      if (kDebugMode) {
+        print('✅ Single audio file mode enabled successfully');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Failed to enable single audio file mode: $e');
+      }
+    }
   }
 
   /// Stop the current run session and save data
