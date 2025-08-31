@@ -66,6 +66,11 @@ List<String> _audioFilesFromJson(dynamic audioFiles) {
         .cast<String>()
         .toList();
   }
+  // Handle case where audioFiles might be a single string
+  if (audioFiles is String) {
+    return [audioFiles];
+  }
+  // Handle case where audioFiles might be other types
   return [];
 }
 
@@ -73,10 +78,15 @@ List<String> _audioFilesFromJson(dynamic audioFiles) {
 List<Map<String, dynamic>> _sceneTimestampsFromJson(dynamic sceneTimestamps) {
   if (sceneTimestamps == null) return [];
   if (sceneTimestamps is List) {
-    return sceneTimestamps
-        .where((item) => item != null && item is Map<String, dynamic>)
-        .cast<Map<String, dynamic>>()
-        .toList();
+    try {
+      return sceneTimestamps
+          .where((item) => item != null && item is Map<String, dynamic>)
+          .cast<Map<String, dynamic>>()
+          .toList();
+    } catch (e) {
+      // If casting fails, return empty list
+      return [];
+    }
   }
   return [];
 }

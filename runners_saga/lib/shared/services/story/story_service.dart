@@ -1179,9 +1179,24 @@ class StoryService {
 
       print('🔍 StoryService: Query successful, found ${querySnapshot.docs.length} episodes');
       
-      final episodes = querySnapshot.docs
-          .map((doc) => EpisodeModel.fromJson(doc.data()))
-          .toList();
+      final episodes = <EpisodeModel>[];
+      
+      for (int i = 0; i < querySnapshot.docs.length; i++) {
+        try {
+          final doc = querySnapshot.docs[i];
+          final data = doc.data();
+          print('🔍 StoryService: Processing episode ${i + 1}: ${doc.id}');
+          print('🔍 StoryService: Episode data keys: ${data.keys.toList()}');
+          
+          final episode = EpisodeModel.fromJson(data);
+          episodes.add(episode);
+          print('🔍 StoryService: Successfully parsed episode ${doc.id}');
+        } catch (e) {
+          print('❌ StoryService: Failed to parse episode ${querySnapshot.docs[i].id}: $e');
+          print('❌ StoryService: Episode data: ${querySnapshot.docs[i].data()}');
+          // Continue with other episodes instead of failing completely
+        }
+      }
       
       print('🔍 StoryService: Parsed ${episodes.length} episodes successfully');
       return episodes;

@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "firebase-admin": "^13.5.0"
+  },
+  "name": "runners_saga",
+  "version": "1.0.0",
+  "description": "A story-driven running experience that transforms workouts into immersive adventures.",
+  "main": "upload_episode_data.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
