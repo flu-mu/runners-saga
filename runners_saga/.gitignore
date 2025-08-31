@@ -49,3 +49,6 @@ sagarunners/
 
 # macOS metadata files
 **/.DS_Store
+
+# Firebase service account keys (sensitive credentials)
+*-firebase-adminsdk-*.json
