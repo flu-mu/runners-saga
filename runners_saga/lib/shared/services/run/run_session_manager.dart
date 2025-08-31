@@ -111,13 +111,29 @@ class RunSessionManager {
       _sceneTrigger.onSceneComplete = _onSceneComplete;
       _sceneTrigger.onProgressUpdate = _onProgressUpdate;
       
-      // Load audio files from the database for this episode
-      // Force debug logging for testing
-      print('🎵 Loading audio files for episode: ${episode.id}');
-      print('📋 Episode audio files: ${episode.audioFiles}');
-      print('📊 Audio files count: ${episode.audioFiles.length}');
-      
-      _sceneTrigger.loadAudioFilesFromDatabase(episode.audioFiles);
+      // Check if episode supports single audio file mode
+      if (episode.audioFile != null && episode.audioFile!.isNotEmpty && 
+          episode.sceneTimestamps != null && episode.sceneTimestamps!.isNotEmpty) {
+        print('🎵 Episode supports single audio file mode - enabling automatically');
+        print('🎵 Single audio file: ${episode.audioFile}');
+        print('🎵 Scene timestamps: ${episode.sceneTimestamps}');
+        
+        // Convert scene timestamps to Duration format
+        final sceneTimestamps = _convertSceneTimestampsToDurations(episode.sceneTimestamps!);
+        
+        // Automatically enable single audio file mode
+        await enableSingleAudioFileMode(
+          audioFilePath: episode.audioFile!,
+          sceneTimestamps: sceneTimestamps,
+        );
+      } else {
+        // Load audio files from the database for this episode (fallback)
+        print('🎵 Loading audio files for episode: ${episode.id}');
+        print('📋 Episode audio files: ${episode.audioFiles}');
+        print('📊 Audio files count: ${episode.audioFiles.length}');
+        
+        _sceneTrigger.loadAudioFilesFromDatabase(episode.audioFiles);
+      }
       
       // Start progress monitoring (but without blocking timers)
       if (kDebugMode) {
@@ -234,6 +250,44 @@ class RunSessionManager {
         print('❌ Failed to enable single audio file mode: $e');
       }
     }
+  }
+  
+  // Convert scene timestamps from Firebase format to Duration format
+  Map<SceneType, Duration> _convertSceneTimestampsToDurations(List<Map<String, dynamic>> sceneTimestamps) {
+    final Map<SceneType, Duration> result = {};
+    
+    for (final scene in sceneTimestamps) {
+      final sceneTypeString = scene['sceneType'] as String?;
+      final startSeconds = scene['startSeconds'] as int?;
+      
+      if (sceneTypeString != null && startSeconds != null) {
+        // Convert string to SceneType enum
+        SceneType? sceneType;
+        switch (sceneTypeString) {
+          case 'missionBriefing':
+            sceneType = SceneType.missionBriefing;
+            break;
+          case 'theJourney':
+            sceneType = SceneType.theJourney;
+            break;
+          case 'firstContact':
+            sceneType = SceneType.firstContact;
+            break;
+          case 'theCrisis':
+            sceneType = SceneType.theCrisis;
+            break;
+          case 'extractionDebrief':
+            sceneType = SceneType.extractionDebrief;
+            break;
+        }
+        
+        if (sceneType != null) {
+          result[sceneType] = Duration(seconds: startSeconds);
+        }
+      }
+    }
+    
+    return result;
   }
 
   /// Stop the current run session and save data

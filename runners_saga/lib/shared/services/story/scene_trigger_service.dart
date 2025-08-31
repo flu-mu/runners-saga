@@ -186,16 +186,27 @@ class SceneTriggerService {
       if (episode != null) {
         debugPrint('🎵 SceneTriggerService: Initialized with episode ${episode.id}');
         debugPrint('🎵 Episode audio files: ${episode.audioFiles}');
+        
+        // Check for single audio file support
+        if (episode.audioFile != null && episode.audioFile!.isNotEmpty) {
+          debugPrint('🎵 Episode has single audio file: ${episode.audioFile}');
+        }
+        if (episode.sceneTimestamps != null && episode.sceneTimestamps!.isNotEmpty) {
+          debugPrint('🎵 Episode has scene timestamps: ${episode.sceneTimestamps}');
+        }
       } else {
         debugPrint('⚠️ SceneTriggerService: Initialized without episode data');
       }
     }
 
-    // Initialize single audio file mode if provided
-    if (singleAudioFile != null) {
-      setSingleAudioFile(singleAudioFile);
-      if (sceneTimestamps != null) {
-        updateSceneTimestamps(sceneTimestamps);
+    // Initialize single audio file mode if provided or if episode supports it
+    if (singleAudioFile != null || (episode?.audioFile != null && episode!.audioFile!.isNotEmpty)) {
+      final audioFile = singleAudioFile ?? episode!.audioFile!;
+      final timestamps = sceneTimestamps ?? _convertSceneTimestampsToDurations(episode?.sceneTimestamps);
+      
+      setSingleAudioFile(audioFile);
+      if (timestamps != null) {
+        updateSceneTimestamps(timestamps);
       }
       await _initializeSingleAudioFile();
     }
@@ -678,6 +689,46 @@ class SceneTriggerService {
     final uri = Uri.parse(url);
     final pathSegments = uri.pathSegments;
     return pathSegments.last;
+  }
+  
+  // Convert scene timestamps from Firebase format to Duration format
+  Map<SceneType, Duration>? _convertSceneTimestampsToDurations(List<Map<String, dynamic>>? sceneTimestamps) {
+    if (sceneTimestamps == null || sceneTimestamps.isEmpty) return null;
+    
+    final Map<SceneType, Duration> result = {};
+    
+    for (final scene in sceneTimestamps) {
+      final sceneTypeString = scene['sceneType'] as String?;
+      final startSeconds = scene['startSeconds'] as int?;
+      
+      if (sceneTypeString != null && startSeconds != null) {
+        // Convert string to SceneType enum
+        SceneType? sceneType;
+        switch (sceneTypeString) {
+          case 'missionBriefing':
+            sceneType = SceneType.missionBriefing;
+            break;
+          case 'theJourney':
+            sceneType = SceneType.theJourney;
+            break;
+          case 'firstContact':
+            sceneType = SceneType.firstContact;
+            break;
+          case 'theCrisis':
+            sceneType = SceneType.theCrisis;
+            break;
+          case 'extractionDebrief':
+            sceneType = SceneType.extractionDebrief;
+            break;
+        }
+        
+        if (sceneType != null) {
+          result[sceneType] = Duration(seconds: startSeconds);
+        }
+      }
+    }
+    
+    return result;
   }
 
   void _onSceneAudioComplete(SceneType sceneType) {

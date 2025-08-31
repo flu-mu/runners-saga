@@ -294,3 +294,4 @@ This implementation provides a robust solution for background functionality in t
 
 The solution ensures that runners can use the app as intended - starting a run, putting their phone in their pocket, and having the complete story experience without interruption.
 
+

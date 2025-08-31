@@ -1,0 +1,5 @@
+file 'scene_1_quick.mp3'
+file 'scene_2_mission_briefing.mp3'
+file 'scene_3_the_journey.mp3'
+file 'scene_4_first_contact.mp3'
+file 'scene_5_the_crisis.mp3'

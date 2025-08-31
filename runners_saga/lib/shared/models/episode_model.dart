@@ -21,6 +21,9 @@ class EpisodeModel with _$EpisodeModel {
     required double targetDistance, // in kilometers
     required int targetTime, // in milliseconds
     @JsonKey(fromJson: _audioFilesFromJson) required List<String> audioFiles,
+    // New single audio file support
+    String? audioFile,
+    @JsonKey(fromJson: _sceneTimestampsFromJson) List<Map<String, dynamic>>? sceneTimestamps,
     Map<String, dynamic>? requirements,
     Map<String, dynamic>? rewards,
     @JsonKey(fromJson: _timestampToDateTime, toJson: _dateTimeToTimestamp)
@@ -61,6 +64,18 @@ List<String> _audioFilesFromJson(dynamic audioFiles) {
     return audioFiles
         .where((item) => item != null && item is String)
         .cast<String>()
+        .toList();
+  }
+  return [];
+}
+
+// Helper method to parse scene timestamps
+List<Map<String, dynamic>> _sceneTimestampsFromJson(dynamic sceneTimestamps) {
+  if (sceneTimestamps == null) return [];
+  if (sceneTimestamps is List) {
+    return sceneTimestamps
+        .where((item) => item != null && item is Map<String, dynamic>)
+        .cast<Map<String, dynamic>>()
         .toList();
   }
   return [];

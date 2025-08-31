@@ -1301,63 +1301,55 @@ class StoryService {
   }
 
   /// Get default episodes when Firebase has no data
+  /// This method now returns minimal placeholder data and relies on Firebase for actual content
   List<EpisodeModel> _getDefaultEpisodes(int seasonNumber) {
     if (seasonNumber == 1) {
       return [
         EpisodeModel(
           id: 'S01E01',
           seasonId: 'S01',
-          title: 'Jolly Alpha Five Niner',
-          description: 'Your story begins here',
+          title: 'Episode 1',
+          description: 'Loading episode data...',
           status: 'unlocked',
           order: 1,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
-          objective: 'Complete your first run in Abel Township',
+          objective: 'Loading objective...',
           targetDistance: 5.0,
           targetTime: 1800000, // 30 minutes
-          audioFiles: [
-            // Audio files should be loaded from Firebase, not hardcoded
-            // These are placeholder names that should match actual downloaded files
-          ],
+          audioFiles: [], // Will be loaded from Firebase
           requirements: {},
           rewards: {},
         ),
         EpisodeModel(
           id: 'S01E02',
           seasonId: 'S01',
-          title: 'Distraction',
-          description: 'Dead herring',
+          title: 'Episode 2',
+          description: 'Loading episode data...',
           status: 'unlocked',
           order: 2,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
-          objective: 'Continue your investigation',
+          objective: 'Loading objective...',
           targetDistance: 7.0,
           targetTime: 2400000, // 40 minutes
-          audioFiles: [
-            // Audio files should be loaded from Firebase, not hardcoded
-            // These are placeholder names that should match actual downloaded files
-          ],
+          audioFiles: [], // Will be loaded from Firebase
           requirements: {},
           rewards: {},
         ),
         EpisodeModel(
           id: 'S01E03',
           seasonId: 'S01',
-          title: 'Lay of the Land',
-          description: 'There\'s no place like home',
+          title: 'Episode 3',
+          description: 'Loading episode data...',
           status: 'locked',
           order: 3,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
-          objective: 'Explore the town boundaries',
+          objective: 'Loading objective...',
           targetDistance: 10.0,
           targetTime: 3600000, // 60 minutes
-          audioFiles: [
-            // Audio files should be loaded from Firebase, not hardcoded
-            // These are placeholder names that should match actual downloaded files
-          ],
+          audioFiles: [], // Will be loaded from Firebase
           requirements: {},
           rewards: {},
         ),
