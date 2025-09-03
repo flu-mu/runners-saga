@@ -47,12 +47,57 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     
     try {
       final service = DownloadService();
-      final isDownloaded = await service.isEpisodeDownloaded(widget.episodeId);
-      if (mounted) {
-        setState(() {
-          _cached = isDownloaded;
-        });
-      }
+      
+      // Get episode data to check what audio files are expected
+      final episodeAsync = ref.read(episodeByIdProvider(widget.episodeId));
+      await episodeAsync.when(
+        data: (episode) async {
+          if (episode == null) {
+            // Episode not found, use original check
+            final isDownloaded = await service.isEpisodeDownloaded(widget.episodeId);
+            if (mounted) {
+              setState(() {
+                _cached = isDownloaded;
+              });
+            }
+            return;
+          }
+          
+          bool isDownloaded = false;
+          
+          // Check if episode uses multiple audio files
+          if (episode.audioFiles.isNotEmpty) {
+            isDownloaded = await service.isEpisodeProperlyDownloaded(widget.episodeId, episode.audioFiles);
+          } else if (episode.audioFile != null && episode.audioFile!.isNotEmpty) {
+            // For single file mode, use the original check
+            isDownloaded = await service.isEpisodeDownloaded(widget.episodeId);
+          }
+          
+          if (mounted) {
+            setState(() {
+              _cached = isDownloaded;
+            });
+          }
+        },
+        loading: () async {
+          // While loading, use the original check
+          final isDownloaded = await service.isEpisodeDownloaded(widget.episodeId);
+          if (mounted) {
+            setState(() {
+              _cached = isDownloaded;
+            });
+          }
+        },
+        error: (error, stack) async {
+          // On error, use the original check
+          final isDownloaded = await service.isEpisodeDownloaded(widget.episodeId);
+          if (mounted) {
+            setState(() {
+              _cached = isDownloaded;
+            });
+          }
+        },
+      );
     } catch (e) {
       print('Error checking download status: $e');
     }

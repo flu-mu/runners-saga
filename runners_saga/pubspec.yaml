@@ -96,6 +96,7 @@ dependencies:
   # Background Audio and Notifications
   flutter_local_notifications: ^16.3.2
   audio_session: ^0.1.18
+  just_audio_background: ^0.0.1-beta.8
 
 dev_dependencies:
   flutter_test:
@@ -113,7 +114,7 @@ dev_dependencies:
   build_runner: ^2.4.13
   
   # Code Generation for Data Classes
-  freezed: ^2.5.7
+  freezed: ^2.5.2
   json_serializable: ^6.8.0
   
   # Hive Code Generation

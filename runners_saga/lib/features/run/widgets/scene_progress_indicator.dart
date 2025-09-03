@@ -91,15 +91,15 @@ class SceneProgressIndicator extends ConsumerWidget {
   double _calculateSceneProgress(SceneType sceneType) {
     // This is a simplified calculation - in a real app, you'd track actual scene progress
     switch (sceneType) {
-      case SceneType.missionBriefing:
+      case SceneType.scene1:
         return 0.2;
-      case SceneType.theJourney:
+      case SceneType.scene2:
         return 0.4;
-      case SceneType.firstContact:
+      case SceneType.scene3:
         return 0.6;
-      case SceneType.theCrisis:
+      case SceneType.scene4:
         return 0.8;
-      case SceneType.extractionDebrief:
+      case SceneType.scene5:
         return 1.0;
       default:
         return 0.5;
@@ -109,16 +109,16 @@ class SceneProgressIndicator extends ConsumerWidget {
   /// Get a brief description for each scene type
   String _getSceneDescription(SceneType sceneType) {
     switch (sceneType) {
-      case SceneType.missionBriefing:
-        return 'Receiving mission details...';
-      case SceneType.theJourney:
-        return 'Embarking on your adventure...';
-      case SceneType.firstContact:
-        return 'Making first contact...';
-      case SceneType.theCrisis:
-        return 'Facing the final challenge...';
-      case SceneType.extractionDebrief:
-        return 'Mission debriefing...';
+      case SceneType.scene1:
+        return 'Scene 1 in progress...';
+      case SceneType.scene2:
+        return 'Scene 2 in progress...';
+      case SceneType.scene3:
+        return 'Scene 3 in progress...';
+      case SceneType.scene4:
+        return 'Scene 4 in progress...';
+      case SceneType.scene5:
+        return 'Scene 5 in progress...';
       default:
         return 'Story in progress...';
     }

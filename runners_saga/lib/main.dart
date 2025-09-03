@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'bootstrap.dart';
 import 'shared/widgets/navigation/app_router.dart';
 import 'shared/providers/app_providers.dart';
@@ -14,6 +15,16 @@ import 'shared/services/audio/audio_manager.dart';
 
 Future<void> main() async {
   try {
+    // Initialize background audio before bootstrap
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.runnerssaga.audio',
+      androidNotificationChannelName: 'Runner\'s Saga Audio',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+    );
+    
+    debugPrint('🎵 Background audio initialized successfully');
+    
     await bootstrap();
     runApp(const ProviderScope(child: RunnersSagaApp()));
   } catch (e, stackTrace) {
@@ -89,8 +100,14 @@ class _RunnersSagaAppState extends ConsumerState<RunnersSagaApp> with WidgetsBin
         audioManager: audioManager,
       );
       
-      // Request battery optimization exemption (Android only)
-      await _appLifecycleManager.requestBatteryOptimizationExemption();
+      // Request battery optimization exemption (Android only) - delay to ensure method channel is ready
+      Future.delayed(const Duration(seconds: 2), () async {
+        try {
+          await _appLifecycleManager.requestBatteryOptimizationExemption();
+        } catch (e) {
+          debugPrint('⚠️ Battery optimization exemption request failed (non-critical): $e');
+        }
+      });
       
       setState(() {
         _isInitialized = true;

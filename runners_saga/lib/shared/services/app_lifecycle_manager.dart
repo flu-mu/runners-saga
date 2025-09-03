@@ -125,9 +125,6 @@ class AppLifecycleManager {
     _progressMonitorService.onAppLifecycleChanged(false);
     _sceneTriggerService.onAppLifecycleChanged(AppLifecycleState.resumed);
     
-    // Resume any background scenes that were queued
-    _sceneTriggerService.resumeBackgroundScenes();
-    
     // Check background service status
     _checkBackgroundServiceStatus();
     

@@ -62,10 +62,60 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 
+                "startRunSession" -> {
+                    try {
+                        val runId = call.argument<String>("runId") ?: ""
+                        val episodeTitle = call.argument<String>("episodeTitle") ?: ""
+                        val targetTime = call.argument<Int>("targetTime") ?: 0
+                        val targetDistance = call.argument<Double>("targetDistance") ?: 0.0
+                        
+                        Log.d("MainActivity", "Starting run session: $runId")
+                        
+                        // Start the service first
+                        RunTrackingService.startService(this)
+                        
+                        // Send the run session data to the service
+                        val intent = Intent(this, RunTrackingService::class.java)
+                        intent.action = "START_RUN_SESSION"
+                        intent.putExtra("runId", runId)
+                        intent.putExtra("episodeTitle", episodeTitle)
+                        intent.putExtra("targetTime", targetTime)
+                        intent.putExtra("targetDistance", targetDistance)
+                        startService(intent)
+                        
+                        result.success(true)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error starting run session: $e")
+                        result.error("SESSION_ERROR", "Failed to start run session", e.message)
+                    }
+                }
+                
+                "stopRunSession" -> {
+                    try {
+                        Log.d("MainActivity", "Stopping run session")
+                        
+                        // Send stop command to service
+                        val intent = Intent(this, RunTrackingService::class.java)
+                        intent.action = "STOP_RUN_SESSION"
+                        startService(intent)
+                        
+                        result.success(true)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error stopping run session: $e")
+                        result.error("SESSION_ERROR", "Failed to stop run session", e.message)
+                    }
+                }
+                
                 "isBackgroundServiceRunning" -> {
-                    // For now, we'll assume it's running if we can start it
-                    // In a real implementation, you'd check the actual service status
-                    result.success(true)
+                    try {
+                        // Check if the service is actually running
+                        val isRunning = RunTrackingService.isServiceRunning(this)
+                        Log.d("MainActivity", "Background service running: $isRunning")
+                        result.success(isRunning)
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error checking service status: $e")
+                        result.success(false)
+                    }
                 }
                 
                 "requestBatteryOptimizationExemption" -> {

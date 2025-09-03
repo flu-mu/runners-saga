@@ -42,17 +42,49 @@ class DownloadService {
       
       // Check if any audio files exist
       final files = episodeDir.listSync();
-      final hasAudioFiles = files.any((file) => file.path.endsWith('.mp3') || file.path.endsWith('.wav'));
+      final audioFiles = files.where((file) => file.path.endsWith('.mp3') || file.path.endsWith('.wav')).toList();
       
-      if (hasAudioFiles) {
-        print('✅ Episode $episodeId is downloaded with ${files.where((file) => file.path.endsWith('.mp3') || file.path.endsWith('.wav')).length} audio files');
+      if (audioFiles.isNotEmpty) {
+        print('✅ Episode $episodeId is downloaded with ${audioFiles.length} audio files');
+        print('🔍 Found files: ${audioFiles.map((f) => f.path.split('/').last).toList()}');
       } else {
         print('❌ Episode $episodeId is not downloaded - no audio files found');
       }
       
-      return hasAudioFiles;
+      return audioFiles.isNotEmpty;
     } catch (e) {
       print('Error checking if episode is downloaded: $e');
+      return false;
+    }
+  }
+
+  /// Check if episode is properly downloaded based on expected audio files
+  Future<bool> isEpisodeProperlyDownloaded(String episodeId, List<String> expectedAudioFiles) async {
+    try {
+      final dir = await _episodeDir(episodeId);
+      final episodeDir = Directory(dir);
+      if (!episodeDir.existsSync()) return false;
+      
+      // Check if all expected audio files exist
+      final localFiles = await getLocalEpisodeFiles(episodeId);
+      final localFileNames = localFiles.map((path) => path.split('/').last).toSet();
+      
+      // Extract expected file names from URLs
+      final expectedFileNames = expectedAudioFiles.map((url) => _getFileNameFromUrl(url)).toSet();
+      
+      final missingFiles = expectedFileNames.difference(localFileNames);
+      
+      if (missingFiles.isEmpty) {
+        print('✅ Episode $episodeId is properly downloaded with all ${expectedFileNames.length} expected files');
+        return true;
+      } else {
+        print('❌ Episode $episodeId is not properly downloaded - missing files: $missingFiles');
+        print('🔍 Expected: $expectedFileNames');
+        print('🔍 Found: $localFileNames');
+        return false;
+      }
+    } catch (e) {
+      print('Error checking if episode is properly downloaded: $e');
       return false;
     }
   }
@@ -76,6 +108,23 @@ class DownloadService {
     } catch (e) {
       print('❌ Error getting local episode files: $e');
       return [];
+    }
+  }
+
+  /// Check if a specific file exists at the given path
+  Future<bool> fileExists(String filePath) async {
+    try {
+      final file = File(filePath);
+      final exists = file.existsSync();
+      if (kDebugMode) {
+        print('🔍 File exists check: $filePath -> $exists');
+      }
+      return exists;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error checking file existence: $e');
+      }
+      return false;
     }
   }
   

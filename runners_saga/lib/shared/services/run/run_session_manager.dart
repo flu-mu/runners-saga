@@ -111,28 +111,18 @@ class RunSessionManager {
       _sceneTrigger.onSceneComplete = _onSceneComplete;
       _sceneTrigger.onProgressUpdate = _onProgressUpdate;
       
-      // Check if episode supports single audio file mode
-      if (episode.audioFile != null && episode.audioFile!.isNotEmpty && 
-          episode.sceneTimestamps != null && episode.sceneTimestamps!.isNotEmpty) {
-        print('🎵 Episode supports single audio file mode - enabling automatically');
-        print('🎵 Single audio file: ${episode.audioFile}');
-        print('🎵 Scene timestamps: ${episode.sceneTimestamps}');
-        
-        // Convert scene timestamps to Duration format
-        final sceneTimestamps = _convertSceneTimestampsToDurations(episode.sceneTimestamps!);
-        
-        // Automatically enable single audio file mode
-        await enableSingleAudioFileMode(
-          audioFilePath: episode.audioFile!,
-          sceneTimestamps: sceneTimestamps,
-        );
-      } else {
-        // Load audio files from the database for this episode (fallback)
-        print('🎵 Loading audio files for episode: ${episode.id}');
+      // ONLY use multiple audio files mode - completely disable single file mode
+      if (episode.audioFiles.isNotEmpty) {
+        print('🎵 Episode uses multiple audio files mode (audioFiles) - enabling automatically');
         print('📋 Episode audio files: ${episode.audioFiles}');
         print('📊 Audio files count: ${episode.audioFiles.length}');
         
         _sceneTrigger.loadAudioFilesFromDatabase(episode.audioFiles);
+      } else {
+        // NO SINGLE FILE MODE - only multiple files mode supported
+        print('❌ Episode has no audioFiles - single file mode completely disabled');
+        print('❌ Episode will not play audio - only multiple files mode supported');
+        _sceneTrigger.loadAudioFilesFromDatabase([]);
       }
       
       // Start progress monitoring (but without blocking timers)
@@ -265,19 +255,19 @@ class RunSessionManager {
         SceneType? sceneType;
         switch (sceneTypeString) {
           case 'missionBriefing':
-            sceneType = SceneType.missionBriefing;
+            sceneType = SceneType.scene1;
             break;
           case 'theJourney':
-            sceneType = SceneType.theJourney;
+            sceneType = SceneType.scene2;
             break;
           case 'firstContact':
-            sceneType = SceneType.firstContact;
+            sceneType = SceneType.scene3;
             break;
           case 'theCrisis':
-            sceneType = SceneType.theCrisis;
+            sceneType = SceneType.scene4;
             break;
           case 'extractionDebrief':
-            sceneType = SceneType.extractionDebrief;
+            sceneType = SceneType.scene5;
             break;
         }
         
@@ -463,7 +453,7 @@ class RunSessionManager {
       print('🎬 onSceneStarted callback completed');
     }
     
-    // Check if episode is downloaded and play from local files
+    // Check if episode is downloaded; in single-file mode, playback is handled by SceneTriggerService
     if (_currentEpisode != null) {
       final downloadService = DownloadService();
       final episodeId = _currentEpisode!.id;
@@ -476,51 +466,17 @@ class RunSessionManager {
         final isDownloaded = await downloadService.isEpisodeDownloaded(episodeId);
         
         if (isDownloaded) {
-          // Get local files
-          final localFiles = await downloadService.getLocalEpisodeFiles(episodeId);
-          if (localFiles.isNotEmpty) {
-            // Check if this episode uses single audio file mode
-            if (_currentEpisode?.audioFile != null && _currentEpisode!.audioFile!.isNotEmpty) {
-              // Single audio file mode - use the first (and only) local file
-              final sceneLocalFile = localFiles.first;
-              
-              if (kDebugMode) {
-                print('🎵 Scene: ${SceneTriggerService.getSceneTitle(scene)}');
-                print('🎵 Single audio file mode - using: $sceneLocalFile');
-              }
-              
-              // Create a local player variable to handle completion
-              final player = AudioPlayer();
-              
-              // Set up completion listener
-              player.playerStateStream.listen((state) {
-                if (state.processingState == ProcessingState.completed) {
-                  if (kDebugMode) {
-                    print('🎵 Audio completed: $sceneLocalFile');
-                  }
-                  // Notify scene completion
-                  onSceneCompleted?.call(scene);
-                  player.dispose();
-                }
-              });
-              
-              await player.setFilePath(sceneLocalFile);
-              await player.play();
-              
-              if (kDebugMode) {
-                print('✅ Audio playing from single audio file: $sceneLocalFile');
-              }
-            } else {
-              // Multiple audio files mode (legacy) - find specific scene file
-              if (kDebugMode) {
-                print('⚠️ Multiple audio files mode not supported in RunSessionManager');
-                print('💡 Use SceneTriggerService for audio playback instead');
-              }
+          // Audio playback is handled by SceneTriggerService for multiple files mode only
+          if (_currentEpisode?.audioFiles.isNotEmpty == true) {
+            if (kDebugMode) {
+              print('🎵 Multiple audio files mode - playback handled by SceneTriggerService');
             }
+            return;
           } else {
             if (kDebugMode) {
-              print('⚠️ Episode marked as downloaded but no local files found');
+              print('❌ Single file mode disabled - only multiple files mode supported');
             }
+            return;
           }
         } else {
           if (kDebugMode) {

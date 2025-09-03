@@ -31,6 +31,15 @@ class RunTarget with _$RunTarget {
   // Predefined run targets
   static final List<RunTarget> predefinedTargets = [
     RunTarget(
+      id: 'quick_5',
+      type: RunTargetType.time,
+      value: 5.0,
+      displayName: '5 minutes',
+      description: 'Quick warm-up',
+      createdAt: DateTime(2025, 1, 1),
+      isCustom: false,
+    ),
+    RunTarget(
       id: 'quick_15',
       type: RunTargetType.time,
       value: 15.0,

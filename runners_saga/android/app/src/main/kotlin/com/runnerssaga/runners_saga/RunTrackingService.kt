@@ -64,6 +64,16 @@ class RunTrackingService : Service() {
             val intent = Intent(context, RunTrackingService::class.java)
             context.stopService(intent)
         }
+        
+        fun isServiceRunning(context: Context): Boolean {
+            val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+            for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
+                if (RunTrackingService::class.java.name == service.service.className) {
+                    return true
+                }
+            }
+            return false
+        }
     }
     
     inner class RunTrackingBinder : Binder() {

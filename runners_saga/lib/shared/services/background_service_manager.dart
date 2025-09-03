@@ -307,6 +307,11 @@ class BackgroundServiceManager {
       final result = await _channel.invokeMethod('isBackgroundServiceRunning');
       return result == true;
     } catch (e) {
+      // Handle MissingPluginException gracefully - this is expected on some platforms
+      if (e.toString().contains('MissingPluginException')) {
+        debugPrint('ℹ️ Background service plugin not available on this platform');
+        return false;
+      }
       debugPrint('❌ Failed to check background service status: $e');
       return false;
     }

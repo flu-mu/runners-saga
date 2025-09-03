@@ -1,0 +1,52 @@
+# Cursor AI Assistant Rules for Runners Saga Project
+
+## 🚫 NEVER DO THIS (CRITICAL RULES):
+- **NEVER suggest `flutter clean`** unless it's the absolute last resort
+- **NEVER suggest full rebuilds** for simple code changes
+- **NEVER waste development time** with unnecessary operations
+- **NEVER forget these rules** - they've been discussed multiple times
+
+## ✅ ALWAYS DO THIS INSTEAD:
+- Use `flutter pub get` for package changes
+- Use `flutter run` for testing
+- Use hot reload when possible
+- Fix issues incrementally
+- Preserve existing working code
+
+## 🎯 Project-Specific Context:
+- This is a Flutter app with **background audio functionality**
+- **Scene-based pause/unpause is already working** - don't break it
+- Audio session issues should be fixed incrementally
+- Focus on enabling background audio without disrupting existing features
+- The app has working story triggers and scene management
+
+## ⏰ Time Management (CRITICAL):
+- **Respect development time** - don't waste 20-40 minutes on cleaning
+- **Quick fixes over time-consuming rebuilds**
+- **Only suggest cleaning if build cache is corrupted** (last resort)
+- **Incremental development** is the goal
+
+## 🔧 Technical Approach:
+- Fix compilation errors one by one
+- Test with `flutter run` after each fix
+- Use `flutter pub get` for dependency updates
+- Preserve working functionality while adding new features
+
+## 📱 Current Focus:
+- Enable background audio with `just_audio_background`
+- Fix iOS audio session configuration
+- Maintain existing scene trigger system
+- Ensure audio works when app is backgrounded
+
+## 🚨 Remember:
+- **We've discussed the "no cleaning" rule multiple times**
+- **Don't forget it again**
+- **Development time is valuable**
+- **Incremental fixes are better than nuclear options**
+
+## 📋 Continuity Strategy (CRITICAL):
+- **ALWAYS check for latest implementation plan** when starting work
+- **Look for files named: `MMDD-ImplementationPlan.md`** (e.g., `0901-ImplementationPlan.md`)
+- **Update implementation plan** when approaching context window limits
+- **Use implementation plan** to maintain continuity between sessions
+- **Never start from scratch** - always reference existing plan first
