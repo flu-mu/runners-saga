@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/auth_providers.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -319,24 +320,8 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: kSurfaceBase,
-        selectedItemColor: kElectricAqua,
-        unselectedItemColor: Colors.white70,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Workouts'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 1) {
-            context.push('/run/history');
-          } else if (index == 2) {
-            context.push('/settings');
-          }
-        },
+      bottomNavigationBar: BottomNavigationWidget(
+        currentIndex: BottomNavIndex.home.value,
       ),
     );
   }

@@ -5,9 +5,12 @@ import '../../../core/constants/app_theme.dart';
 import '../../../shared/models/episode_model.dart';
 import '../../../shared/providers/run_providers.dart';
 import '../../../shared/providers/run_session_providers.dart';
+import '../../../shared/providers/run_config_providers.dart';
 import '../../../shared/providers/run_completion_providers.dart';
 import '../../../shared/services/run/run_completion_service.dart';
 import '../../../shared/providers/settings_providers.dart';
+import '../../../shared/services/settings/settings_service.dart';
+import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
 
 class RunSummaryScreen extends ConsumerStatefulWidget {
   final String? episodeId;
@@ -97,7 +100,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
     else if (speedKmh < 9.7) met = 9.8;
     else if (speedKmh < 11.3) met = 11.0;
     else met = 12.8;
-    final kcal = met * 3.5 * weightKg / 200.0 * minutes;
+    final kcal = met * 3.5 * (weightKg ?? 70.0) / 200.0 * minutes;
     return kcal.round();
   }
 
@@ -165,26 +168,8 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: kSurfaceBase,
-        selectedItemColor: kElectricAqua,
-        unselectedItemColor: Colors.white70,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Workouts'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
-        currentIndex: 1, // Set to Workouts since this is a run summary
-        onTap: (index) {
-          if (index == 0) {
-            context.go('/home');
-          } else if (index == 1) {
-            context.go('/run/history');
-          } else if (index == 2) {
-            context.go('/settings');
-          }
-        },
+      bottomNavigationBar: BottomNavigationWidget(
+        currentIndex: BottomNavIndex.workouts.value,
       ),
     );
   }
@@ -263,14 +248,35 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           Row(
             children: [
               Expanded(child: _buildStatItem('Time', _formatDuration(_totalTime), Icons.timer, kEmberCoral)),
-              Expanded(child: _buildStatItem('Distance', '${_totalDistance.toStringAsFixed(1)} km', Icons.flag, kMeadowGreen)),
+              Expanded(
+                child: FutureBuilder<String>(
+                  future: _formatDistanceWithUnits(_totalDistance),
+                  builder: (context, snapshot) {
+                    return _buildStatItem('Distance', snapshot.data ?? '${_totalDistance.toStringAsFixed(1)} km', Icons.flag, kMeadowGreen);
+                  },
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _buildStatItem('Pace', '${_averagePace.toStringAsFixed(1)} min/km', Icons.speed, kDeepTeal)),
-              Expanded(child: _buildStatItem('Calories', '$_caloriesBurned', Icons.local_fire_department, kElectricAqua)),
+              Expanded(
+                child: FutureBuilder<String>(
+                  future: _formatPaceWithUnits(_averagePace),
+                  builder: (context, snapshot) {
+                    return _buildStatItem('Pace', snapshot.data ?? '${_averagePace.toStringAsFixed(1)} min/km', Icons.speed, kDeepTeal);
+                  },
+                ),
+              ),
+              Expanded(
+                child: FutureBuilder<String>(
+                  future: _formatEnergyWithUnits(_caloriesBurned.toDouble()),
+                  builder: (context, snapshot) {
+                    return _buildStatItem('Calories', snapshot.data ?? '$_caloriesBurned', Icons.local_fire_department, kElectricAqua);
+                  },
+                ),
+              ),
             ],
           ),
         ],
@@ -310,6 +316,24 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
         ],
       ),
     );
+  }
+
+  // Format distance with units using settings service
+  Future<String> _formatDistanceWithUnits(double distanceInKm) async {
+    final settingsService = SettingsService();
+    return await settingsService.formatDistance(distanceInKm);
+  }
+
+  // Format pace with units using settings service
+  Future<String> _formatPaceWithUnits(double paceInMinPerKm) async {
+    final settingsService = SettingsService();
+    return await settingsService.formatPace(paceInMinPerKm);
+  }
+
+  // Format energy with units using settings service
+  Future<String> _formatEnergyWithUnits(double energyInKcal) async {
+    final settingsService = SettingsService();
+    return await settingsService.formatEnergy(energyInKcal);
   }
 
   Widget _buildEpisodeCard() {

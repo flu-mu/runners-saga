@@ -5,7 +5,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../shared/providers/run_providers.dart';
 import '../../../shared/models/run_model.dart';
+import '../../../shared/providers/settings_providers.dart';
+import '../../../shared/services/settings/settings_service.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
 import 'dart:math';
 
 class RunHistoryScreen extends ConsumerStatefulWidget {
@@ -157,24 +160,8 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: kSurfaceBase,
-        selectedItemColor: kElectricAqua,
-        unselectedItemColor: Colors.white70,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Workouts'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
-        currentIndex: 1, // Set to Workouts since this is the run history screen
-        onTap: (index) {
-          if (index == 0) {
-            context.go('/home');
-          } else if (index == 2) {
-            context.go('/settings');
-          }
-        },
+      bottomNavigationBar: BottomNavigationWidget(
+        currentIndex: BottomNavIndex.workouts.value,
       ),
     );
   }
@@ -259,76 +246,8 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
   }
 
   Widget _buildStatsSummary(Map<String, dynamic> stats) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Your Running Stats',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatItem(
-                  'Total Runs',
-                  '${stats['totalRuns']}',
-                  Icons.directions_run,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  'Total Distance',
-                  '${stats['totalDistance'].toStringAsFixed(1)} km',
-                  Icons.straighten,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  'Best Pace',
-                  _formatPace(stats['bestPace']),
-                  Icons.speed,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatItem(
-                  'Total Time',
-                  _formatDuration(stats['totalTime']),
-                  Icons.timer,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  'Avg Pace',
-                  _formatPace(stats['averagePace']),
-                  Icons.trending_up,
-                ),
-              ),
-              Expanded(
-                child: _buildStatItem(
-                  'Route Points',
-                  '${stats['totalPoints']}',
-                  Icons.map,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+    // This card has been moved to the Stats page
+    return const SizedBox.shrink();
   }
 
   Widget _buildStatItem(String label, String value, IconData icon) {
@@ -406,11 +325,21 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             const SizedBox(height: 8),
             Row(
               children: [
-                _buildRunStat('Distance', '${(run.totalDistance ?? 0.0).toStringAsFixed(2)} km'),
+                FutureBuilder<String>(
+                  future: _formatDistanceAsync(run.totalDistance ?? 0.0),
+                  builder: (context, snapshot) {
+                    return _buildRunStat('Distance', snapshot.data ?? _formatDistance(run.totalDistance ?? 0.0));
+                  },
+                ),
                 const SizedBox(width: 24),
-                                  _buildRunStat('Time', _formatDuration(run.totalTime ?? Duration.zero)),
+                _buildRunStat('Time', _formatDuration(run.totalTime ?? Duration.zero)),
                 const SizedBox(width: 24),
-                                  _buildRunStat('Pace', _formatPace(run.averagePace ?? 0.0)),
+                FutureBuilder<String>(
+                  future: _formatPaceWithUnitsAsync(run.averagePace ?? 0.0),
+                  builder: (context, snapshot) {
+                    return _buildRunStat('Pace', snapshot.data ?? _formatPaceWithUnits(run.averagePace ?? 0.0));
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -502,74 +431,152 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
     return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
+  // Format distance using settings service
+  String _formatDistance(double distanceInKm) {
+    // For synchronous display, we'll use a default conversion
+    // The async version will be used for the main display
+    return '${distanceInKm.toStringAsFixed(2)} km';
+  }
+
+  // Format distance asynchronously using settings service
+  Future<String> _formatDistanceAsync(double distanceInKm) async {
+    final settingsService = SettingsService();
+    return await settingsService.formatDistance(distanceInKm);
+  }
+
+  // Format pace using settings service
+  Future<String> _formatPaceAsync(double paceInMinPerKm) async {
+    final settingsService = SettingsService();
+    return await settingsService.formatPace(paceInMinPerKm);
+  }
+
+  // Format energy using settings service
+  Future<String> _formatEnergyAsync(double energyInKcal) async {
+    final settingsService = SettingsService();
+    return await settingsService.formatEnergy(energyInKcal);
+  }
+
+  // Format pace with units (synchronous fallback)
+  String _formatPaceWithUnits(double paceInMinPerKm) {
+    // For now, use the existing format - we'll make this async in the detailed view
+    return '${_formatPace(paceInMinPerKm)}/km';
+  }
+
+  // Format pace with units using settings service
+  Future<String> _formatPaceWithUnitsAsync(double paceInMinPerKm) async {
+    final settingsService = SettingsService();
+    return await settingsService.formatPace(paceInMinPerKm);
+  }
+
+  // Format speed using settings service
+  Future<String> _formatSpeedAsync(double speedInKmh) async {
+    final settingsService = SettingsService();
+    return await settingsService.formatSpeed(speedInKmh);
+  }
+
+  // Get distance unit text (km or mi)
+  Future<String> _getDistanceUnitText() async {
+    final settingsService = SettingsService();
+    final distanceUnit = await settingsService.getDistanceUnit();
+    return distanceUnit == DistanceUnit.miles ? 'mi' : 'km';
+  }
+
   void _showRunDetails(BuildContext context, RunModel run) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.black,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9, // Make it larger to show more content
-        minChildSize: 0.7,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Title and workout summary
-              _buildWorkoutSummary(run),
-              
-              const SizedBox(height: 20),
-              
-              // Tab bar for switching between map and stats
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
-                    color: kElectricAqua,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  labelColor: Colors.black,
-                  unselectedLabelColor: Colors.white70,
-                  tabs: const [
-                    Tab(text: 'Map'),
-                    Tab(text: 'Pace Details'),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              // Tab content
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildMapTab(run),
-                    _buildPaceDetailsTab(run),
-                  ],
-                ),
-              ),
-            ],
+      backgroundColor: Colors.transparent,
+      builder: (context) => Stack(
+        children: [
+          // Map as background (full screen)
+          Positioned.fill(
+            child: _buildMapTab(run),
           ),
-        ),
+          
+          // Draggable workout details card (slides over the map)
+          DraggableScrollableSheet(
+            initialChildSize: 0.75,
+            minChildSize: 0.25,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => Container(
+              decoration: BoxDecoration(
+                color: kMidnightNavy,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  
+                  // Scrollable content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title and workout summary
+                          _buildWorkoutSummary(run),
+                          
+                          const SizedBox(height: 20),
+                          
+                          // Tab bar for switching between pace details and other stats
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: TabBar(
+                              controller: _tabController,
+                              indicator: BoxDecoration(
+                                color: kElectricAqua,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              labelColor: Colors.black,
+                              unselectedLabelColor: Colors.white70,
+                              tabs: const [
+                                Tab(text: 'Pace Details'),
+                                Tab(text: 'More Stats'),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Tab content
+                          SizedBox(
+                            height: 400,
+                            child: TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildPaceDetailsTab(run),
+                                _buildMoreStatsTab(run),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -675,13 +682,18 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
                       ],
                     ),
                   ),
-                  Text(
-                    '${totalDistance.toStringAsFixed(2)} km',
-                    style: TextStyle(
-                      color: kElectricAqua,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
+                  FutureBuilder<String>(
+                    future: _formatDistanceAsync(totalDistance),
+                    builder: (context, snapshot) {
+                      return Text(
+                        snapshot.data ?? '${totalDistance.toStringAsFixed(2)} km',
+                        style: TextStyle(
+                          color: kElectricAqua,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -812,6 +824,45 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
     );
   }
 
+  /// Build more stats tab
+  Widget _buildMoreStatsTab(RunModel run) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Additional Statistics',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Additional stats cards
+          _buildDetailCard('Total Elevation', '${run.elevationGain?.toStringAsFixed(0) ?? '0'} m', Icons.terrain),
+          const SizedBox(height: 12),
+          FutureBuilder<String>(
+            future: _formatSpeedAsync(run.maxSpeed ?? 0.0),
+            builder: (context, snapshot) {
+              return _buildDetailCard('Max Speed', snapshot.data ?? '${run.maxSpeed?.toStringAsFixed(1) ?? '0.0'} km/h', Icons.speed);
+            },
+          ),
+          const SizedBox(height: 12),
+          _buildDetailCard('Avg Heart Rate', '${run.avgHeartRate?.toStringAsFixed(0) ?? '--'} bpm', Icons.favorite),
+          const SizedBox(height: 12),
+          FutureBuilder<String>(
+            future: _formatEnergyAsync(run.caloriesBurned ?? 0.0),
+            builder: (context, snapshot) {
+              return _buildDetailCard('Calories Burned', snapshot.data ?? '${run.caloriesBurned?.toStringAsFixed(0) ?? '0'} kcal', Icons.local_fire_department);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Build pace details tab
   Widget _buildPaceDetailsTab(RunModel run) {
     final segments = _calculateKilometerSegments(run);
@@ -824,13 +875,18 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Details per km',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
+              FutureBuilder<String>(
+                future: _getDistanceUnitText(),
+                builder: (context, snapshot) {
+                  return Text(
+                    'Details per ${snapshot.data ?? 'km'}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  );
+                },
               ),
               IconButton(
                 onPressed: () {
@@ -852,12 +908,18 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
           const SizedBox(height: 16),
           
           // Distance filter buttons
-          Row(
-            children: [
-              _buildFilterButton('1 km', true),
-              const SizedBox(width: 12),
-              _buildFilterButton('5 km', false),
-            ],
+          FutureBuilder<String>(
+            future: _getDistanceUnitText(),
+            builder: (context, snapshot) {
+              final unit = snapshot.data ?? 'km';
+              return Row(
+                children: [
+                  _buildFilterButton('1 $unit', true),
+                  const SizedBox(width: 12),
+                  _buildFilterButton('5 $unit', false),
+                ],
+              );
+            },
           ),
           
           const SizedBox(height: 20),

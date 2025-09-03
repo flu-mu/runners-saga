@@ -32,6 +32,10 @@ class RunModel with _$RunModel {
     RunStatus? status, // Make optional since it might not exist in old data
     RunTarget? runTarget, // Make optional since it might not exist in old data
     Map<String, dynamic>? metadata, // for additional data like calories, elevation, etc.
+    double? elevationGain, // Total elevation gain in meters
+    double? maxSpeed, // Maximum speed in km/h
+    double? avgHeartRate, // Average heart rate in bpm
+    double? caloriesBurned, // Calories burned
   }) = _RunModel;
 
   factory RunModel.fromJson(Map<String, dynamic> json) => _$RunModelFromJson(json);

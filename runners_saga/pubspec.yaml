@@ -47,6 +47,9 @@ dependencies:
   geolocator: ^12.0.0
   permission_handler: ^11.3.1
   
+  # Settings and Preferences
+  shared_preferences: ^2.2.2
+  
   # Maps and Route Display
   flutter_map: ^7.0.2
   latlong2: ^0.9.0
@@ -68,7 +71,6 @@ dependencies:
   # UI Components and Utilities
   flutter_svg: ^2.0.10+1
   cached_network_image: ^3.4.1
-  shared_preferences: ^2.3.3
   
   # Image generation for design mock PNGs (v3 API provides built-in bitmap fonts)
   image: ^3.3.0

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/story_providers.dart';
 import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/providers/run_providers.dart';
+import '../../../shared/providers/run_config_providers.dart';
+import '../../../shared/models/run_enums.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../shared/providers/run_session_providers.dart';
 import '../../../shared/models/run_target_model.dart';
@@ -512,7 +514,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Weight: ${weightKg.toStringAsFixed(0)} kg',
+                          'Weight: ${(weightKg ?? 70.0).toStringAsFixed(0)} kg',
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
@@ -521,7 +523,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                           final newValue = await showDialog<double>(
                             context: context,
                             builder: (ctx) {
-                              double temp = weightKg;
+                              double temp = weightKg ?? 70.0;
                               return AlertDialog(
                                 backgroundColor: kSurfaceBase,
                                 title: const Text('Set Weight (kg)', style: TextStyle(color: Colors.white)),
@@ -567,14 +569,14 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 _tile(
                   context,
                   'Tracking',
-                  subtitle: tracking == TrackingMode.gps ? 'GPS (default)' : tracking.name,
+                  subtitle: tracking == TrackingMode.gps ? 'GPS (default)' : tracking?.name ?? 'GPS',
                   icon: Icons.explore,
                   onTap: _showTrackingSheet,
                 ),
                 const SizedBox(height: 12),
-                _tile(context, 'Sprints', subtitle: sprint.name, icon: Icons.bolt, onTap: _showSprintsSheet),
+                _tile(context, 'Sprints', subtitle: sprint?.name ?? 'Off', icon: Icons.bolt, onTap: _showSprintsSheet),
                 const SizedBox(height: 12),
-                _tile(context, 'Music', subtitle: music.name, icon: Icons.music_note, onTap: _showMusicSheet),
+                _tile(context, 'Music', subtitle: music?.name ?? 'External Player', icon: Icons.music_note, onTap: _showMusicSheet),
                 const SizedBox(height: 12),
                 _tile(context, 'Duration', subtitle: selectedTarget?.displayName ?? 'Select duration', icon: Icons.timer, onTap: (){
                   showModalBottomSheet(

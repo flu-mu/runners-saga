@@ -13,6 +13,7 @@ import '../firebase/firebase_storage_service.dart';
 import '../../models/episode_model.dart';
 import '../../models/run_model.dart';
 import '../../models/run_target_model.dart';
+import '../../models/run_enums.dart';
 import '../../providers/settings_providers.dart';
 
 class RunSessionManager {
@@ -301,6 +302,9 @@ class RunSessionManager {
     
     _sceneTrigger.stop();
     print('🛑 RunSessionManager: stopSession() - Scene trigger service stopped');
+    
+    // Clear all callbacks to prevent further updates
+    _clearAllCallbacks();
     
     print('🛑 RunSessionManager: stopSession() completed');
   }
@@ -764,7 +768,22 @@ class RunSessionManager {
     // Stop scene trigger
     _sceneTrigger.stop();
     
+    // Clear all callbacks to prevent further updates
+    _clearAllCallbacks();
+    
     print('☢️ RunSessionManager: NUCLEAR STOP - Everything killed');
+  }
+  
+  /// Clear all callbacks to prevent further updates
+  void _clearAllCallbacks() {
+    onSessionStateChanged = null;
+    onSceneStarted = null;
+    onSceneCompleted = null;
+    onProgressUpdated = null;
+    onStatsUpdated = null;
+    onRouteUpdated = null;
+    onTimeUpdated = null;
+    print('🛑 RunSessionManager: All callbacks cleared');
   }
   
   /// Dispose resources

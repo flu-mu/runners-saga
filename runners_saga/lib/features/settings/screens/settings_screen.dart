@@ -8,7 +8,11 @@ import 'dart:math';
 import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/services/firebase/firestore_service.dart';
 import '../../../shared/models/run_model.dart';
+import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
+import '../../../shared/providers/settings_providers.dart';
+import '../../../shared/services/settings/settings_service.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../core/themes/theme_selector_widget.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -90,6 +94,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
             ),
           ),
+          
+          _sectionTitle('DISTANCE UNITS'),
+          _buildDistanceUnitsSection(),
+          
+          _sectionTitle('ENERGY UNITS'),
+          _buildEnergyUnitsSection(),
+          
+          _sectionTitle('Audio & vibration notifications'),
+          _buildAudioNotificationsSection(),
+          
+          _sectionTitle('EPISODE DOWNLOADS'),
+          _buildEpisodeDownloadsSection(),
+          
+          _sectionTitle('APP THEME'),
+          const ThemeSelectorWidget(),
+          
+          _sectionTitle('APP VOLUME'),
+          _buildAppVolumeSection(),
+          
+          _sectionTitle('ZRX PLAYER MUSIC VOLUME'),
+          _buildMusicVolumeSection(),
           
           _sectionTitle('Import Runs'),
           Container(
@@ -417,41 +442,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: kMidnightNavy,
-        selectedItemColor: kElectricAqua,
-        unselectedItemColor: Colors.white70,
-        currentIndex: 0, // Settings is selected
-        onTap: (index) {
-          switch (index) {
-            case 0: // Settings (current)
-              break;
-            case 1: // Home
-              context.go('/');
-              break;
-            case 2: // Workouts
-              context.go('/workouts');
-              break;
-            case 3: // Run
-              context.go('/settings');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Workouts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          )
-        ],
+      bottomNavigationBar: BottomNavigationWidget(
+        currentIndex: BottomNavIndex.settings.value,
       ),
     );
   }
@@ -480,6 +472,277 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildDistanceUnitsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurfaceBase,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+      ),
+      child: Consumer(
+        builder: (context, ref, child) {
+          final distanceUnit = ref.watch(distanceUnitProvider);
+          
+          return Column(
+            children: [
+              _buildUnitOption(
+                'Kilometres',
+                distanceUnit == DistanceUnit.kilometers,
+                () => ref.read(distanceUnitProvider.notifier).setDistanceUnit(DistanceUnit.kilometers),
+              ),
+              const Divider(color: Colors.white24),
+              _buildUnitOption(
+                'Miles',
+                distanceUnit == DistanceUnit.miles,
+                () => ref.read(distanceUnitProvider.notifier).setDistanceUnit(DistanceUnit.miles),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEnergyUnitsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurfaceBase,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+      ),
+      child: Consumer(
+        builder: (context, ref, child) {
+          final energyUnit = ref.watch(energyUnitProvider);
+          
+          return Column(
+            children: [
+              _buildUnitOption(
+                'kCal',
+                energyUnit == EnergyUnit.kcal,
+                () => ref.read(energyUnitProvider.notifier).setEnergyUnit(EnergyUnit.kcal),
+              ),
+              const Divider(color: Colors.white24),
+              _buildUnitOption(
+                'kJ',
+                energyUnit == EnergyUnit.kj,
+                () => ref.read(energyUnitProvider.notifier).setEnergyUnit(EnergyUnit.kj),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildUnitOption(String title, bool isSelected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check,
+                color: kElectricAqua,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAudioNotificationsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurfaceBase,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.notifications_active, color: kElectricAqua),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Audio & vibration notifications',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ),
+          Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppVolumeSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurfaceBase,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+      ),
+      child: Consumer(
+        builder: (context, ref, child) {
+          final appVolume = ref.watch(appVolumeProvider);
+          
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Set the volume of clips and notifications relative to music tracks',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.volume_down, color: Colors.white70),
+                  Expanded(
+                    child: Slider(
+                      value: appVolume,
+                      onChanged: (value) {
+                        ref.read(appVolumeProvider.notifier).setAppVolume(value);
+                      },
+                      activeColor: kElectricAqua,
+                      inactiveColor: Colors.white24,
+                    ),
+                  ),
+                  Icon(Icons.volume_up, color: Colors.white70),
+                ],
+              ),
+              Center(
+                child: Text(
+                  '${(appVolume * 100).round()}%',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMusicVolumeSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurfaceBase,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+      ),
+      child: Consumer(
+        builder: (context, ref, child) {
+          final musicVolume = ref.watch(musicVolumeProvider);
+          
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Useful if you are having issues balancing music and story clips',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.volume_down, color: Colors.white70),
+                  Expanded(
+                    child: Slider(
+                      value: musicVolume,
+                      onChanged: (value) {
+                        ref.read(musicVolumeProvider.notifier).setMusicVolume(value);
+                      },
+                      activeColor: kElectricAqua,
+                      inactiveColor: Colors.white24,
+                    ),
+                  ),
+                  Icon(Icons.volume_up, color: Colors.white70),
+                ],
+              ),
+              Center(
+                child: Text(
+                  'Volume: ${(musicVolume * 100).round()}%',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEpisodeDownloadsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurfaceBase,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Manage your downloaded episodes',
+            style: TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: kElectricAqua.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.download_done,
+                color: kElectricAqua,
+                size: 20,
+              ),
+            ),
+            title: const Text(
+              'Episode Downloads',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: const Text(
+              'View and delete downloaded episodes',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white70,
+              size: 16,
+            ),
+            onTap: () {
+              context.push('/settings/episode-downloads');
+            },
+          ),
+        ],
+      ),
     );
   }
 

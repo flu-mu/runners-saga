@@ -50,3 +50,39 @@
 - **Update implementation plan** when approaching context window limits
 - **Use implementation plan** to maintain continuity between sessions
 - **Never start from scratch** - always reference existing plan first
+
+## 📅 Daily Implementation Plan System (MANDATORY):
+- **Naming Convention**: `MMDD-ImplementationPlan.md` where MM=month, DD=day
+  - Example: `0901` = September 1st, `0903` = September 3rd, `1001` = October 1st
+- **Daily Document Creation**: Create new implementation plan document each day
+- **Daily Document Updates**: Update current day's plan throughout the session
+- **Session End**: Final update to current day's plan before ending session
+- **Next Day Start**: Always read previous day's plan first, then create new day's plan
+
+## 🔄 Implementation Plan Continuity (MANDATORY):
+- **ALWAYS review previous day's implementation plan** before starting new work
+- **Carry forward ALL incomplete/pending items** from previous plans to current plan
+- **Update current plan** to include items from previous sessions that weren't completed
+- **Mark completed items** from previous plans as ✅ COMPLETED in current plan
+- **Never lose track** of pending tasks between sessions
+- **Example**: If 0901-ImplementationPlan.md has pending items, add them to 0903-ImplementationPlan.md
+
+## 📝 Daily Workflow (MANDATORY):
+1. **Start of Day**: Read previous day's implementation plan
+2. **Create Today's Plan**: Create new `MMDD-ImplementationPlan.md` file
+3. **Carry Forward**: Add all pending items from previous day(s)
+4. **Work Session**: Update plan throughout the day as tasks are completed
+5. **End of Day**: Final update to current day's plan with status
+6. **Next Day**: Repeat process with new date
+
+## 📱 Device Assignment (MANDATORY):
+- **iPhone (00008130-001C50D40821401C)**: Keep release version installed for outdoor testing
+  - Use for: Real-world testing, outdoor runs, production-like experience
+  - Build: Release version only (manual builds by user)
+  - Purpose: Always available for testing when outside
+- **iPad (00008101-000209612293A01E)**: Use for development and debug builds
+  - Use for: Development testing, debug builds, indoor development work
+  - Build: Debug version for development
+  - Purpose: Primary development device for coding and testing
+- **Rule**: NEVER overwrite the release version on iPhone with debug builds
+- **Rule**: ALWAYS use iPad for development flutter run commands

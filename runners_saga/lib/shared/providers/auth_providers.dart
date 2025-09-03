@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/services/auth_service.dart';
 import '../models/user_model.dart';
 import 'settings_providers.dart';
+import 'run_config_providers.dart';
 
 /// Provider for current user
 final currentUserProvider = StreamProvider<User?>((ref) {

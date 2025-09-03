@@ -154,10 +154,16 @@ class FirestoreService {
       print('💾 FirestoreService.completeRun: Timestamps - completedAt: ${runData['completedAt']}');
       
       // Add completion metadata
-              runData['totalPoints'] = completedRun.route?.length ?? 0;
+      runData['totalPoints'] = completedRun.route?.length ?? 0;
       runData['finalDistance'] = completedRun.totalDistance ?? 0.0;
       runData['finalTime'] = completedRun.totalTime?.inSeconds ?? 0;
       runData['finalPace'] = completedRun.averagePace ?? 0.0;
+      
+      // Add new run statistics fields
+      runData['elevationGain'] = completedRun.elevationGain ?? 0.0;
+      runData['maxSpeed'] = completedRun.maxSpeed ?? 0.0;
+      runData['avgHeartRate'] = completedRun.avgHeartRate ?? 0.0;
+      runData['caloriesBurned'] = completedRun.caloriesBurned ?? 0.0;
       
       // Update only in top-level runs collection
       await _firestoreInstance.collection(_runsCollection).doc(runId).update(runData);

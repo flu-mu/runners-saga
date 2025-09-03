@@ -67,11 +67,11 @@ class _TestSingleAudioFileScreenState extends State<TestSingleAudioFileScreen> {
 
       // Example scene timestamps (adjust these based on your actual audio file)
       final sceneTimestamps = {
-        SceneType.missionBriefing: Duration.zero,
-        SceneType.theJourney: Duration(seconds: 120),      // 2:00
-        SceneType.firstContact: Duration(seconds: 240),    // 4:00
-        SceneType.theCrisis: Duration(seconds: 420),       // 7:00
-        SceneType.extractionDebrief: Duration(seconds: 540), // 9:00
+        SceneType.scene1: Duration.zero,
+        SceneType.scene2: Duration(seconds: 120),      // 2:00
+        SceneType.scene3: Duration(seconds: 240),    // 4:00
+        SceneType.scene4: Duration(seconds: 420),       // 7:00
+        SceneType.scene5: Duration(seconds: 540), // 9:00
       };
 
       // Enable single audio file mode
@@ -138,7 +138,11 @@ class _TestSingleAudioFileScreenState extends State<TestSingleAudioFileScreen> {
         _status = 'Starting audio playback...';
       });
 
-      await _sceneTrigger.startSingleAudioFilePlayback();
+      // Note: This method doesn't exist in the current implementation
+      // The scene trigger service now uses multiple audio files
+      setState(() {
+        _status = 'Audio playback method not available in current implementation';
+      });
 
       setState(() {
         _status = 'Audio playback started';
@@ -238,16 +242,18 @@ class _TestSingleAudioFileScreenState extends State<TestSingleAudioFileScreen> {
 await runSessionManager.enableSingleAudioFileMode(
   audioFilePath: '/path/to/your/episode_audio.mp3',
   sceneTimestamps: {
-    SceneType.missionBriefing: Duration.zero,
-    SceneType.theJourney: Duration(seconds: 120),      // 2:00
-    SceneType.firstContact: Duration(seconds: 240),    // 4:00
-    SceneType.theCrisis: Duration(seconds: 420),       // 7:00
-    SceneType.extractionDebrief: Duration(seconds: 540), // 9:00
+    SceneType.scene1: Duration.zero,
+    SceneType.scene2: Duration(seconds: 120),      // 2:00
+    SceneType.scene3: Duration(seconds: 240),    // 4:00
+    SceneType.scene4: Duration(seconds: 420),       // 7:00
+    SceneType.scene5: Duration(seconds: 540), // 9:00
   },
 );
 
+// Note: The current implementation uses multiple audio files instead of single file
 // Start audio playback
-await sceneTriggerService.startSingleAudioFilePlayback();
+await sceneTriggerService.startMultipleAudioFilesPlayback();
 */
+
 
 

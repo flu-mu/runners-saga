@@ -10,6 +10,7 @@ import '../../../features/run/screens/run_screen.dart';
 import '../../../features/run/screens/run_history_screen.dart';
 import '../../../features/run/screens/run_target_selection_screen.dart';
 import '../../../features/run/screens/run_summary_screen.dart';
+import '../../../features/stats/screens/stats_screen.dart';
 import '../../../features/story/screens/story_screen.dart';
 import '../../../features/story/screens/season_hub_screen.dart';
 import '../../../features/story/screens/episode_detail_screen.dart';
@@ -19,6 +20,7 @@ import '../../../features/onboarding/screens/story_intro_screen.dart';
 import '../../../features/onboarding/screens/account_creation_screen.dart';
 import 'splash_screen.dart';
 import '../../../features/settings/screens/settings_screen.dart';
+import '../../../features/settings/screens/episode_downloads_screen.dart';
 
 /// App router configuration using GoRouter
 class AppRouter {
@@ -148,11 +150,25 @@ class AppRouter {
         builder: (context, state) => const RunHistoryScreen(),
       ),
 
+      // Stats
+      GoRoute(
+        path: '/stats',
+        name: 'stats',
+        builder: (context, state) => const StatsScreen(),
+      ),
+
       // Settings (available for both signed in/out)
       GoRoute(
         path: '/settings',
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      
+      // Episode Downloads
+      GoRoute(
+        path: '/settings/episode-downloads',
+        name: 'episode_downloads',
+        builder: (context, state) => const EpisodeDownloadsScreen(),
       ),
       
       GoRoute(

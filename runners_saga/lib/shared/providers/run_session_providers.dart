@@ -6,6 +6,7 @@ import '../services/run/progress_monitor_service.dart';
 import '../models/episode_model.dart';
 import '../models/run_model.dart';
 import '../models/run_target_model.dart';
+import '../models/run_enums.dart';
 import 'settings_providers.dart';
 
 part 'run_session_providers.g.dart';
