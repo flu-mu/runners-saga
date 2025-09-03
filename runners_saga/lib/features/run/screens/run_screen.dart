@@ -1599,6 +1599,167 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     }
   }
 
+  /// REAL GPS TRACKING with captured GPS data (CRITICAL FIX)
+  Future<void> _directSaveRunWithCapturedData(List<Position> capturedGpsData) async {
+    print('🚀 CAPTURED GPS TRACKING: Starting GPS data save with captured data');
+    print('🚀 CAPTURED GPS TRACKING: Using ${capturedGpsData.length} captured GPS points');
+    
+    try {
+      // Get current user first
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        print('❌ CAPTURED GPS TRACKING: FAILED - No user logged in');
+        return;
+      }
+      
+      // Get current time and create a simple run ID
+      final now = DateTime.now();
+      final runId = 'run_${now.millisecondsSinceEpoch}';
+      
+      // Use the captured GPS data directly
+      final routeForProcessing = capturedGpsData;
+      print('🚀 CAPTURED GPS TRACKING: Using captured route with ${routeForProcessing.length} points');
+      
+      // Calculate distance from captured GPS data
+      double totalDistance = 0.0;
+      if (routeForProcessing.length > 1) {
+        for (int i = 1; i < routeForProcessing.length; i++) {
+          final prevPos = routeForProcessing[i - 1];
+          final currPos = routeForProcessing[i];
+          
+          final distance = Geolocator.distanceBetween(
+            prevPos.latitude,
+            prevPos.longitude,
+            currPos.latitude,
+            currPos.longitude,
+          ) / 1000; // Convert to kilometers
+          
+          totalDistance += distance;
+        }
+      }
+      
+      print('🚀 CAPTURED GPS TRACKING: Total distance calculated: ${totalDistance.toStringAsFixed(4)} km');
+      
+      // Get elapsed time
+      final elapsedTime = _elapsedTime;
+      print('🚀 CAPTURED GPS TRACKING: Elapsed time: ${elapsedTime.inSeconds} seconds');
+      
+      // Create GPS points array for Firebase
+      final gpsPoints = <Map<String, dynamic>>[];
+      for (int i = 0; i < routeForProcessing.length; i++) {
+        final position = routeForProcessing[i];
+        gpsPoints.add({
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'accuracy': position.accuracy,
+          'altitude': position.altitude,
+          'speed': position.speed,
+          'heading': position.heading,
+          'timestamp': position.timestamp?.toIso8601String(),
+          'elapsedSeconds': i * 2, // Approximate elapsed seconds
+        });
+      }
+      
+      // Calculate additional metrics
+      final elevationGain = _calculateElevationGain(gpsPoints);
+      final maxSpeed = _calculateMaxSpeed(gpsPoints);
+      final avgHeartRate = _calculateAvgHeartRate(gpsPoints);
+      final caloriesBurned = _calculateCalories(totalDistance, elapsedTime);
+      
+      // Create complete run data
+      final runData = {
+        'id': runId,
+        'userId': currentUser.uid,
+        'startTime': _startTime?.toIso8601String() ?? now.toIso8601String(),
+        'endTime': now.toIso8601String(),
+        'duration': elapsedTime.inSeconds,
+        'durationFormatted': '${elapsedTime.inMinutes}:${(elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
+        'elapsedTimeSeconds': elapsedTime.inSeconds,
+        'distance': totalDistance,
+        'distanceFormatted': '${totalDistance.toStringAsFixed(2)} km',
+        'averagePace': totalDistance > 0 ? (elapsedTime.inMinutes / totalDistance) : 0.0,
+        'averagePaceFormatted': totalDistance > 0 ? '${(elapsedTime.inMinutes / totalDistance).toStringAsFixed(1)} min/km' : '0.0 min/km',
+        'elevationGain': elevationGain,
+        'maxSpeed': maxSpeed,
+        'avgHeartRate': avgHeartRate,
+        'caloriesBurned': caloriesBurned,
+        'gpsPoints': gpsPoints,
+        'totalGpsPoints': gpsPoints.length,
+        'episodeId': _getEpisodeIdFromQuery() ?? 'unknown',
+        'episodeTitle': ref.read(currentEpisodeProvider)?.title ?? 'Unknown Episode',
+        'status': 'completed',
+        'completedAt': now.toIso8601String(),
+        'createdAt': now.toIso8601String(),
+        'updatedAt': now.toIso8601String(),
+        'runType': 'episode',
+        'wasTimerUsed': true,
+        'timerElapsedSeconds': elapsedTime.inSeconds,
+        'wasPaused': _isPaused,
+        'deviceInfo': {
+          'platform': Platform.isIOS ? 'iOS' : 'Android',
+          'appVersion': '1.0.0',
+        },
+        'metadata': {
+          'saveMethod': 'captured_gps_tracking',
+          'gpsSource': 'progress_monitor_service',
+          'gpsPointsCaptured': capturedGpsData.length,
+          'distanceCalculationMethod': 'geolocator_distance_between',
+        },
+      };
+      
+      print('🚀 CAPTURED GPS TRACKING: Created complete run data');
+      print('🚀 CAPTURED GPS TRACKING: Duration: ${elapsedTime.inSeconds} seconds (${elapsedTime.inMinutes}:${(elapsedTime.inSeconds % 60).toString().padLeft(2, '0')})');
+      print('🚀 CAPTURED GPS TRACKING: Distance: ${totalDistance.toStringAsFixed(2)} km');
+      print('🚀 CAPTURED GPS TRACKING: GPS points: ${gpsPoints.length}');
+      print('🚀 CAPTURED GPS TRACKING: Episode: ${ref.read(currentEpisodeProvider)?.title ?? 'Unknown'}');
+      
+      // Save directly to Firestore
+      await FirebaseFirestore.instance.collection('runs').doc(runId).set(runData);
+      
+      print('✅ CAPTURED GPS TRACKING: Complete run data saved successfully to Firestore!');
+      print('✅ CAPTURED GPS TRACKING: Run ID: $runId');
+      print('✅ CAPTURED GPS TRACKING: Collection: runs');
+      print('✅ CAPTURED GPS TRACKING: User: ${currentUser.uid}');
+      
+      // Set summary data for navigation
+      final summaryData = {
+        'runId': runId,
+        'duration': elapsedTime,
+        'distance': totalDistance,
+        'averagePace': totalDistance > 0 ? (elapsedTime.inMinutes / totalDistance) : 0.0,
+        'gpsPoints': gpsPoints.length,
+        'episodeTitle': ref.read(currentEpisodeProvider)?.title ?? 'Unknown Episode',
+      };
+      
+      // Set the summary data in the provider
+      // Note: RunCompletionService doesn't have setRunSummary method, skip for now
+      print('🚀 CAPTURED GPS TRACKING: Skipping provider summary data (method not available)');
+      
+      print('🚀 CAPTURED GPS TRACKING: Summary data - Time: ${elapsedTime.inSeconds}s, Distance: ${totalDistance.toStringAsFixed(1)}km, Pace: ${totalDistance > 0 ? (elapsedTime.inMinutes / totalDistance).toStringAsFixed(1) : '0.0'} min/km');
+      
+      // Navigate to run summary screen
+      print('🚀 CAPTURED GPS TRACKING: Navigating to run summary screen...');
+      if (mounted) {
+        context.go('/run/summary');
+      }
+      
+    } catch (e) {
+      print('❌ CAPTURED GPS TRACKING: Error saving run data: $e');
+      print('❌ CAPTURED GPS TRACKING: Stack trace: ${StackTrace.current}');
+      
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save run data: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
   /// Calculate calories burned based on distance and time
   int _calculateCalories(double distance, Duration time) {
     // Simple calorie calculation based on MET values
@@ -2894,9 +3055,16 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     try {
       print('🎯 RunScreen: Starting run completion process...');
       
-      // USE THE WORKING METHOD - _directSaveRun() which was saving GPS points correctly
-      print('💾 RunScreen: Using _directSaveRun() method to save GPS data...');
-      await _directSaveRun();
+      // CRITICAL FIX: Capture GPS data BEFORE any cleanup
+      print('📍 RunScreen: Capturing GPS data before cleanup...');
+      final runSessionController = ref.read(runSessionControllerProvider.notifier);
+      final progressMonitor = runSessionController.state.progressMonitor;
+      final capturedGpsData = List<Position>.from(progressMonitor.route);
+      print('📍 RunScreen: Captured ${capturedGpsData.length} GPS points from ProgressMonitorService');
+      
+      // USE THE WORKING METHOD - _directSaveRun() with captured data
+      print('💾 RunScreen: Using _directSaveRun() method with captured GPS data...');
+      await _directSaveRunWithCapturedData(capturedGpsData);
       
       // NOW stop everything AFTER saving the data
       print('🛑 RunScreen: Stopping ALL services and cleanup...');
@@ -2956,9 +3124,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       final audioManager = ref.read(audioManagerProvider);
       audioManager.stopAll();
       print('🎵 Audio stopped when run finished');
-      
-      // Get the run session controller
-      final runSessionController = ref.read(runSessionControllerProvider.notifier);
       
       // Stop the run session (this should stop progress monitor, scene trigger, etc.)
       try {
