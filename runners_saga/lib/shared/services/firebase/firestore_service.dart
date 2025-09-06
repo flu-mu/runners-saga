@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/run_model.dart';
-import '../../../shared/providers/firebase_providers.dart';
 
 class FirestoreService {
   static const String _runsCollection = 'runs';
@@ -190,7 +189,10 @@ class FirestoreService {
         final data = _convertDocData(doc);
         // Verify the run belongs to the current user
         if (data['userId'] == userId) {
-          return RunModel.fromJson(data);
+          return RunModel.fromJson({
+            ...data,
+            'id': doc.id,
+          });
         }
       }
       
@@ -225,7 +227,10 @@ class FirestoreService {
       final querySnapshot = await query.get();
       
       return querySnapshot.docs
-          .map((doc) => RunModel.fromJson(_convertDocData(doc)))
+          .map((doc) => RunModel.fromJson({
+                ..._convertDocData(doc),
+                'id': doc.id,
+              }))
           .toList();
     } catch (e) {
       throw Exception('Failed to get user runs: $e');
@@ -262,7 +267,10 @@ class FirestoreService {
           final querySnapshot = await query.limit(limit).get();
           
           return querySnapshot.docs
-              .map((doc) => RunModel.fromJson(_convertDocData(doc)))
+              .map((doc) => RunModel.fromJson({
+                    ..._convertDocData(doc),
+                    'id': doc.id,
+                  }))
               .toList();
         } catch (e) {
           throw Exception('Failed to get runs by status: $e');
@@ -286,7 +294,10 @@ class FirestoreService {
           .get();
 
       return querySnapshot.docs
-          .map((doc) => RunModel.fromJson(_convertDocData(doc)))
+          .map((doc) => RunModel.fromJson({
+                ..._convertDocData(doc),
+                'id': doc.id,
+              }))
           .toList();
     } catch (e) {
       throw Exception('Failed to get runs by season: $e');
@@ -310,7 +321,10 @@ class FirestoreService {
           .get();
       
       return querySnapshot.docs
-          .map((doc) => RunModel.fromJson(_convertDocData(doc)))
+          .map((doc) => RunModel.fromJson({
+                ..._convertDocData(doc),
+                'id': doc.id,
+              }))
           .toList();
     } catch (e) {
       throw Exception('Failed to get runs by mission: $e');
@@ -334,7 +348,10 @@ class FirestoreService {
           .get();
       
       return querySnapshot.docs
-          .map((doc) => RunModel.fromJson(_convertDocData(doc)))
+          .map((doc) => RunModel.fromJson({
+                ..._convertDocData(doc),
+                'id': doc.id,
+              }))
           .toList();
     } catch (e) {
       throw Exception('Failed to get completed runs: $e');
@@ -498,7 +515,10 @@ class FirestoreService {
             for (final doc in snapshot.docs) {
               try {
                 final runData = _convertDocData(doc);
-                final run = RunModel.fromJson(runData);
+                final run = RunModel.fromJson({
+                  ...runData,
+                  'id': doc.id,
+                });
                 validRuns.add(run);
               } catch (e) {
                 print('⚠️ FirestoreService: Skipping invalid run document ${doc.id}: $e');
@@ -555,7 +575,10 @@ class FirestoreService {
                   print('🔍 FirestoreService: Document ${doc.id} maxPace: ${runData['maxPace']} (type: ${runData['maxPace']?.runtimeType})');
                   print('🔍 FirestoreService: Document ${doc.id} minPace: ${runData['minPace']} (type: ${runData['minPace']?.runtimeType})');
                   
-                  final run = RunModel.fromJson(runData);
+                  final run = RunModel.fromJson({
+                    ...runData,
+                    'id': doc.id,
+                  });
                   validRuns.add(run);
                 } catch (e) {
                   print('⚠️ FirestoreService: Skipping invalid completed run document ${doc.id}: $e');
@@ -687,7 +710,10 @@ class FirestoreService {
       for (final doc in snapshot.docs) {
         try {
           final runData = _convertDocData(doc);
-          final run = RunModel.fromJson(runData);
+          final run = RunModel.fromJson({
+            ...runData,
+            'id': doc.id,
+          });
           validRuns.add(run);
         } catch (e) {
           print('⚠️ FirestoreService: Skipping invalid run document ${doc.id}: $e');
@@ -1054,7 +1080,10 @@ class FirestoreService {
       for (final doc in snapshot.docs) {
         try {
           final runData = _convertDocData(doc);
-          final run = RunModel.fromJson(runData);
+          final run = RunModel.fromJson({
+            ...runData,
+            'id': doc.id,
+          });
           validRuns.add(run);
         } catch (e) {
           print('⚠️ FirestoreService: Skipping invalid run document ${doc.id}: $e');

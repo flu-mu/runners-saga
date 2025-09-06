@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/settings/settings_service.dart';
+import 'settings_providers.dart';
 import '../models/run_enums.dart';
 
 // Tracking mode provider
@@ -18,7 +20,8 @@ final musicSourceProvider = StateNotifierProvider<MusicSourceNotifier, MusicSour
 
 // User weight provider
 final userWeightKgProvider = StateNotifierProvider<UserWeightNotifier, double?>((ref) {
-  return UserWeightNotifier();
+  final settingsService = ref.read(settingsServiceProvider);
+  return UserWeightNotifier(settingsService);
 });
 
 // Unit system provider (for backward compatibility)
@@ -55,7 +58,17 @@ class MusicSourceNotifier extends StateNotifier<MusicSource?> {
 
 // User weight notifier
 class UserWeightNotifier extends StateNotifier<double?> {
-  UserWeightNotifier() : super(null);
+  final SettingsService _settingsService;
+
+  UserWeightNotifier(this._settingsService) : super(null) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    // Load stored weight if available
+    final stored = await _settingsService.getUserWeightKg();
+    state = stored;
+  }
 
   void setUserWeight(double weight) {
     state = weight;
@@ -70,4 +83,13 @@ class UnitSystemNotifier extends StateNotifier<String> {
     state = unit;
   }
 }
+
+
+
+
+
+
+
+
+
 

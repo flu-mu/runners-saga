@@ -138,6 +138,7 @@ class RunTrackingNotifier extends StateNotifier<RunModel?> {
       minPace: 0.0,
       episodeId: seasonId, // Using seasonId as episodeId for backward compatibility
       status: RunStatus.inProgress,
+      achievements: [], // Add empty achievements list
       runTarget: runTarget,
     );
     
@@ -382,11 +383,12 @@ class RunTrackingNotifier extends StateNotifier<RunModel?> {
   
   // Calculate pace between two points
   double _calculatePaceBetweenPoints(LocationPoint point1, LocationPoint point2) {
+    // Correct order: (lat1, lon1, lat2, lon2)
     final distance = geolocator.Geolocator.distanceBetween(
       point1.latitude,
       point1.longitude,
-      point2.longitude,
       point2.latitude,
+      point2.longitude,
     ) / 1000; // Convert to kilometers
     
     // Since elapsedSeconds represents time from start, calculate difference

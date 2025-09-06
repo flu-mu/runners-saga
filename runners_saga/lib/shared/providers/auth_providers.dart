@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/services/auth_service.dart';
 import '../models/user_model.dart';
 import 'settings_providers.dart';
+import '../services/settings/settings_service.dart';
 import 'run_config_providers.dart';
 
 /// Provider for current user
@@ -103,6 +104,35 @@ class AuthController extends StateNotifier<AuthState> {
             auth.getUserWeightKg().then((w) {
               if (w != null && w > 0) {
                 _ref.read(userWeightKgProvider.notifier).state = w;
+              }
+            });
+            // Load height, age, gender for multi-device consistency
+            auth.getUserHeightCm().then((h) {
+              if (h != null && h > 0) {
+                _ref.read(heightCmProvider.notifier).setHeight(h);
+              }
+            });
+            auth.getUserAgeYears().then((a) {
+              if (a != null && a > 0) {
+                _ref.read(ageYearsProvider.notifier).setAge(a);
+              }
+            });
+            auth.getUserGender().then((g) {
+              if (g != null && g.isNotEmpty) {
+                Gender mapGender(String s) {
+                  switch (s) {
+                    case 'female':
+                      return Gender.female;
+                    case 'male':
+                      return Gender.male;
+                    case 'nonBinary':
+                      return Gender.nonBinary;
+                    case 'preferNotToSay':
+                    default:
+                      return Gender.preferNotToSay;
+                  }
+                }
+                _ref.read(genderProvider.notifier).setGender(mapGender(g));
               }
             });
           } else {

@@ -27,9 +27,9 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
     final targets = RunTarget.predefinedTargets.where((t) => t.type == _type).toList();
 
     return Container(
-      decoration: const BoxDecoration(
-        color: kSurfaceBase,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
         child: Padding(
@@ -43,7 +43,7 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: kTextMid.withValues(alpha: 0.3),
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -56,12 +56,12 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
                   Text(
                     'Set Duration', 
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onBackground,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: kTextMid), 
+                    icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6)), 
                     onPressed: () => Navigator.pop(context)
                   ),
                 ],
@@ -71,7 +71,7 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
               // Type toggle
               Container(
                 decoration: BoxDecoration(
-                  color: kMidnightNavy,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: ToggleButtons(
@@ -83,13 +83,13 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
                       _selected = list.first;
                     });
                   },
-                  selectedColor: kMidnightNavy,
-                  fillColor: kElectricAqua,
-                  borderColor: kElectricAqua,
+                  selectedColor: Theme.of(context).colorScheme.onPrimary,
+                  fillColor: Theme.of(context).colorScheme.primary,
+                  borderColor: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(8),
-                  children: const [
-                    Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Text('Distance')),
-                    Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: Text('Time')),
+                  children: [
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text('Distance', style: TextStyle(color: Theme.of(context).colorScheme.onBackground))),
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text('Time', style: TextStyle(color: Theme.of(context).colorScheme.onBackground))),
                   ],
                 ),
               ),
@@ -105,14 +105,14 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
                       label: Text(
                         t.displayName,
                         style: TextStyle(
-                          color: _selected?.id == t.id ? kMidnightNavy : Colors.white,
+                          color: _selected?.id == t.id ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onBackground,
                         ),
                       ),
                       selected: _selected?.id == t.id,
-                      selectedColor: kElectricAqua,
-                      backgroundColor: kSurfaceElev,
+                      selectedColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
                       side: BorderSide(
-                        color: _selected?.id == t.id ? kElectricAqua : kTextMid.withValues(alpha: 0.3),
+                        color: _selected?.id == t.id ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onBackground.withOpacity(0.3),
                       ),
                       onSelected: (_) => setState(() => _selected = t),
                     ),
@@ -147,8 +147,8 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
                           Navigator.pop(context);
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: kElectricAqua,
-                    foregroundColor: kMidnightNavy,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -157,7 +157,7 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
                     'Apply',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: kMidnightNavy,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                 ),
@@ -170,5 +170,4 @@ class _RunTargetSheetState extends ConsumerState<RunTargetSheet> {
     );
   }
 }
-
 

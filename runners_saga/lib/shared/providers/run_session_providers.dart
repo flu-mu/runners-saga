@@ -156,7 +156,7 @@ class CompletedRun extends _$CompletedRun {
 }
 
 /// Provider for the run session manager with state synchronization
-@riverpod
+@Riverpod(keepAlive: true)
 class RunSessionController extends _$RunSessionController {
   @override
   RunSessionManager build() {
@@ -308,6 +308,11 @@ class RunSessionController extends _$RunSessionController {
     state.resetGlobalStop();
   }
   
+  /// Prepare manager to start a brand new run
+  void prepareForNewRun() {
+    state.prepareForNewRun();
+  }
+  
   /// Completely disable all timers and monitoring
   void disableAllTimers() {
     state.disableAllTimers();
@@ -354,4 +359,3 @@ class RunSessionController extends _$RunSessionController {
     }
   }
 }
-

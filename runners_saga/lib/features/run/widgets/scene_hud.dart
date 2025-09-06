@@ -17,18 +17,19 @@ class SceneHud extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: kMidnightNavy.withValues(alpha: 0.95),
+        color: theme.colorScheme.surface.withOpacity(0.95),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.8), width: 2),
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.8), width: 2),
         boxShadow: [
           BoxShadow(
-            color: kElectricAqua.withValues(alpha: 0.3),
+            color: theme.colorScheme.primary.withOpacity(0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
             spreadRadius: 2,
@@ -49,7 +50,7 @@ class SceneHud extends ConsumerWidget {
               Text(
                 'STORY TRANSMISSION',
                 style: TextStyle(
-                  color: kElectricAqua.withValues(alpha: 0.8),
+                  color: theme.colorScheme.primary.withOpacity(0.8),
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
@@ -59,7 +60,7 @@ class SceneHud extends ConsumerWidget {
               Text(
                 SceneTriggerService.getSceneTitle(currentScene!),
                 style: TextStyle(
-                  color: kElectricAqua,
+                  color: theme.colorScheme.primary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -119,7 +120,7 @@ class _AnimatedRadioIconState extends State<_AnimatedRadioIcon>
           scale: _scaleAnimation.value,
           child: Icon(
             Icons.radio,
-            color: kElectricAqua,
+            color: Theme.of(context).colorScheme.primary,
             size: 24,
           ),
         );
@@ -176,7 +177,8 @@ class _AnimatedDotsState extends State<_AnimatedDots> with TickerProviderStateMi
               width: 6,
               height: 6,
               decoration: BoxDecoration(
-                color: kElectricAqua.withValues(alpha: 0.3 + (_dotAnimations[index].value * 0.7)),
+                color: Theme.of(context).colorScheme.primary
+                    .withOpacity(0.3 + (_dotAnimations[index].value * 0.7)),
                 shape: BoxShape.circle,
               ),
             );
@@ -186,6 +188,5 @@ class _AnimatedDotsState extends State<_AnimatedDots> with TickerProviderStateMi
     );
   }
 }
-
 
 

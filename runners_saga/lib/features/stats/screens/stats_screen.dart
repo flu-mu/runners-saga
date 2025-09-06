@@ -2,34 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:runners_saga/core/constants/app_theme.dart';
 import 'package:runners_saga/shared/widgets/navigation/bottom_navigation_widget.dart';
+import 'package:runners_saga/shared/widgets/ui/seasonal_background.dart';
+import 'package:runners_saga/core/themes/theme_factory.dart';
 import 'package:runners_saga/shared/services/firebase/firestore_service.dart';
 import 'package:runners_saga/shared/providers/run_providers.dart';
+import 'package:runners_saga/features/stats/widgets/trends_section.dart';
 
 class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ThemeFactory.getCurrentTheme();
+    
     return Scaffold(
-      backgroundColor: kMidnightNavy,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: kMidnightNavy,
-        title: const Text(
+        backgroundColor: Colors.transparent,
+        title: Text(
           'Your Running Stats',
-          style: TextStyle(
-            color: Colors.white,
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onBackground,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
         elevation: 0,
       ),
-      body: SafeArea(
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 120,
+        child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // New dynamic trends section (charts + week/month selector)
+              const StatsTrendsSection(),
+
+              const SizedBox(height: 20),
               // Stats Summary Card
               _buildStatsSummaryCard(ref),
               
@@ -44,6 +56,7 @@ class StatsScreen extends ConsumerWidget {
               _buildGoalsCard(context),
             ],
           ),
+        ),
         ),
       ),
       bottomNavigationBar: BottomNavigationWidget(
@@ -206,9 +219,9 @@ class StatsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.10),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Column(
         children: [
@@ -217,7 +230,7 @@ class StatsScreen extends ConsumerWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onBackground,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
@@ -226,7 +239,7 @@ class StatsScreen extends ConsumerWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white70,
+              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -239,9 +252,9 @@ class StatsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +262,7 @@ class StatsScreen extends ConsumerWidget {
           Text(
             'Recent Activity',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: kElectricAqua,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -257,28 +270,28 @@ class StatsScreen extends ConsumerWidget {
           Text(
             'Your recent running activity will appear here.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white70,
+              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
             ),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: kElectricAqua.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.info_outline,
-                  color: kElectricAqua,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Complete more runs to see your activity history here.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onBackground,
                     ),
                   ),
                 ),
@@ -294,9 +307,9 @@ class StatsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +317,7 @@ class StatsScreen extends ConsumerWidget {
           Text(
             'Goals & Achievements',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: kElectricAqua,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -312,28 +325,28 @@ class StatsScreen extends ConsumerWidget {
           Text(
             'Track your progress towards running goals.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white70,
+              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
             ),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: kMeadowGreen.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.flag,
-                  color: kMeadowGreen,
+                  color: Theme.of(context).colorScheme.tertiary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Set your first running goal to get started!',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onBackground,
                     ),
                   ),
                 ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../../../shared/providers/run_providers.dart';
 import '../../../shared/providers/run_session_providers.dart';
 import '../../../shared/models/run_model.dart';
 import '../../../core/constants/app_theme.dart';
@@ -22,9 +21,11 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the session manager for real-time route updates
-    final sessionManager = ref.watch(runSessionControllerProvider.notifier);
-    final currentRoute = sessionManager?.getCurrentRoute() ?? <LocationPoint>[];
+    // Watch live stats so this widget rebuilds as the route updates
+    final stats = ref.watch(currentRunStatsProvider);
+    // Fallback to pulling from the manager if stats are not yet available
+    final sessionManager = ref.read(runSessionControllerProvider.notifier);
+    final currentRoute = stats?.route ?? sessionManager.getCurrentRoute();
     
     // No fallback location: world view until GPS arrives
     final bool hasRouteGps = currentRoute.isNotEmpty;
@@ -68,12 +69,12 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -111,7 +112,7 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                     polylines: [
                       Polyline(
                         points: polylinePoints, 
-                        color: kElectricAqua, 
+                        color: Theme.of(context).colorScheme.primary, 
                         strokeWidth: 4,
                       ),
                     ],
@@ -126,20 +127,20 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                         height: 24,
                         child: Container(
                           decoration: BoxDecoration(
-                            color: kElectricAqua,
+                            color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
+                            border: Border.all(color: Theme.of(context).colorScheme.onPrimary, width: 3),
                             boxShadow: [
                               BoxShadow(
-                                color: kElectricAqua.withValues(alpha: 0.5),
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
                                 blurRadius: 8,
                                 spreadRadius: 2,
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.my_location,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                             size: 14,
                           ),
                         ),
@@ -157,11 +158,11 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                   // Zoom in button
                   Container(
                     decoration: BoxDecoration(
-                      color: kSurfaceBase.withValues(alpha: 0.9),
+                      color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: Colors.black.withOpacity(0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -172,7 +173,7 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                         _mapController.camera.center,
                         _mapController.camera.zoom + 1,
                       ),
-                      icon: Icon(Icons.add, color: kElectricAqua, size: 20),
+                      icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary, size: 20),
                       padding: const EdgeInsets.all(8),
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     ),
@@ -181,11 +182,11 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                   // Zoom out button
                   Container(
                     decoration: BoxDecoration(
-                      color: kSurfaceBase.withValues(alpha: 0.9),
+                      color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: Colors.black.withOpacity(0.2),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -196,7 +197,7 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                         _mapController.camera.center,
                         _mapController.camera.zoom - 1,
                       ),
-                      icon: Icon(Icons.remove, color: kElectricAqua, size: 20),
+                      icon: Icon(Icons.remove, color: Theme.of(context).colorScheme.primary, size: 20),
                       padding: const EdgeInsets.all(8),
                       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     ),
@@ -206,11 +207,11 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                   if (polylinePoints.length > 1)
                     Container(
                       decoration: BoxDecoration(
-                        color: kSurfaceBase.withValues(alpha: 0.9),
+                        color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
+                            color: Colors.black.withOpacity(0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -223,7 +224,7 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
                             CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(32)),
                           );
                         },
-                        icon: Icon(Icons.fit_screen, color: kElectricAqua, size: 20),
+                        icon: Icon(Icons.fit_screen, color: Theme.of(context).colorScheme.primary, size: 20),
                         padding: const EdgeInsets.all(8),
                         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                       ),
@@ -261,14 +262,14 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: kMeadowGreen.withValues(alpha: 0.9),
+              color: Theme.of(context).colorScheme.tertiary.withOpacity(0.9),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white, width: 1),
+              border: Border.all(color: Theme.of(context).colorScheme.onPrimary, width: 1),
             ),
             child: Text(
               '${totalDistance.toInt()}km',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimary,
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),
@@ -301,5 +302,3 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
     return earthRadius * c;
   }
 }
-
-

@@ -15,6 +15,8 @@ import '../../run/widgets/run_target_sheet.dart';
 import '../../../shared/services/audio/download_service.dart';
 import '../../../shared/services/firebase/firebase_storage_service.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../shared/widgets/ui/seasonal_background.dart';
+import '../../../core/themes/theme_factory.dart';
 
 class EpisodeDetailScreen extends ConsumerStatefulWidget {
   final String episodeId;
@@ -69,7 +71,14 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           
           // Check if episode uses multiple audio files
           if (episode.audioFiles.isNotEmpty) {
+            // Prefer strict check; if it fails, fall back to lenient presence check
             isDownloaded = await service.isEpisodeProperlyDownloaded(widget.episodeId, episode.audioFiles);
+            if (!isDownloaded) {
+              final anyFiles = await service.isEpisodeDownloaded(widget.episodeId);
+              if (anyFiles) {
+                isDownloaded = true;
+              }
+            }
           } else if (episode.audioFile != null && episode.audioFile!.isNotEmpty) {
             // For single file mode, use the original check
             isDownloaded = await service.isEpisodeDownloaded(widget.episodeId);
@@ -160,11 +169,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           content: Text(
             result.success ? 'Episode downloaded successfully!' : 'Download failed: ${result.error}'
           ),
-          backgroundColor: result.success ? kMeadowGreen : kEmberCoral,
+          backgroundColor: result.success ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.error,
           duration: const Duration(seconds: 5),
           action: result.success ? null : SnackBarAction(
             label: 'Help',
-            textColor: Colors.white,
+            textColor: Theme.of(context).colorScheme.onPrimary,
             onPressed: () {
               _showDownloadHelpDialog(context);
             },
@@ -211,11 +220,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         content: Text(
           result.success ? 'Episode downloaded successfully!' : 'Download failed: ${result.error}'
         ),
-        backgroundColor: result.success ? kMeadowGreen : kEmberCoral,
+        backgroundColor: result.success ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.error,
         duration: const Duration(seconds: 5),
         action: result.success ? null : SnackBarAction(
           label: 'Help',
-          textColor: Colors.white,
+          textColor: Theme.of(context).colorScheme.onPrimary,
           onPressed: () {
             _showDownloadHelpDialog(context);
           },
@@ -229,7 +238,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       
       final snack = SnackBar(
         content: Text('Download error: $e'),
-        backgroundColor: kEmberCoral,
+        backgroundColor: Theme.of(context).colorScheme.error,
       );
       ScaffoldMessenger.of(context).showSnackBar(snack);
     }
@@ -244,21 +253,30 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     final music = ref.watch(musicSourceProvider);
     final weightKg = ref.watch(userWeightKgProvider);
     final selectedTarget = ref.watch(selectedRunTargetProvider);
+    final theme = ThemeFactory.getCurrentTheme();
 
     return Scaffold(
-      backgroundColor: kMidnightNavy,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Episode', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Episode',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onBackground,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: theme.colorScheme.onBackground),
       ),
-      body: episodeAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: kElectricAqua)),
-        error: (e, st) => Center(child: Text('Error: $e', style: const TextStyle(color: Colors.white))),
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 120,
+        child: episodeAsync.when(
+        loading: () => Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
+        error: (e, st) => Center(child: Text('Error: $e', style: TextStyle(color: Theme.of(context).colorScheme.onBackground))),
         data: (episode) {
           if (episode == null) {
-            return const Center(child: Text('Episode not found', style: TextStyle(color: Colors.white)));
+            return Center(child: Text('Episode not found', style: TextStyle(color: Theme.of(context).colorScheme.onBackground)));
           }
 
           return SingleChildScrollView(
@@ -270,7 +288,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 Text(
                   episode.title, 
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onBackground,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -278,7 +296,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 Text(
                   episode.description, 
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: kTextMid,
+                    color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -287,14 +305,14 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: kSurfaceBase,
+                    color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: kElectricAqua.withOpacity(0.3)),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Listen Again', style: TextStyle(color: Colors.white.withOpacity(0.9), fontWeight: FontWeight.w600)),
+                      Text('Listen Again', style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.9), fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       if (episode.audioFile != null && episode.audioFile!.isNotEmpty && episode.sceneTimestamps != null) ...[
                         // Single audio file mode - show scenes with timestamps
@@ -313,11 +331,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                                   height: 28,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: kElectricAqua.withOpacity(0.15),
+                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: kElectricAqua.withOpacity(0.4)),
+                                    border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.4)),
                                   ),
-                                  child: Text('${i + 1}', style: const TextStyle(color: Colors.white)),
+                                  child: Text('${i + 1}', style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -325,11 +343,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                                     sceneName,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: Colors.white),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Text('$startTime-$endTime', style: TextStyle(color: kTextMid, fontSize: 12)),
+                          Text('$startTime-$endTime', style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7), fontSize: 12)),
                               ],
                             ),
                           );
@@ -347,11 +365,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                                   height: 28,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: kElectricAqua.withOpacity(0.15),
+                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: kElectricAqua.withOpacity(0.4)),
+                                    border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.4)),
                                   ),
-                                  child: Text('${i + 1}', style: const TextStyle(color: Colors.white)),
+                                  child: Text('${i + 1}', style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -359,11 +377,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                                     label,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: Colors.white),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                Text('—', style: TextStyle(color: kTextMid)),
+                                Text('—', style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7))),
                               ],
                             ),
                           );
@@ -381,32 +399,32 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: kElectricAqua.withOpacity(0.1),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: kElectricAqua.withOpacity(0.3)),
+                      border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.download, color: kElectricAqua, size: 20),
+                            Icon(Icons.download, color: Theme.of(context).colorScheme.primary, size: 20),
                             const SizedBox(width: 8),
-                            Text(
-                              'Download Episode Audio',
-                              style: TextStyle(
-                                color: kElectricAqua,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
+                        Text(
+                          'Download Episode Audio',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Download audio files to listen offline during your run',
                           style: TextStyle(
-                            color: kTextMid,
+                            color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                             fontSize: 14,
                           ),
                         ),
@@ -414,8 +432,8 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                         ElevatedButton(
                           onPressed: _downloading ? null : () => _downloadEpisodeFromFirebase(episode),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: kElectricAqua,
-                            foregroundColor: kMidnightNavy,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimary,
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           ),
                           child: Row(
@@ -427,7 +445,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(kMidnightNavy),
+                                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -451,13 +469,13 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: kElectricAqua.withOpacity(0.1),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: kElectricAqua.withOpacity(0.3)),
+                      border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
                     ),
                     child: Text(
                       'Web preview: audio streams from assets; no download needed.',
-                      style: TextStyle(color: kElectricAqua),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -483,8 +501,8 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                         }
                       : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: kElectricAqua,
-                      foregroundColor: kMidnightNavy,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -493,76 +511,14 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                       'Start Workout',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: kMidnightNavy,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
 
-                // Quick weight setting (temporary inline control)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: kSurfaceBase,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: kElectricAqua.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.monitor_weight, color: Colors.white70),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Weight: ${(weightKg ?? 70.0).toStringAsFixed(0)} kg',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () async {
-                          final newValue = await showDialog<double>(
-                            context: context,
-                            builder: (ctx) {
-                              double temp = weightKg ?? 70.0;
-                              return AlertDialog(
-                                backgroundColor: kSurfaceBase,
-                                title: const Text('Set Weight (kg)', style: TextStyle(color: Colors.white)),
-                                content: StatefulBuilder(
-                                  builder: (ctx, setState) => Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Slider(
-                                        min: 40,
-                                        max: 130,
-                                        divisions: 90,
-                                        value: temp,
-                                        onChanged: (v) => setState(() => temp = v),
-                                      ),
-                                      Text('${temp.toStringAsFixed(0)} kg', style: const TextStyle(color: Colors.white70)),
-                                    ],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-                                  TextButton(onPressed: () => Navigator.pop(ctx, temp), child: const Text('Save')),
-                                ],
-                              );
-                            },
-                          );
-                          if (newValue != null) {
-                            ref.read(userWeightKgProvider.notifier).state = newValue;
-                            // Persist to Firestore (best-effort)
-                            try {
-                              final auth = ref.read(authServiceProvider);
-                              await auth.setUserWeightKg(newValue);
-                            } catch (_) {}
-                          }
-                        },
-                        icon: const Icon(Icons.edit, color: Colors.white70),
-                      )
-                    ],
-                  ),
-                ),
+                // Weight control moved to Settings > Fitness Profile
                 const SizedBox(height: 16),
 
                 // Run parameter tiles at the bottom
@@ -581,7 +537,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 _tile(context, 'Duration', subtitle: selectedTarget?.displayName ?? 'Select duration', icon: Icons.timer, onTap: (){
                   showModalBottomSheet(
                     context: context,
-                    backgroundColor: kSurfaceBase,
+                    backgroundColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                     ),
@@ -592,6 +548,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
             ),
           );
         },
+        ),
       ),
     );
   }
@@ -603,9 +560,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: kSurfaceBase,
+          color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kElectricAqua.withOpacity(0.3)),
+          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
@@ -616,7 +573,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: kElectricAqua, size: 24),
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
             const SizedBox(width: 16),
             Expanded(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,7 +581,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 Text(
                   title, 
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onBackground,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -632,12 +589,12 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 Text(
                   subtitle, 
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: kTextMid,
+                    color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                   ),
                 ),
               ],
             )),
-            Icon(Icons.chevron_right, color: kElectricAqua),
+            Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.primary),
           ],
         ),
       ),
@@ -648,20 +605,20 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: kMeadowGreen.withOpacity(0.15),
+        color: Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: kMeadowGreen.withOpacity(0.4)),
+        border: Border.all(color: Theme.of(context).colorScheme.tertiary.withOpacity(0.4)),
       ),
       child: Row(
         children: [
-          Icon(Icons.download_done, color: kMeadowGreen),
+          Icon(Icons.download_done, color: Theme.of(context).colorScheme.tertiary),
           const SizedBox(width: 8),
           Expanded(
             child: LinearProgressIndicator(
               value: _cached ? 1 : (_downloading ? _progress : 0),
               minHeight: 8,
-              backgroundColor: kMeadowGreen.withOpacity(0.2),
-              valueColor: AlwaysStoppedAnimation<Color>(kMeadowGreen),
+              backgroundColor: Theme.of(context).colorScheme.tertiary.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.tertiary),
             ),
           ),
         ],
@@ -673,7 +630,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   void _showTrackingSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: kSurfaceBase,
+      backgroundColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -688,7 +645,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: kTextMid.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -696,7 +653,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               Text(
                 'Tracking Mode',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onBackground,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -704,7 +661,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               Text(
                 'Choose how to track your run',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: kTextMid,
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 16),
@@ -714,9 +671,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   groupValue: current,
                   title: Text(
                     mode.name,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
                   ),
-                  activeColor: kElectricAqua,
+                  activeColor: Theme.of(context).colorScheme.primary,
                   onChanged: (v) { 
                     if (v!=null) { 
                       ref.read(trackingModeProvider.notifier).state = v; 
@@ -735,7 +692,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   void _showSprintsSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: kSurfaceBase,
+      backgroundColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -750,7 +707,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: kTextMid.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -758,7 +715,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               Text(
                 'Sprint Intensity',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onBackground,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -766,7 +723,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               Text(
                 'Set your sprint intensity level',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: kTextMid,
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 16),
@@ -776,9 +733,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   groupValue: current,
                   title: Text(
                     s.name,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
                   ),
-                  activeColor: kElectricAqua,
+                  activeColor: Theme.of(context).colorScheme.primary,
                   onChanged: (v) { 
                     if (v!=null) { 
                       ref.read(sprintIntensityProvider.notifier).state = v; 
@@ -797,7 +754,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   void _showMusicSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: kSurfaceBase,
+      backgroundColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -812,7 +769,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: kTextMid.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -820,7 +777,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               Text(
                 'Music Source',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onBackground,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -828,7 +785,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               Text(
                 'External music will duck during scenes',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: kTextMid,
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 16),
@@ -838,9 +795,9 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                   groupValue: current,
                   title: Text(
                     m.name,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
                   ),
-                  activeColor: kElectricAqua,
+                  activeColor: Theme.of(context).colorScheme.primary,
                   onChanged: (v) { 
                     if (v!=null) { 
                       ref.read(musicSourceProvider.notifier).state = v; 
@@ -860,28 +817,26 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: kSurfaceBase,
-        title: const Text(
+        backgroundColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+        title: Text(
           'Download Help',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
         ),
-        content: const Text(
+        content: Text(
           'The download failed because:\n\n'
           '1. Firebase Storage security rules are blocking access\n'
           '2. Audio files may not be uploaded yet\n'
           '3. Network connectivity issues\n\n'
           'Please check your Firebase Storage configuration.',
-          style: TextStyle(color: kTextMid),
+          style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(color: kElectricAqua)),
+            child: Text('OK', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
           ),
         ],
       ),
     );
   }
 }
-
-

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'theme_config.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme_factory.dart';
+import '../../shared/providers/theme_providers.dart';
 
 /// Widget for selecting themes in the settings
-class ThemeSelectorWidget extends StatelessWidget {
+class ThemeSelectorWidget extends ConsumerWidget {
   const ThemeSelectorWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentTheme = ref.watch(themeProvider);
+    final themeNotifier = ref.read(themeProvider.notifier);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -31,12 +35,20 @@ class ThemeSelectorWidget extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                'Current Theme: ${ThemeConfig.themeName}',
+                'Current Theme: ${ThemeFactory.getThemeName(currentTheme)}',
                 style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                ThemeFactory.getSeasonalName(currentTheme),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
-                ThemeConfig.themeDescription,
+                ThemeFactory.getSeasonalDescription(currentTheme),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -46,25 +58,30 @@ class ThemeSelectorWidget extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ...ThemeFactory.getAvailableThemes().map((themeType) {
-                final isCurrentTheme = themeType == ThemeConfig.activeTheme;
+                final isCurrentTheme = themeType == currentTheme;
                 final themeColors = ThemeFactory.getThemeColors(themeType);
                 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isCurrentTheme 
-                        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                        : Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
+                return GestureDetector(
+                  onTap: () {
+                    themeNotifier.setTheme(themeType);
+                    GlobalThemeProvider.setTheme(themeType);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
                       color: isCurrentTheme 
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                      width: isCurrentTheme ? 2 : 1,
+                          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                          : Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isCurrentTheme 
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                        width: isCurrentTheme ? 2 : 1,
+                      ),
                     ),
-                  ),
-                  child: Row(
+                    child: Row(
                     children: [
                       // Color preview
                       Container(
@@ -104,7 +121,14 @@ class ThemeSelectorWidget extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              ThemeFactory.getThemeDescription(themeType),
+                              ThemeFactory.getSeasonalName(themeType),
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: themeColors['primary'],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              ThemeFactory.getSeasonalDescription(themeType),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
@@ -118,37 +142,9 @@ class ThemeSelectorWidget extends StatelessWidget {
                         ),
                     ],
                   ),
-                );
+                ),
+              );
               }).toList(),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'To change themes, edit the currentTheme value in lib/core/themes/theme_config.dart and rebuild the app.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),

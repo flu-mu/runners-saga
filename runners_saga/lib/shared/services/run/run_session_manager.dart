@@ -1,20 +1,20 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart'; // Add this import for AppLifecycleState
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:flutter/material.dart'; // Not used
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:just_audio/just_audio.dart';
+// import 'package:just_audio/just_audio.dart';
 import 'progress_monitor_service.dart';
 import '../story/scene_trigger_service.dart';
 import '../audio/audio_manager.dart';
-import '../firebase/firestore_service.dart';
+// import '../firebase/firestore_service.dart';
 import '../audio/download_service.dart';
-import '../firebase/firebase_storage_service.dart';
+// import '../firebase/firebase_storage_service.dart';
 import '../../models/episode_model.dart';
 import '../../models/run_model.dart';
 import '../../models/run_target_model.dart';
 import '../../models/run_enums.dart';
-import '../../providers/settings_providers.dart';
+// import '../../providers/settings_providers.dart';
 
 class RunSessionManager {
   final ProgressMonitorService _progressMonitor = ProgressMonitorService();
@@ -99,6 +99,10 @@ class RunSessionManager {
         onProgressUpdate: _onProgressUpdate,
         onRouteUpdate: _onRouteUpdate,
       );
+
+      // Ensure background progress monitoring can trigger scenes while app is backgrounded
+      // This connects the ProgressMonitorService's background timer to the SceneTriggerService
+      _progressMonitor.setSceneTriggerService(_sceneTrigger);
       
       // Initialize scene trigger service with user's selected targets and episode data
       await _sceneTrigger.initialize(
@@ -605,6 +609,7 @@ class RunSessionManager {
       minPace: stats['minPace'] as double,
       episodeId: _currentEpisode?.id ?? '',
       status: RunStatus.completed,
+      achievements: [], // Add empty achievements list
       runTarget: RunTarget(
         id: 'episode_${_currentEpisode?.id ?? "unknown"}',
         type: RunTargetType.distance,
@@ -663,6 +668,7 @@ class RunSessionManager {
       minPace: stats['minPace'] as double,
       episodeId: _currentEpisode?.id ?? '',
       status: RunStatus.completed,
+      achievements: [], // Add empty achievements list
       runTarget: RunTarget(
         id: 'episode_${_currentEpisode?.id ?? "unknown"}',
         type: RunTargetType.distance,
@@ -771,7 +777,19 @@ class RunSessionManager {
     // Clear all callbacks to prevent further updates
     _clearAllCallbacks();
     
-    print('☢️ RunSessionManager: NUCLEAR STOP - Everything killed');
+    // Ensure session marked inactive so a new run can start later
+    _isSessionActive = false;
+    _isPaused = false;
+    print('☢️ RunSessionManager: NUCLEAR STOP - Everything killed; session marked inactive');
+  }
+
+  /// Prepare the manager for a brand new run after a hard stop
+  void prepareForNewRun() {
+    _globallyStopped = false;
+    _timersStopped = false;
+    _isSessionActive = false;
+    _isPaused = false;
+    print('🔄 RunSessionManager: Prepared for new run (flags reset)');
   }
   
   /// Clear all callbacks to prevent further updates
@@ -832,5 +850,3 @@ class RunStats {
     required this.route,
   });
 }
-
-

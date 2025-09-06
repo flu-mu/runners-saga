@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:runners_saga/shared/models/season_model.dart';
 import 'package:runners_saga/shared/providers/story_providers.dart';
 import 'package:runners_saga/shared/providers/auth_providers.dart';
-import 'package:runners_saga/core/constants/app_theme.dart';
+import 'package:runners_saga/core/themes/theme_factory.dart';
+import 'package:runners_saga/shared/widgets/ui/seasonal_background.dart';
 
 
 class SeasonHubScreen extends ConsumerWidget {
@@ -12,19 +13,32 @@ class SeasonHubScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ThemeFactory.getCurrentTheme();
+    
     return Scaffold(
-      backgroundColor: kMidnightNavy,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Season Hub', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Season Hub',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onBackground,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: theme.colorScheme.onBackground),
       ),
-      body: const Center(
-        child: Text(
-          'Season content will be available here.',
-          style: TextStyle(color: Colors.white),
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 120,
+        child: Center(
+          child: Text(
+            'Season content will be available here.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onBackground,
+            ),
+          ),
         ),
       ),
     );
@@ -46,13 +60,15 @@ class SeasonHubScreen extends ConsumerWidget {
   }
 
   Widget _buildSeasonCard(BuildContext context, WidgetRef ref, SeasonModel season) {
+    final theme = ThemeFactory.getCurrentTheme();
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF6750A4),
-            const Color(0xFF9C27B0),
+            theme.colorScheme.primary,
+            theme.colorScheme.secondary,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -60,7 +76,7 @@ class SeasonHubScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -83,12 +99,12 @@ class SeasonHubScreen extends ConsumerWidget {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: theme.colorScheme.onPrimary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.book,
-                        color: Colors.white,
+                        color: theme.colorScheme.onPrimary,
                         size: 32,
                       ),
                     ),

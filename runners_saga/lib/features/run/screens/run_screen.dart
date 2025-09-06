@@ -36,6 +36,9 @@ import '../widgets/scene_progress_indicator.dart';
 import '../../../shared/widgets/ui/skeleton_loader.dart';
 import '../../../shared/services/firebase/firestore_service.dart';
 import '../../../shared/services/run/run_completion_service.dart';
+import '../../../shared/services/local/local_run_storage_service.dart';
+import '../../../shared/services/local/local_to_firebase_upload_service.dart';
+import '../../../shared/services/local/background_upload_service.dart';
 import '../../../shared/providers/run_completion_providers.dart';
 import '../../../shared/models/run_model.dart';
 import '../../../shared/services/background_service_manager.dart';
@@ -70,6 +73,9 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   // GPS tracking for real distance calculation
   List<Position> _gpsRoute = [];
   double _totalDistance = 0.0;
+  
+  // SIMPLE GPS SAVING - Direct approach that won't get cleared
+  List<Map<String, dynamic>> _simpleGpsData = [];
   StreamSubscription<Position>? _gpsSubscription;
   Position? _lastGpsPosition;
   
@@ -123,36 +129,14 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   @override
   void dispose() {
     try {
-      _disposed = true;
-      _stopSimpleTimer();
-      
-      // Clear service callbacks to prevent further updates
-      _clearServiceCallbacks();
-      
-      // Clean up GPS tracking
-      _gpsSubscription?.cancel();
-      _gpsSubscription = null;
-      
-      // Clean up GPS signal loss detection
-      _gpsSignalLossTimer?.cancel();
-      _gpsSignalLossTimer = null;
-      
-      // Clean up pace calculation timer
-      _paceCalculationTimer?.cancel();
-      _paceCalculationTimer = null;
-      
-      // Clean up error handling timers
-      _errorToastTimer?.cancel();
-      _errorToastTimer = null;
-      _networkCheckTimer?.cancel();
-      _networkCheckTimer = null;
+      // Use comprehensive cleanup
+      _stopAllTimersAndServices();
       
       // Remove lifecycle observer
       WidgetsBinding.instance.removeObserver(this);
       
     } catch (e) {
       // Log error but don't let it prevent disposal
-      print('⚠️ RunScreen: Error during dispose: $e');
     } finally {
       super.dispose();
     }
@@ -186,11 +170,9 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   void _onAppResumed() {
     if (_disposed) return;
     
-    print('📱 RunScreen: App resumed - continuing run tracking');
     
     // Ensure GPS tracking is still active
     if (_isTimerRunning && !_isPaused && _gpsSubscription == null) {
-      print('📍 RunScreen: Restarting GPS tracking after resume');
       _startGpsTracking();
     }
     
@@ -204,7 +186,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   void _onAppInactive() {
     if (_disposed) return;
     
-    print('📱 RunScreen: App inactive - maintaining run state');
     // Keep everything running during transitions
   }
   
@@ -212,7 +193,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   void _onAppPaused() {
     if (_disposed) return;
     
-    print('📱 RunScreen: App paused - continuing background processing');
     
     // Start background service if available
     if (_isTimerRunning && !_isPaused) {
@@ -227,7 +207,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   void _onAppDetached() {
     if (_disposed) return;
     
-    print('📱 RunScreen: App detached - saving run state');
     
     // Save current run state to persistent storage
     if (_isTimerRunning) {
@@ -239,7 +218,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   void _onAppHidden() {
     if (_disposed) return;
     
-    print('📱 RunScreen: App hidden - maintaining background processing');
     // Similar to paused - keep everything running
   }
   
@@ -260,12 +238,9 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       );
       
       if (success) {
-        print('✅ RunScreen: Background service started successfully');
       } else {
-        print('⚠️ RunScreen: Background service not available (web/unsupported platform)');
       }
     } catch (e) {
-      print('❌ RunScreen: Error starting background service: $e');
     }
   }
   
@@ -273,13 +248,11 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   void _saveRunStateForBackground() {
     // This will be handled by the existing timer and GPS tracking
     // The Timer.periodic calls will continue running in background
-    print('💾 RunScreen: Run state preserved for background processing');
   }
   
   /// Start GPS tracking for real distance calculation
   void _startGpsTracking() async {
     try {
-      print('📍 RunScreen: Starting GPS tracking for real distance calculation');
       
       // Get initial position
       final initialPosition = await Geolocator.getCurrentPosition(
@@ -290,10 +263,21 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       // Store initial position
       _lastGpsPosition = initialPosition;
       _gpsRoute.add(initialPosition);
+      
+      // SIMPLE GPS SAVING - Add initial position to _simpleGpsData
+      _simpleGpsData.add({
+        'latitude': initialPosition.latitude,
+        'longitude': initialPosition.longitude,
+        'accuracy': initialPosition.accuracy,
+        'altitude': initialPosition.altitude,
+        'speed': initialPosition.speed,
+        'heading': initialPosition.heading,
+        'timestamp': initialPosition.timestamp?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        'elapsedSeconds': _elapsedTime.inSeconds,
+      });
+      
       _totalDistance = 0.0;
       
-      print('📍 RunScreen: Initial GPS position captured: (${initialPosition.latitude}, ${initialPosition.longitude})');
-      print('📍 RunScreen: GPS route started with 1 point');
       
       // Start continuous GPS tracking with background-friendly settings
       _gpsSubscription = Geolocator.getPositionStream(
@@ -307,16 +291,13 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           _onGpsPositionUpdate(position);
         },
         onError: (error) {
-          print('❌ RunScreen: GPS stream error: $error');
           // Don't cancel the subscription on error - let it retry
         },
         cancelOnError: false, // Keep GPS tracking alive even on errors
       );
       
-      print('📍 RunScreen: Continuous GPS tracking started - will continue in background');
       
     } catch (e) {
-      print('❌ RunScreen: Failed to start GPS tracking: $e');
     }
   }
   
@@ -335,7 +316,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       _checkGpsSignalLoss();
     });
     
-    print('🔍 RunScreen: GPS signal loss detection started');
   }
   
   /// Check if GPS signal has been lost
@@ -361,8 +341,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       _averagePaceBeforeSignalLoss = _totalDistance / (_elapsedTime.inHours);
     }
     
-    print('⚠️ RunScreen: GPS signal lost - Starting distance estimation');
-    print('⚠️ RunScreen: Average pace before signal loss: ${_averagePaceBeforeSignalLoss.toStringAsFixed(2)} km/h');
     
     // Start estimating distance during signal loss
     _startDistanceEstimationDuringSignalLoss();
@@ -395,8 +373,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           final originalDistance = _totalDistance - _estimatedDistanceDuringSignalLoss;
           _totalDistance = originalDistance + estimatedDistance;
           
-          print('📍 RunScreen: Signal loss - Estimated distance: ${_estimatedDistanceDuringSignalLoss.toStringAsFixed(6)} km');
-          print('📍 RunScreen: Signal loss - Total distance (with estimation): ${_totalDistance.toStringAsFixed(6)} km');
           
           // Update UI
           if (mounted && !_disposed) {
@@ -406,27 +382,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     });
   }
   
-  /// Handle GPS signal recovery
-  void _handleGpsSignalRecovery() {
-    _isGpsSignalLost = false;
-    
-    // Calculate actual distance traveled during signal loss
-    final actualDistanceTraveled = _estimatedDistanceDuringSignalLoss;
-    
-    print('✅ RunScreen: GPS signal recovered!');
-    print('✅ RunScreen: Estimated distance during signal loss: ${_estimatedDistanceDuringSignalLoss.toStringAsFixed(6)} km');
-    print('✅ RunScreen: Signal loss duration: ${_gpsSignalLossDuration.inSeconds} seconds');
-    
-    // Reset signal loss tracking
-    _gpsSignalLossDuration = Duration.zero;
-    _estimatedDistanceDuringSignalLoss = 0.0;
-    _averagePaceBeforeSignalLoss = 0.0;
-    
-    // Update UI to show signal recovery
-    if (mounted && !_disposed) {
-      setState(() {});
-    }
-  }
   
   /// Start real-time pace calculation
   void _startPaceCalculation() {
@@ -443,7 +398,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       _calculateCurrentPace();
     });
     
-    print('⚡ RunScreen: Real-time pace calculation started');
   }
   
   /// Calculate current pace based on recent GPS data
@@ -495,9 +449,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       // Analyze pace trend
       _analyzePaceTrend();
       
-      print('⚡ RunScreen: Current pace: ${_currentPace.toStringAsFixed(1)} min/km');
-      print('⚡ RunScreen: Current speed: ${_currentSpeed.toStringAsFixed(1)} km/h');
-      print('⚡ RunScreen: Pace trend: $_paceTrend');
       
       // Update UI
       if (mounted && !_disposed) {
@@ -742,7 +693,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       _checkNetworkAvailability();
     });
     
-    print('🌐 RunScreen: Network monitoring started');
   }
   
   /// Check network availability
@@ -797,92 +747,15 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       setState(() {});
     }
     
-    print('${isError ? '❌' : 'ℹ️'} RunScreen: Toast - $message');
   }
   
-  /// Show loading state
-  void _showLoading(String message) {
-    _isLoading = true;
-    _currentErrorMessage = message;
-    
-    if (mounted && !_disposed) {
-      setState(() {});
-    }
-    
-    print('⏳ RunScreen: Loading - $message');
-  }
   
-  /// Hide loading state
-  void _hideLoading() {
-    _isLoading = false;
-    _currentErrorMessage = null;
-    
-    if (mounted && !_disposed) {
-      setState(() {});
-    }
-    
-    print('✅ RunScreen: Loading completed');
-  }
   
-  /// Handle errors with user-friendly feedback
-  void _handleError(dynamic error, String operation, {bool showDialog = true, bool showToast = true, VoidCallback? onRetry}) {
-    final errorMessage = _getUserFriendlyErrorMessage(error);
-    final fullMessage = 'Failed to $operation. $errorMessage';
-    
-    print('❌ RunScreen: Error in $operation: $error');
-    
-    if (showToast) {
-      _showToast(fullMessage, isError: true);
-    }
-    
-    if (showDialog && onRetry != null) {
-      _showErrorDialog(
-        'Operation Failed',
-        fullMessage,
-        showRetry: true,
-        onRetry: onRetry,
-      );
-    } else if (showDialog) {
-      _showErrorDialog(
-        'Operation Failed',
-        fullMessage,
-        showRetry: false,
-      );
-    }
-    
-    // Hide loading if it was showing
-    _hideLoading();
-  }
-  
-  /// Retry operation with exponential backoff
-  Future<T?> _retryOperation<T>(Future<T> Function() operation, {
-    int maxRetries = 3,
-    Duration initialDelay = const Duration(seconds: 1),
-  }) async {
-    int retryCount = 0;
-    Duration delay = initialDelay;
-    
-    while (retryCount < maxRetries) {
-      try {
-        return await operation();
-      } catch (e) {
-        retryCount++;
-        
-        if (retryCount >= maxRetries) {
-          rethrow;
-        }
-        
-        print('🔄 RunScreen: Retry $retryCount/$maxRetries failed: $e');
-        await Future.delayed(delay);
-        delay *= 2; // Exponential backoff
-      }
-    }
-    
-    return null;
-  }
   
   /// Handle GPS position updates and calculate distance
   void _onGpsPositionUpdate(Position position) {
+    print('📍 RunScreen: GPS position update received: (${position.latitude}, ${position.longitude})');
+    
     if (_lastGpsPosition != null) {
       // Calculate distance from last position
       final distance = Geolocator.distanceBetween(
@@ -895,16 +768,24 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       // Add to total distance
       _totalDistance += distance;
       
-      print('📍 RunScreen: GPS update - Position: (${position.latitude}, ${position.longitude})');
-      print('📍 RunScreen: GPS update - Distance: ${distance.toStringAsFixed(6)} km, Total: ${_totalDistance.toStringAsFixed(6)} km');
-      print('📍 RunScreen: GPS update - Accuracy: ${position.accuracy}m, Speed: ${position.speed}m/s');
     }
     
     // Store the new position
     _lastGpsPosition = position;
     _gpsRoute.add(position);
     
-    print('📍 RunScreen: GPS route now has ${_gpsRoute.length} points');
+    // SIMPLE GPS SAVING - Also store in simple format that won't get cleared
+    _simpleGpsData.add({
+      'latitude': position.latitude,
+      'longitude': position.longitude,
+      'accuracy': position.accuracy,
+      'altitude': position.altitude,
+      'speed': position.speed,
+      'heading': position.heading,
+      'timestamp': position.timestamp?.toIso8601String() ?? DateTime.now().toIso8601String(),
+      'elapsedSeconds': _elapsedTime.inSeconds,
+    });
+    
     
 
     
@@ -916,7 +797,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   
   /// Start a simple, controllable timer
   void _startSimpleTimer() async {
-    print('🚀 RunScreen: Starting simple timer...');
     
     // Initialize start time if not already set
     if (_startTime == null) {
@@ -951,7 +831,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     _startNetworkMonitoring();
     
     // Audio will be handled by the background session (SceneTriggerService)
-    print('🎵 Audio will be managed by background session');
     
     // Set timer state for UI
     _isTimerRunning = true;
@@ -960,7 +839,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     // Start listening to elapsed time updates from ProgressMonitorService
     _startListeningToServiceUpdates();
     
-    print('🚀 RunScreen: Simple timer started and all services initialized');
   }
   
   /// Start listening to updates from ProgressMonitorService
@@ -981,15 +859,8 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       }
     };
     
-    print('👂 RunScreen: Now listening to ProgressMonitorService time updates');
   }
   
-  /// Save timer state for background persistence
-  void _saveTimerState() {
-    // Save current timer state to shared preferences
-    // This ensures the timer can resume correctly when app is brought back
-    print('💾 RunScreen: Saving timer state for background persistence');
-  }
   
   /// Pause the simple timer
   void _pauseSimpleTimer() async {
@@ -1011,12 +882,9 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
         final audioManager = ref.read(audioManagerProvider);
         await audioManager.pauseAll();
         
-        print('🎵 Audio paused when timer paused (session + audio manager)');
       } catch (e) {
-        print('❌ Error pausing audio: $e');
       }
       
-      print('⏸️ Simple timer paused at: ${_elapsedTime.inSeconds}s');
       if (mounted && !_disposed) {
         setState(() {});
       }
@@ -1032,7 +900,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     if (_simpleTimer != null) {
       _simpleTimer!.cancel();
       _simpleTimer = null;
-      print('🛑 Simple timer stopped completely');
     }
     
     // Clear the callback to prevent further updates from ProgressMonitorService
@@ -1044,6 +911,74 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     }
   }
   
+  /// Stop ALL timers and services - comprehensive cleanup for hot reload
+  void _stopAllTimersAndServices() {
+    print('🛑 RunScreen: Starting comprehensive timer cleanup...');
+    
+    // Set all flags to stop state IMMEDIATELY
+    _disposed = true;
+    _isTimerRunning = false;
+    _isPaused = false;
+    _timerStopped = true;
+    
+    // Stop all defined timers
+    if (_simpleTimer != null) {
+      _simpleTimer!.cancel();
+      _simpleTimer = null;
+      print('🛑 RunScreen: _simpleTimer stopped');
+    }
+    
+    if (_gpsSignalLossTimer != null) {
+      _gpsSignalLossTimer!.cancel();
+      _gpsSignalLossTimer = null;
+      print('🛑 RunScreen: _gpsSignalLossTimer stopped');
+    }
+    
+    if (_paceCalculationTimer != null) {
+      _paceCalculationTimer!.cancel();
+      _paceCalculationTimer = null;
+      print('🛑 RunScreen: _paceCalculationTimer stopped');
+    }
+    
+    if (_errorToastTimer != null) {
+      _errorToastTimer!.cancel();
+      _errorToastTimer = null;
+      print('🛑 RunScreen: _errorToastTimer stopped');
+    }
+    
+    if (_networkCheckTimer != null) {
+      _networkCheckTimer!.cancel();
+      _networkCheckTimer = null;
+      print('🛑 RunScreen: _networkCheckTimer stopped');
+    }
+    
+    // Stop GPS tracking
+    if (_gpsSubscription != null) {
+      _gpsSubscription!.cancel();
+      _gpsSubscription = null;
+      print('🛑 RunScreen: GPS subscription stopped');
+    }
+    
+    // Clear service callbacks
+    _clearServiceCallbacks();
+    
+    print('🛑 RunScreen: All timers and services stopped successfully');
+  }
+
+  /// Test method to verify all timers are stopped (for debugging hot reload)
+  void testTimerCleanup() {
+    print('🧪 RunScreen: Testing timer cleanup...');
+    print('🧪 _simpleTimer: ${_simpleTimer == null ? "STOPPED" : "RUNNING"}');
+    print('🧪 _gpsSignalLossTimer: ${_gpsSignalLossTimer == null ? "STOPPED" : "RUNNING"}');
+    print('🧪 _paceCalculationTimer: ${_paceCalculationTimer == null ? "STOPPED" : "RUNNING"}');
+    print('🧪 _errorToastTimer: ${_errorToastTimer == null ? "STOPPED" : "RUNNING"}');
+    print('🧪 _networkCheckTimer: ${_networkCheckTimer == null ? "STOPPED" : "RUNNING"}');
+    print('🧪 _gpsSubscription: ${_gpsSubscription == null ? "STOPPED" : "RUNNING"}');
+    print('🧪 _isTimerRunning: $_isTimerRunning');
+    print('🧪 _disposed: $_disposed');
+    print('🧪 _timerStopped: $_timerStopped');
+  }
+  
   /// Update elapsed time
   void _updateElapsedTime() {
     if (_startTime != null) {
@@ -1051,87 +986,12 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     }
   }
 
-  /// Calculate total elevation gain from GPS points
-  double _calculateElevationGain(List<Map<String, dynamic>> gpsPoints) {
-    if (gpsPoints.length < 2) return 0.0;
-    
-    double totalElevationGain = 0.0;
-    double previousAltitude = gpsPoints.first['altitude'] ?? 0.0;
-    
-    for (int i = 1; i < gpsPoints.length; i++) {
-      double currentAltitude = gpsPoints[i]['altitude'] ?? 0.0;
-      double elevationChange = currentAltitude - previousAltitude;
-      
-      // Only count positive elevation changes (gains)
-      if (elevationChange > 0) {
-        totalElevationGain += elevationChange;
-      }
-      
-      previousAltitude = currentAltitude;
-    }
-    
-    return totalElevationGain;
-  }
-
-  /// Calculate maximum speed from GPS points
-  double _calculateMaxSpeed(List<Map<String, dynamic>> gpsPoints) {
-    if (gpsPoints.isEmpty) return 0.0;
-    
-    double maxSpeed = 0.0;
-    for (var point in gpsPoints) {
-      double speed = (point['speed'] ?? 0.0) * 3.6; // Convert m/s to km/h
-      if (speed > maxSpeed) {
-        maxSpeed = speed;
-      }
-    }
-    
-    return maxSpeed;
-  }
-
-  /// Calculate average heart rate from GPS points (simulated for now)
-  double _calculateAvgHeartRate(List<Map<String, dynamic>> gpsPoints) {
-    if (gpsPoints.isEmpty) return 0.0;
-    
-    // For now, simulate heart rate based on speed and duration
-    // In a real app, this would come from a heart rate monitor
-    double totalSpeed = 0.0;
-    for (var point in gpsPoints) {
-      totalSpeed += (point['speed'] ?? 0.0) * 3.6; // Convert to km/h
-    }
-    
-    double avgSpeed = totalSpeed / gpsPoints.length;
-    
-    // Simulate heart rate: 60-70 bpm at rest, up to 180+ bpm at high intensity
-    // This is a rough approximation based on speed
-    double simulatedHeartRate = 60 + (avgSpeed * 2.5).clamp(0, 120);
-    
-    return simulatedHeartRate;
-  }
-
-  /// Calculate calories burned based on distance and duration
-  double _calculateCaloriesBurned(double distanceKm, int durationSeconds) {
-    if (distanceKm <= 0 || durationSeconds <= 0) return 0.0;
-    
-    // Rough calorie calculation: ~60 calories per km for average runner
-    // This is a simplified formula - real calculation would consider weight, age, etc.
-    double baseCalories = distanceKm * 60;
-    
-    // Adjust for duration (longer runs burn more calories per km)
-    double durationMinutes = durationSeconds / 60.0;
-    double paceMinutesPerKm = durationMinutes / distanceKm;
-    
-    // Faster pace = more calories per km
-    double paceMultiplier = (8.0 / paceMinutesPerKm).clamp(0.8, 1.5);
-    
-    return baseCalories * paceMultiplier;
-  }
 
   /// Clear all callbacks to prevent further updates from services
   void _clearServiceCallbacks() {
     try {
-      // Check if widget is still mounted before accessing ref
-      if (!mounted) {
-        print('🛑 RunScreen: Widget disposed, skipping callback clearing');
+      // Check if widget is disposed or not mounted before accessing ref
+      if (_disposed || !mounted) {
         return;
       }
       
@@ -1139,101 +999,28 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       
       // Clear the onTimeUpdated callback through the controller's setter
       runSessionController.onTimeUpdated = null;
-      print('🛑 RunScreen: onTimeUpdated callback cleared');
       
       // Force stop all services to prevent them from continuing to run
       runSessionController.nuclearStop();
-      print('🛑 RunScreen: All services force stopped with nuclear stop');
       
     } catch (e) {
-      print('⚠️ RunScreen: Error clearing service callbacks: $e');
     }
   }
   
   // Note: _saveRunCompletion method removed to prevent duplicate run saving
   // Run completion is now handled by RunCompletionService
   
-  /// Mark episode as completed for the user
-  Future<void> _markEpisodeCompleted(String episodeId) async {
-    try {
-      // Check if Firebase is ready using the provider
-      final firebaseStatus = ref.read(firebaseStatusProvider);
-      if (firebaseStatus != FirebaseStatus.ready) {
-        print('⚠️ RunScreen: Firebase not ready, skipping episode completion');
-        return;
-      }
-      
-      print('🏆 RunScreen: Marking episode $episodeId as completed');
-      
-      final userAsync = ref.read(currentUserProvider);
-      final user = userAsync.value;
-      if (user == null) return;
-      
-      final firestore = FirebaseFirestore.instance;
-      
-      // Check if user already has progress for this episode
-      final existingProgressQuery = await firestore
-          .collection('user_progress')
-          .where('userId', isEqualTo: user.uid)
-          .where('episodeId', isEqualTo: episodeId)
-          .limit(1)
-          .get();
-      
-      if (existingProgressQuery.docs.isNotEmpty) {
-        // Update existing progress
-        final docId = existingProgressQuery.docs.first.id;
-        await firestore.collection('user_progress').doc(docId).update({
-          'status': 'completed',
-          'completedAt': DateTime.now().toIso8601String(),
-          'elapsedTime': _elapsedTime.inSeconds,
-        });
-      } else {
-        // Create new progress entry
-        await firestore.collection('user_progress').add({
-          'userId': user.uid,
-          'episodeId': episodeId,
-          'status': 'completed',
-          'completedAt': DateTime.now().toIso8601String(),
-          'elapsedTime': _elapsedTime.inSeconds,
-        });
-      }
-      
-      print('✅ RunScreen: Episode marked as completed');
-      
-    } catch (e) {
-      print('❌ RunScreen: Error marking episode as completed: $e');
-      // Don't rethrow - this is not critical
-    }
-  }
   
-  // Helper methods for timer display
-  Color _getTimerDisplayColor() {
-    if (_timerStopped) return Colors.grey.shade200;
-    if (_isPaused) return Colors.orange.shade100;
-    return Colors.green.shade100;
-  }
   
-  Color _getTimerDisplayBorderColor() {
-    if (_timerStopped) return Colors.grey.shade400;
-    if (_isPaused) return Colors.orange.shade300;
-    return Colors.green.shade300;
+  String _getTimerDisplayText() {
+    if (_isPaused) return 'Timer Paused';
+    return 'Simple Timer';
   }
   
   IconData _getTimerDisplayIcon() {
     if (_timerStopped) return Icons.timer_off;
     if (_isPaused) return Icons.pause_circle;
     return Icons.timer;
-  }
-  
-  Color _getTimerDisplayIconColor() {
-    if (_timerStopped) return Colors.grey.shade600;
-    if (_isPaused) return Colors.orange.shade600;
-    return Colors.green.shade600;
-  }
-  
-  String _getTimerDisplayText() {
-    if (_isPaused) return 'Timer Paused';
-    return 'Simple Timer';
   }
   
   /// Build the control buttons based on timer state
@@ -1255,7 +1042,7 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           ),
           const SizedBox(width: 16),
           ElevatedButton.icon(
-            onPressed: _directSaveRun,
+            onPressed: _finishRun,
             icon: const Icon(Icons.flag),
             label: const Text('Finish Run'),
             style: ElevatedButton.styleFrom(
@@ -1285,7 +1072,10 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: _directSaveRun,
+              onPressed: () {
+                print('🚨 BUTTON CLICKED: Finish Run button pressed!');
+                _finishRun();
+              },
               icon: const Icon(Icons.flag),
               label: const Text('Finish Run'),
               style: ElevatedButton.styleFrom(
@@ -1301,464 +1091,7 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   }
   
   /// REAL GPS TRACKING with accurate distance calculation
-  Future<void> _directSaveRun() async {
-    print('🚀 REAL GPS TRACKING: Starting GPS data save with real distance calculation');
-    
-    try {
-      // Get current user first
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        print('❌ INDEPENDENT GPS CAPTURE: FAILED - No user logged in');
-        return;
-      }
-      
-      // Get current time and create a simple run ID
-      final now = DateTime.now();
-      final runId = 'run_${now.millisecondsSinceEpoch}';
-      
-      // TRY MULTIPLE SOURCES - Controller (live), cached service route, and RunScreen's own GPS list
-      print('🔍 REAL GPS TRACKING: Attempting to access GPS data from multiple sources...');
-      
-      // Check if widget is still mounted before accessing ref
-      if (!mounted) {
-        print('❌ REAL GPS TRACKING: Widget disposed, cannot access GPS data');
-        return;
-      }
-      
-      // Pull raw route directly from ProgressMonitorService to avoid conversion/clearing issues
-      final runSessionController = ref.read(runSessionControllerProvider.notifier);
-      final progressMonitor = runSessionController.state.progressMonitor;
-      final rawServiceRoute = progressMonitor.route; // List<Position>
-      print('🔍 REAL GPS TRACKING: Raw service route length: ${rawServiceRoute.length}');
-      
-      // Also get converted controller route and RunScreen route
-      final controllerRoute = runSessionController.getCurrentRoute(); // List<LocationPoint>
-      print('🔍 REAL GPS TRACKING: Controller route length: ${controllerRoute.length}');
-      print('🔍 REAL GPS TRACKING: RunScreen GPS route length: ${_gpsRoute.length}');
-      
-      // Choose the richest source available
-      List<dynamic> routeForProcessing = [];
-      if (rawServiceRoute.length >= controllerRoute.length && rawServiceRoute.length >= _gpsRoute.length) {
-        routeForProcessing = rawServiceRoute; // Position
-        print('🔍 REAL GPS TRACKING: Using raw service route with ${rawServiceRoute.length} points');
-      } else if (controllerRoute.length >= _gpsRoute.length) {
-        routeForProcessing = controllerRoute; // LocationPoint
-        print('🔍 REAL GPS TRACKING: Using controller route with ${controllerRoute.length} points');
-      } else {
-        routeForProcessing = _gpsRoute; // Position
-        print('🔍 REAL GPS TRACKING: Using RunScreen route with ${_gpsRoute.length} points');
-      }
-      
-      List<Map<String, dynamic>> gpsPoints = [];
-      
-      // Calculate total distance from GPS route to ensure accuracy
-      double distance = 0.0;
-      if (routeForProcessing.length > 1) {
-        for (int i = 1; i < routeForProcessing.length; i++) {
-          final prevPos = routeForProcessing[i - 1];
-          final currPos = routeForProcessing[i];
-          final segmentDistance = Geolocator.distanceBetween(
-            prevPos.latitude,
-            prevPos.longitude,
-            currPos.latitude,
-            currPos.longitude,
-          ) / 1000; // Convert to kilometers
-          distance += segmentDistance;
-        }
-        print('🚀 REAL GPS TRACKING: Calculated total distance from GPS route: ${distance.toStringAsFixed(6)} km');
-      } else {
-        distance = _totalDistance; // Fallback to accumulated distance
-        print('🚀 REAL GPS TRACKING: Using accumulated distance: ${distance.toStringAsFixed(6)} km');
-      }
-      
-      print('🚀 REAL GPS TRACKING: Using collected GPS data for distance calculation');
-      print('🚀 REAL GPS TRACKING: GPS route has ${routeForProcessing.length} points');
-      print('🚀 REAL GPS TRACKING: Total accumulated distance: ${_totalDistance.toStringAsFixed(4)} km');
-      print('🚀 REAL GPS TRACKING: Elapsed time: ${_elapsedTime.inSeconds} seconds');
-      
-      // Debug: Check if GPS tracking was working
-      if (routeForProcessing.isNotEmpty) {
-        final firstPoint = routeForProcessing.first;
-        final lastPoint = routeForProcessing.last;
-        print('🚀 REAL GPS TRACKING: First GPS point: (${firstPoint.latitude}, ${firstPoint.longitude})');
-        print('🚀 REAL GPS TRACKING: Last GPS point: (${lastPoint.latitude}, ${lastPoint.longitude})');
-      }
-      
-      if (routeForProcessing.isNotEmpty) {
-        // Convert collected GPS positions to data points with elapsed time
-        for (int i = 0; i < routeForProcessing.length; i++) {
-          final position = routeForProcessing[i];
-          
-          // Calculate elapsed time at this GPS point
-          // Assume GPS points are collected every 5 seconds on average
-          final elapsedSecondsAtPoint = (i * 5).clamp(0, _elapsedTime.inSeconds);
-          
-          // Handle both LocationPoint and Position types
-          double latitude, longitude, accuracy, altitude, speed;
-          double? heading;
-          if (position is LocationPoint) {
-            latitude = position.latitude;
-            longitude = position.longitude;
-            accuracy = position.accuracy;
-            altitude = position.altitude;
-            speed = position.speed;
-            heading = position.heading;
-          } else {
-            // Assume it's a Position object - cast it properly
-            final pos = position as Position;
-            latitude = pos.latitude;
-            longitude = pos.longitude;
-            accuracy = pos.accuracy;
-            altitude = pos.altitude;
-            speed = pos.speed;
-            heading = pos.heading;
-          }
-          
-          gpsPoints.add({
-            'latitude': latitude,
-            'longitude': longitude,
-            'elapsedSeconds': elapsedSecondsAtPoint,
-            'elapsedTimeFormatted': '${(elapsedSecondsAtPoint ~/ 60)}:${(elapsedSecondsAtPoint % 60).toString().padLeft(2, '0')}',
-            'accuracy': accuracy,
-            'altitude': altitude,
-            'speed': speed,
-            'heading': heading,
-          });
-        }
-        
-        print('🚀 REAL GPS TRACKING: Created ${gpsPoints.length} GPS points with real distance: ${distance.toStringAsFixed(4)} km');
-      } else {
-        print('⚠️ REAL GPS TRACKING: No GPS data collected - distance will be 0');
-        distance = 0.0;
-      }
-      
-      // Create comprehensive run data with independent GPS capture
-      final runData = {
-        'id': runId,
-        'userId': currentUser.uid,
-        'startTime': now.subtract(Duration(seconds: _elapsedTime.inSeconds)).toIso8601String(),
-        'endTime': now.toIso8601String(),
-        'duration': _elapsedTime.inSeconds,
-        'durationFormatted': '${_elapsedTime.inMinutes}:${(_elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
-        'elapsedTimeSeconds': _elapsedTime.inSeconds,
-        'distance': distance,
-        'distanceFormatted': '${distance.toStringAsFixed(2)} km',
-        'averagePace': _elapsedTime.inSeconds > 0 && distance > 0 ? (_elapsedTime.inSeconds / 60) / distance : 0.0,
-        'averagePaceFormatted': _elapsedTime.inSeconds > 0 && distance > 0 ? '${((_elapsedTime.inSeconds / 60) / distance).toStringAsFixed(1)} min/km' : '0.0 min/km',
-        'elevationGain': _calculateElevationGain(gpsPoints),
-        'maxSpeed': _calculateMaxSpeed(gpsPoints),
-        'avgHeartRate': _calculateAvgHeartRate(gpsPoints),
-        'caloriesBurned': _calculateCaloriesBurned(distance, _elapsedTime.inSeconds),
-        'gpsPoints': gpsPoints,
-        'totalGpsPoints': gpsPoints.length,
-        'episodeId': 'S01E01',
-        'episodeTitle': 'First Contact',
-        'status': 'completed',
-        'completedAt': now.toIso8601String(),
-        'createdAt': now.toIso8601String(),
-        'updatedAt': now.toIso8601String(),
-        'runType': 'episode',
-        'wasTimerUsed': true,
-        'timerElapsedSeconds': _elapsedTime.inSeconds,
-        'wasPaused': _isPaused,
-        'deviceInfo': {
-          'platform': 'iOS',
-          'appVersion': '1.0.0',
-        },
-        'metadata': {
-          'saveMethod': 'real_gps_tracking',
-          'gpsSource': 'continuous_collection',
-          'gpsPointsCollected': routeForProcessing.length,
-          'realDistanceCalculated': true,
-          'savedAt': now.toIso8601String(),
-        }
-      };
-      
-      print('🚀 REAL GPS TRACKING: Created complete run data');
-      print('🚀 REAL GPS TRACKING: Duration: ${_elapsedTime.inSeconds} seconds (${runData['durationFormatted']})');
-      print('🚀 REAL GPS TRACKING: Distance: ${distance.toStringAsFixed(2)} km');
-      print('🚀 REAL GPS TRACKING: GPS points: ${gpsPoints.length}');
-      print('🚀 REAL GPS TRACKING: Episode: ${runData['episodeTitle']}');
-      
-      // DEBUG: Print the entire runData object to see what's actually being saved
-      print('🔍 DEBUG: Full runData object before Firebase save:');
-      print('🔍 DEBUG: runData keys: ${runData.keys.toList()}');
-      final gpsPointsList = (runData['gpsPoints'] is List) ? runData['gpsPoints'] as List : null;
-      print('🔍 DEBUG: gpsPoints array length: ${gpsPointsList?.length ?? 'NULL'}');
-      print('🔍 DEBUG: totalGpsPoints: ${runData['totalGpsPoints']}');
-      print('🔍 DEBUG: elevationGain: ${runData['elevationGain']}');
-      print('🔍 DEBUG: maxSpeed: ${runData['maxSpeed']}');
-      print('🔍 DEBUG: avgHeartRate: ${runData['avgHeartRate']}');
-      print('🔍 DEBUG: caloriesBurned: ${runData['caloriesBurned']}');
-      
-      // Print first few GPS points if they exist
-      if (gpsPointsList != null && gpsPointsList.isNotEmpty) {
-        print('🔍 DEBUG: First GPS point: ${gpsPointsList.first}');
-        print('🔍 DEBUG: Last GPS point: ${gpsPointsList.last}');
-      } else {
-        print('🔍 DEBUG: GPS points array is NULL or EMPTY!');
-      }
-
-      // Print full JSON of runData for verification
-      try {
-        final prettyJson = const JsonEncoder.withIndent('  ').convert(runData);
-        print('🔍 DEBUG: runData JSON:\n$prettyJson');
-      } catch (e) {
-        print('🔍 DEBUG: Failed to JSON-encode runData: $e');
-        print('🔍 DEBUG: runData (raw map): $runData');
-      }
-      
-      // Save directly to Firestore
-      await FirebaseFirestore.instance.collection('runs').doc(runId).set(runData);
-      
-      print('✅ REAL GPS TRACKING: Complete run data saved successfully to Firestore!');
-      print('✅ REAL GPS TRACKING: Run ID: $runId');
-      print('✅ REAL GPS TRACKING: Collection: runs');
-      print('✅ REAL GPS TRACKING: User: ${currentUser.uid}');
-      
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Run saved successfully! Duration: ${runData['durationFormatted']}'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-      
-      // Set up run summary data for the summary screen
-      if (mounted) {
-        // Create run summary data
-        final summaryData = RunSummaryData(
-          totalTime: _elapsedTime,
-          totalDistance: _totalDistance,
-          averagePace: _currentPace > 0 ? _currentPace : 0.0,
-          caloriesBurned: _calculateCalories(_totalDistance, _elapsedTime),
-          episode: EpisodeModel(
-            id: 'S01E01',
-            title: 'First Contact',
-            description: 'First Contact episode',
-            seasonId: 'S01',
-            status: 'completed',
-            order: 1,
-            createdAt: now,
-            updatedAt: now,
-            objective: 'Complete the mission',
-            targetDistance: 0.0,
-            targetTime: 15 * 60 * 1000, // 15 minutes in milliseconds
-            audioFiles: [],
-          ),
-          achievements: _generateAchievements(_totalDistance, _elapsedTime),
-          route: gpsPoints.map((point) => LocationPoint(
-            latitude: point['latitude']?.toDouble() ?? 0.0,
-            longitude: point['longitude']?.toDouble() ?? 0.0,
-            accuracy: point['accuracy']?.toDouble() ?? 0.0,
-            altitude: point['altitude']?.toDouble() ?? 0.0,
-            speed: point['speed']?.toDouble() ?? 0.0,
-            elapsedSeconds: point['elapsedSeconds']?.toInt() ?? 0,
-            heading: point['heading']?.toDouble() ?? 0.0,
-            elapsedTimeFormatted: point['elapsedTimeFormatted'] ?? '0:00',
-          )).toList(),
-          createdAt: now.subtract(Duration(seconds: _elapsedTime.inSeconds)),
-          completedAt: now,
-        );
-        
-        // Set the summary data in the provider
-        print('🚀 REAL GPS TRACKING: Setting summary data in provider...');
-        print('🚀 REAL GPS TRACKING: Summary data - Time: ${summaryData.totalTime.inSeconds}s, Distance: ${summaryData.totalDistance}km, Pace: ${summaryData.averagePace} min/km');
-        
-        ref.read(currentRunSummaryProvider.notifier).state = summaryData;
-        
-        // Verify the data was set
-        final verifyData = ref.read(currentRunSummaryProvider);
-        print('🚀 REAL GPS TRACKING: Provider verification - Data set: ${verifyData != null}');
-        if (verifyData != null) {
-          print('🚀 REAL GPS TRACKING: Verified data - Time: ${verifyData.totalTime.inSeconds}s, Distance: ${verifyData.totalDistance}km');
-        }
-        
-        // Navigate to run summary screen
-        print('🚀 REAL GPS TRACKING: Navigating to run summary screen...');
-        context.go('/run/summary');
-      }
-      
-    } catch (e) {
-      print('❌ REAL GPS TRACKING: Error saving run: $e');
-      print('❌ REAL GPS TRACKING: Stack trace: $e');
-      
-      // Show error message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving run: $e'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
-          ),
-        );
-      }
-    }
-  }
-
-  /// REAL GPS TRACKING with captured GPS data (CRITICAL FIX)
-  Future<void> _directSaveRunWithCapturedData(List<Position> capturedGpsData) async {
-    print('🚀 CAPTURED GPS TRACKING: Starting GPS data save with captured data');
-    print('🚀 CAPTURED GPS TRACKING: Using ${capturedGpsData.length} captured GPS points');
-    
-    try {
-      // Get current user first
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser == null) {
-        print('❌ CAPTURED GPS TRACKING: FAILED - No user logged in');
-        return;
-      }
-      
-      // Get current time and create a simple run ID
-      final now = DateTime.now();
-      final runId = 'run_${now.millisecondsSinceEpoch}';
-      
-      // Use the captured GPS data directly
-      final routeForProcessing = capturedGpsData;
-      print('🚀 CAPTURED GPS TRACKING: Using captured route with ${routeForProcessing.length} points');
-      
-      // Calculate distance from captured GPS data
-      double totalDistance = 0.0;
-      if (routeForProcessing.length > 1) {
-        for (int i = 1; i < routeForProcessing.length; i++) {
-          final prevPos = routeForProcessing[i - 1];
-          final currPos = routeForProcessing[i];
-          
-          final distance = Geolocator.distanceBetween(
-            prevPos.latitude,
-            prevPos.longitude,
-            currPos.latitude,
-            currPos.longitude,
-          ) / 1000; // Convert to kilometers
-          
-          totalDistance += distance;
-        }
-      }
-      
-      print('🚀 CAPTURED GPS TRACKING: Total distance calculated: ${totalDistance.toStringAsFixed(4)} km');
-      
-      // Get elapsed time
-      final elapsedTime = _elapsedTime;
-      print('🚀 CAPTURED GPS TRACKING: Elapsed time: ${elapsedTime.inSeconds} seconds');
-      
-      // Create GPS points array for Firebase
-      final gpsPoints = <Map<String, dynamic>>[];
-      for (int i = 0; i < routeForProcessing.length; i++) {
-        final position = routeForProcessing[i];
-        gpsPoints.add({
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'accuracy': position.accuracy,
-          'altitude': position.altitude,
-          'speed': position.speed,
-          'heading': position.heading,
-          'timestamp': position.timestamp?.toIso8601String(),
-          'elapsedSeconds': i * 2, // Approximate elapsed seconds
-        });
-      }
-      
-      // Calculate additional metrics
-      final elevationGain = _calculateElevationGain(gpsPoints);
-      final maxSpeed = _calculateMaxSpeed(gpsPoints);
-      final avgHeartRate = _calculateAvgHeartRate(gpsPoints);
-      final caloriesBurned = _calculateCalories(totalDistance, elapsedTime);
-      
-      // Create complete run data
-      final runData = {
-        'id': runId,
-        'userId': currentUser.uid,
-        'startTime': _startTime?.toIso8601String() ?? now.toIso8601String(),
-        'endTime': now.toIso8601String(),
-        'duration': elapsedTime.inSeconds,
-        'durationFormatted': '${elapsedTime.inMinutes}:${(elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
-        'elapsedTimeSeconds': elapsedTime.inSeconds,
-        'distance': totalDistance,
-        'distanceFormatted': '${totalDistance.toStringAsFixed(2)} km',
-        'averagePace': totalDistance > 0 ? (elapsedTime.inMinutes / totalDistance) : 0.0,
-        'averagePaceFormatted': totalDistance > 0 ? '${(elapsedTime.inMinutes / totalDistance).toStringAsFixed(1)} min/km' : '0.0 min/km',
-        'elevationGain': elevationGain,
-        'maxSpeed': maxSpeed,
-        'avgHeartRate': avgHeartRate,
-        'caloriesBurned': caloriesBurned,
-        'gpsPoints': gpsPoints,
-        'totalGpsPoints': gpsPoints.length,
-        'episodeId': _getEpisodeIdFromQuery() ?? 'unknown',
-        'episodeTitle': ref.read(currentEpisodeProvider)?.title ?? 'Unknown Episode',
-        'status': 'completed',
-        'completedAt': now.toIso8601String(),
-        'createdAt': now.toIso8601String(),
-        'updatedAt': now.toIso8601String(),
-        'runType': 'episode',
-        'wasTimerUsed': true,
-        'timerElapsedSeconds': elapsedTime.inSeconds,
-        'wasPaused': _isPaused,
-        'deviceInfo': {
-          'platform': Platform.isIOS ? 'iOS' : 'Android',
-          'appVersion': '1.0.0',
-        },
-        'metadata': {
-          'saveMethod': 'captured_gps_tracking',
-          'gpsSource': 'progress_monitor_service',
-          'gpsPointsCaptured': capturedGpsData.length,
-          'distanceCalculationMethod': 'geolocator_distance_between',
-        },
-      };
-      
-      print('🚀 CAPTURED GPS TRACKING: Created complete run data');
-      print('🚀 CAPTURED GPS TRACKING: Duration: ${elapsedTime.inSeconds} seconds (${elapsedTime.inMinutes}:${(elapsedTime.inSeconds % 60).toString().padLeft(2, '0')})');
-      print('🚀 CAPTURED GPS TRACKING: Distance: ${totalDistance.toStringAsFixed(2)} km');
-      print('🚀 CAPTURED GPS TRACKING: GPS points: ${gpsPoints.length}');
-      print('🚀 CAPTURED GPS TRACKING: Episode: ${ref.read(currentEpisodeProvider)?.title ?? 'Unknown'}');
-      
-      // Save directly to Firestore
-      await FirebaseFirestore.instance.collection('runs').doc(runId).set(runData);
-      
-      print('✅ CAPTURED GPS TRACKING: Complete run data saved successfully to Firestore!');
-      print('✅ CAPTURED GPS TRACKING: Run ID: $runId');
-      print('✅ CAPTURED GPS TRACKING: Collection: runs');
-      print('✅ CAPTURED GPS TRACKING: User: ${currentUser.uid}');
-      
-      // Set summary data for navigation
-      final summaryData = {
-        'runId': runId,
-        'duration': elapsedTime,
-        'distance': totalDistance,
-        'averagePace': totalDistance > 0 ? (elapsedTime.inMinutes / totalDistance) : 0.0,
-        'gpsPoints': gpsPoints.length,
-        'episodeTitle': ref.read(currentEpisodeProvider)?.title ?? 'Unknown Episode',
-      };
-      
-      // Set the summary data in the provider
-      // Note: RunCompletionService doesn't have setRunSummary method, skip for now
-      print('🚀 CAPTURED GPS TRACKING: Skipping provider summary data (method not available)');
-      
-      print('🚀 CAPTURED GPS TRACKING: Summary data - Time: ${elapsedTime.inSeconds}s, Distance: ${totalDistance.toStringAsFixed(1)}km, Pace: ${totalDistance > 0 ? (elapsedTime.inMinutes / totalDistance).toStringAsFixed(1) : '0.0'} min/km');
-      
-      // Navigate to run summary screen
-      print('🚀 CAPTURED GPS TRACKING: Navigating to run summary screen...');
-      if (mounted) {
-        context.go('/run/summary');
-      }
-      
-    } catch (e) {
-      print('❌ CAPTURED GPS TRACKING: Error saving run data: $e');
-      print('❌ CAPTURED GPS TRACKING: Stack trace: ${StackTrace.current}');
-      
-      // Show error to user
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save run data: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-      }
-    }
-  }
+  
 
   /// Calculate calories burned based on distance and time
   int _calculateCalories(double distance, Duration time) {
@@ -1785,45 +1118,11 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     final kcal = met * 3.5 * weightKg / 200.0 * minutes;
     return kcal.round();
   }
-  
-  /// Generate achievements based on distance and time
-  List<String> _generateAchievements(double distance, Duration time) {
-    final achievements = <String>[];
-    
-    // Distance achievements
-    if (distance >= 5.0) achievements.add('5K Runner');
-    if (distance >= 10.0) achievements.add('10K Warrior');
-    if (distance >= 21.1) achievements.add('Half Marathon Hero');
-    if (distance >= 42.2) achievements.add('Marathon Master');
-    
-    // Time achievements
-    final minutes = time.inMinutes;
-    if (minutes >= 30) achievements.add('30 Minute Warrior');
-    if (minutes >= 60) achievements.add('Hour Hero');
-    if (minutes >= 120) achievements.add('2 Hour Champion');
-    
-    // Speed achievements
-    if (distance > 0) {
-      final pace = minutes / distance; // min/km
-      if (pace <= 4.0) achievements.add('Speed Demon');
-      if (pace <= 5.0) achievements.add('Fast Runner');
-      if (pace <= 6.0) achievements.add('Steady Pacer');
-    }
-    
-    // Consistency achievements
-    if (distance > 0 && time.inSeconds > 0) {
-      achievements.add('GPS Tracker');
-      achievements.add('Real Distance Runner');
-    }
-    
-    return achievements;
-  }
 
   Future<bool> _ensureLocationPermission() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        print('⚠️ RunScreen: GPS service is disabled');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -1843,7 +1142,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       }
 
       if (permission == LocationPermission.deniedForever) {
-        print('❌ RunScreen: Location permission permanently denied');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -1861,7 +1159,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           permission == LocationPermission.always || permission == LocationPermission.whileInUse;
       return hasPermission;
     } catch (e) {
-      print('❌ RunScreen: ensureLocationPermission error: $e');
       return false;
     }
   }
@@ -1875,11 +1172,9 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       });
       return;
     }
-    print('✅ RunScreen: GPS permissions and services OK');
     
     // Don't start if timer was explicitly stopped
     if (_timerStopped) {
-      print('🎯 RunScreen: Timer was stopped - not starting session');
       setState(() {
         _isInitializing = false;
       });
@@ -1889,7 +1184,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     // Don't start if there's already an active session
     final isSessionActive = ref.read(runSessionControllerProvider.notifier).isSessionActive;
     if (isSessionActive) {
-      print('🎯 RunScreen: Session already active - not starting new session');
       setState(() {
         _isInitializing = false;
       });
@@ -1898,23 +1192,16 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     
     // Debug: Check what target data is available
     final userRunTarget = ref.read(userRunTargetProvider);
-    print('🎯 RunScreen: _startRun called');
-    print('🎯 RunScreen: userRunTarget from provider: $userRunTarget');
-    print('🎯 RunScreen: Provider hash: ${userRunTarget.hashCode}');
     
     if (userRunTarget != null) {
       if (userRunTarget.targetDistance > 0) {
-        print('🎯 RunScreen: User selected DISTANCE target: ${userRunTarget.targetDistance} km');
       } else if (userRunTarget.targetTime.inMinutes > 0) {
-        print('🎯 RunScreen: User selected TIME target: ${userRunTarget.targetTime.inMinutes} min');
       }
     } else {
-      print('🎯 RunScreen: No user target, using episode defaults');
     }
     
     // Get episode ID from query parameters and load episode data
     final episodeId = _getEpisodeIdFromQuery();
-    print('🎯 RunScreen: Episode ID from query: $episodeId');
     
     EpisodeModel? currentEpisode;
     if (episodeId != null) {
@@ -1924,18 +1211,14 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
         episodeAsync.whenData((episode) {
           if (episode != null) {
             currentEpisode = episode;
-            print('🎯 RunScreen: Episode loaded: ${episode.title}');
-            print('🎯 RunScreen: Episode audio files: ${episode.audioFiles.length}');
           }
         });
       } catch (e) {
-        print('🎯 RunScreen: Error loading episode: $e');
       }
     }
     
     // If no episode loaded, create a fallback episode with audio files
     if (currentEpisode == null) {
-      print('🎯 RunScreen: No episode loaded, creating fallback with audio');
       currentEpisode = EpisodeModel(
         id: 'S01E01',
         seasonId: 'S01',
@@ -1954,7 +1237,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
         requirements: {},
         rewards: {},
       );
-      print('🎯 RunScreen: Fallback episode created with ${currentEpisode!.audioFiles.length} audio files');
     }
     
     try {
@@ -1969,40 +1251,27 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           // User selected distance target
           targetDistance = userRunTarget.targetDistance;
           targetTime = null; // No time target - user only selected distance
-          print('🎯 RunScreen: User selected DISTANCE target: ${userRunTarget.targetDistance} km');
         } else if (userRunTarget.targetTime.inMinutes > 0) {
           // User selected time target
           targetTime = userRunTarget.targetTime;
           targetDistance = null; // No distance target - user only selected time
-          print('🎯 RunScreen: User selected TIME target: ${userRunTarget.targetTime.inMinutes} min');
         } else {
-          print('🎯 RunScreen: Invalid target - both distance and time are zero');
         }
       }
       // No fallback to database - only show user selection
       
-      print('🎯 RunScreen: Using targetTime: $targetTime');
-      print('🎯 RunScreen: Using targetDistance: $targetDistance');
       
       // Only start if user has selected a target AND timer wasn't stopped
-      print('🎯 RunScreen: Target check: targetTime=$targetTime, targetDistance=$targetDistance, _timerStopped=$_timerStopped');
       if ((targetTime != null || targetDistance != null) && !_timerStopped) {
         // Check if the run session manager can start a session
-        print('🎯 RunScreen: Checking if session can start...');
         final canStart = ref.read(runSessionControllerProvider.notifier).canStartSession();
-        print('🎯 RunScreen: canStartSession() returned: $canStart');
         if (canStart) {
           final trackingMode = ref.read(trackingModeProvider);
           // Force debug logging for testing
-          print('🎯 RunScreen: Starting session with episode: ${currentEpisode!.id}');
-          print('🎯 RunScreen: Episode audio files: ${currentEpisode!.audioFiles}');
-          print('🎯 RunScreen: Audio files count: ${currentEpisode!.audioFiles.length}');
           
-          print('🎯 RunScreen: About to start session...');
           
           // Set up time update callback BEFORE starting the session
           // This ensures we don't miss any time updates
-          print('🔗 RunScreen: Setting up time update callback before starting session...');
           _startListeningToServiceUpdates();
           
           await ref.read(runSessionControllerProvider.notifier).startSession(
@@ -2011,16 +1280,12 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
             userTargetDistance: targetDistance ?? 5.0,
             trackingMode: trackingMode ?? TrackingMode.gps,
           );
-          print('🎯 RunScreen: Session start completed');
-          print('🎯 RunScreen: Session active: ${ref.read(runSessionControllerProvider.notifier).isSessionActive}');
           
           // Hook route updates to force map refresh via provider changes
           ref.read(runSessionControllerProvider.notifier).state.onRouteUpdated = (route) {
             setState(() {});
           };
-          print('🎯 RunScreen: Background session started for audio and scene management');
         } else {
-          print('🎯 RunScreen: Cannot start session - run session manager is not ready');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -2031,9 +1296,7 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
           }
         }
       } else if (_timerStopped) {
-        print('🎯 RunScreen: Timer was stopped - not starting session');
       } else {
-        print('🎯 RunScreen: No user target selected, cannot start session');
       }
       
       setState(() {
@@ -2044,7 +1307,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       // No need to call _startSimpleTimer() here
       
     } catch (e) {
-      print('Error starting run: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error starting run: $e')),
@@ -2055,22 +1317,7 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   
 
   
-  // Simple function to toggle pause state
-  void _togglePause() {
-    setState(() {
-      _isPaused = !_isPaused; // Toggle pause state
-    });
-    
-    if (_isPaused) {
-      print('⏸️ RunScreen: Timer PAUSED at ${_elapsedTime.inSeconds} seconds');
-    } else {
-      print('▶️ RunScreen: Timer RESUMED from ${_elapsedTime.inSeconds} seconds');
-    }
-  }
-
-    // Function to pause the timer
   void _pauseTimer() {
-    print('⏸️ RunScreen: Pausing timer');
     
     try {
       // Pause our simple timer first (this we can control)
@@ -2078,7 +1325,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       
       // Also pause the background session
       ref.read(runSessionControllerProvider.notifier).pauseSession();
-      print('⏸️ RunScreen: Session paused successfully');
       
       // Update UI to show timer is paused
       setState(() {});
@@ -2094,7 +1340,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
         );
       }
     } catch (e) {
-      print('⏸️ RunScreen: Error pausing session: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -2107,7 +1352,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   
   // Method to resume timer from pause
   void _resumeTimer() async {
-    print('🔄 RunScreen: Resuming timer from pause');
     
     // Resume the background session and audio
     try {
@@ -2118,9 +1362,7 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       final audioManager = ref.read(audioManagerProvider);
       await audioManager.resumeAll();
       
-      print('🎵 Audio resumed when timer resumed (session + audio manager)');
     } catch (e) {
-      print('❌ Error resuming audio: $e');
     }
     
     // Resume the timer state and restart the simple timer
@@ -2137,7 +1379,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       _isInitializing = false;
     });
     
-    print('🔄 RunScreen: Timer resumed from pause at ${_elapsedTime.inSeconds}s');
   }
   
   // _resetTimer method removed - unnecessary complexity
@@ -2340,14 +1581,8 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
                       final userRunTarget = ref.watch(userRunTargetProvider);
                       
                       // Debug logging
-                      print('🎯 RunScreen UI: userRunTarget: $userRunTarget');
                       if (userRunTarget != null) {
-                        print('🎯 RunScreen UI: Target distance: ${userRunTarget.targetDistance} km');
-                        print('🎯 RunScreen UI: Target time: ${userRunTarget.targetTime.inMinutes} min');
                       } else {
-                        print('🎯 RunScreen UI: No user target, using episode defaults');
-                        print('🎯 RunScreen UI: Episode distance: ${currentEpisode.targetDistance} km');
-                        print('🎯 RunScreen UI: Episode time: ${(currentEpisode.targetTime / 60000).toInt()} min');
                       }
                       
                       return Row(
@@ -2443,11 +1678,6 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
                   ElevatedButton(
                     onPressed: () {
                       final runSessionManager = ref.read(runSessionControllerProvider.notifier);
-                      print('🔍 Debug: Session active: ${runSessionManager.isSessionActive}');
-                      print('🔍 Debug: Session state: ${runSessionManager.sessionState}');
-                      print('🔍 Debug: Current elapsed time: ${_elapsedTime.inSeconds}s');
-                      print('🔍 Debug: Timer running: $_isTimerRunning');
-                      print('🔍 Debug: Timer paused: $_isPaused');
                     },
                     child: const Text('Debug Timer Status'),
                   ),
@@ -2924,31 +2154,9 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     );
   }
 
-  String _getStatusText(RunSessionState state) {
-    switch (state) {
-      case RunSessionState.inactive:
-        return 'Not Started';
-      case RunSessionState.running:
-        return 'Running';
-      case RunSessionState.playingScene:
-        return 'Story Playing';
-      case RunSessionState.paused:
-        return 'Paused';
-    }
-  }
 
-  Color _getStatusColor(RunSessionState state) {
-    switch (state) {
-      case RunSessionState.inactive:
-        return Colors.grey;
-      case RunSessionState.running:
-        return Colors.green;
-      case RunSessionState.playingScene:
-        return Colors.orange;
-      case RunSessionState.paused:
-        return Colors.orange;
-    }
-  }
+
+
 
   // Format pace defensively when distance is zero to avoid NaN/inf
   String _formatPace(double? paceMinPerKm, double? distanceKm) {
@@ -2992,337 +2200,87 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     return await settingsService.formatEnergy(energyInKcal);
   }
 
-  /// Create run model from GPS data collected in this screen
-  RunModel _createRunModelFromGpsData() {
-    print('💾 RunScreen: Creating run model from GPS data...');
-    
-    // Get current user
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      throw Exception('No user logged in');
-    }
-    
-    // Calculate average pace
-    final averagePace = _totalDistance > 0 && _elapsedTime.inSeconds > 0 
-        ? (_elapsedTime.inSeconds / 60.0) / _totalDistance 
-        : 0.0;
-    
-    // Convert GPS route to LocationPoints
-    final route = _gpsRoute.map((position) => LocationPoint(
-      latitude: position.latitude,
-      longitude: position.longitude,
-      accuracy: position.accuracy,
-      altitude: position.altitude,
-      speed: position.speed,
-      elapsedSeconds: 0, // Will be calculated when saving
-      heading: position.heading,
-    )).toList();
-    
-    print('💾 RunScreen: Created run model with ${route.length} GPS points');
-    print('💾 RunScreen: Distance: ${_totalDistance}km, Time: ${_elapsedTime.inSeconds}s, Pace: ${averagePace.toStringAsFixed(2)} min/km');
-    
-    return RunModel(
-      userId: currentUser.uid,
-      createdAt: DateTime.now().subtract(_elapsedTime),
-      completedAt: DateTime.now(),
-      route: route,
-      totalDistance: _totalDistance,
-      totalTime: _elapsedTime,
-      averagePace: averagePace,
-      maxPace: _currentPace, // Use current pace as max for now
-      minPace: _currentPace, // Use current pace as min for now
-      episodeId: 'S01E01', // Default episode
-      status: RunStatus.completed,
-      runTarget: RunTarget(
-        id: 'episode_S01E01',
-        type: RunTargetType.distance,
-        value: 5.0, // Default 5km target
-        displayName: '5.0 km',
-        description: 'Episode target distance',
-        createdAt: DateTime.now(),
-        isCustom: false,
-      ),
-      metadata: {
-        'gpsPointsCollected': _gpsRoute.length,
-        'totalPausedTime': 0,
-      },
-    );
-  }
-
-
-
   void _finishRun() async {
-    try {
-      print('🎯 RunScreen: Starting run completion process...');
-      
-      // CRITICAL FIX: Capture GPS data BEFORE any cleanup
-      print('📍 RunScreen: Capturing GPS data before cleanup...');
-      final runSessionController = ref.read(runSessionControllerProvider.notifier);
-      final progressMonitor = runSessionController.state.progressMonitor;
-      final capturedGpsData = List<Position>.from(progressMonitor.route);
-      print('📍 RunScreen: Captured ${capturedGpsData.length} GPS points from ProgressMonitorService');
-      
-      // USE THE WORKING METHOD - _directSaveRun() with captured data
-      print('💾 RunScreen: Using _directSaveRun() method with captured GPS data...');
-      await _directSaveRunWithCapturedData(capturedGpsData);
-      
-      // NOW stop everything AFTER saving the data
-      print('🛑 RunScreen: Stopping ALL services and cleanup...');
-      
-      // Clear service callbacks FIRST to prevent further updates
-      _clearServiceCallbacks();
-      print('🛑 Service callbacks cleared');
-      
-      // Stop the RunSessionManager directly
-      try {
-        final runSessionController = ref.read(runSessionControllerProvider.notifier);
-        runSessionController.stopSession();
-        print('🛑 RunSessionManager stopped');
-      } catch (e) {
-        print('⚠️ RunScreen: Error stopping RunSessionManager: $e');
-      }
-      
-      // Stop the simple timer
-      _timerStopped = true;
-      _stopSimpleTimer();
-      print('🛑 Simple timer stopped completely');
-      
-      // Stop ALL GPS tracking and subscriptions
-      _gpsSubscription?.cancel();
-      _gpsSubscription = null;
-      print('📍 GPS subscription cancelled');
-      
-      // Stop GPS signal loss detection timer
-      _gpsSignalLossTimer?.cancel();
-      _gpsSignalLossTimer = null;
-      print('📍 GPS signal loss timer cancelled');
-      
-      // Stop pace calculation timer
-      _paceCalculationTimer?.cancel();
-      _paceCalculationTimer = null;
-      print('⏱️ Pace calculation timer cancelled');
-      
-      // Stop network monitoring timer
-      _networkCheckTimer?.cancel();
-      _networkCheckTimer = null;
-      print('🌐 Network monitoring timer cancelled');
-      
-      // Stop error toast timer
-      _errorToastTimer?.cancel();
-      _errorToastTimer = null;
-      print('❌ Error toast timer cancelled');
-      
-      // Stop background service
-      try {
-        await BackgroundServiceManager.instance.stopRunSession();
-        print('🔄 Background service stopped');
-      } catch (e) {
-        print('⚠️ RunScreen: Error stopping background service: $e');
-      }
-      
-      // Stop audio
-      final audioManager = ref.read(audioManagerProvider);
-      audioManager.stopAll();
-      print('🎵 Audio stopped when run finished');
-      
-      // Stop the run session (this should stop progress monitor, scene trigger, etc.)
-      try {
-        runSessionController.stopSession();
-        print('🛑 RunSessionManager: Session stopped');
-      } catch (e) {
-        print('⚠️ RunScreen: Error stopping session: $e');
-      }
-      
-      // Force stop all timers and monitoring as a safety measure
-      try {
-        runSessionController.forceStopProgressMonitor();
-        print('🛑 Progress monitor force stopped');
-      } catch (e) {
-        print('⚠️ RunScreen: Error force stopping progress monitor: $e');
-      }
-      
-      // Nuclear option: completely kill everything if needed
-      try {
-        runSessionController.nuclearStop();
-        print('☢️ Nuclear stop executed - all services killed');
-      } catch (e) {
-        print('⚠️ RunScreen: Error during nuclear stop: $e');
-      }
-      
-      // Navigate to summary screen
-      if (mounted) {
-        context.go('/run/summary');
-      }
-      
-    } catch (e) {
-      print('❌ RunScreen: Error in _finishRun: $e');
-      // Navigate to summary anyway
-      if (mounted) {
-        context.go('/run/summary');
-      }
-    }
+  print('🚨 RunScreen: _finishRun() method called!');
+
+  // Set up loading state for UI
+  setState(() {
+    _isLoading = true; // You can add a loading indicator to the UI
+  });
+
+  // IMMEDIATELY stop all data collection to get the final state
+  try {
+    _stopAllTimersAndServices();
+    ref.read(runSessionControllerProvider.notifier).nuclearStop();
+    _clearServiceCallbacks();
+  } catch (e) {
+    print('❌ RunScreen: Error stopping services: $e');
   }
-  
-  /// Show user-friendly error dialog
-  void _showErrorDialog(String title, String message, {bool showRetry = false, VoidCallback? onRetry}) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: kSurfaceBase,
-        title: Text(
-          title,
-          style: TextStyle(
-            color: kTextHigh,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: Text(
-          message,
-          style: TextStyle(color: kTextMid),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'OK',
-              style: TextStyle(color: kElectricAqua),
-            ),
-          ),
-          if (showRetry && onRetry != null)
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onRetry();
-              },
-              child: Text(
-                'Retry',
-                style: TextStyle(color: kMeadowGreen),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-  
-  /// Convert technical error messages to user-friendly ones
-  String _getUserFriendlyErrorMessage(dynamic error) {
-    final errorString = error.toString().toLowerCase();
+
+  try {
+    // 1. Get the final, complete GPS data and stats from the session manager
+    final runSessionManager = ref.read(runSessionControllerProvider);
+    final gpsPositions = runSessionManager.progressMonitor.route;
+    final managerStats = ref.read(runSessionControllerProvider.notifier).getCurrentStats();
     
-    if (errorString.contains('network') || errorString.contains('connection')) {
-      return 'Please check your internet connection and try again.';
-    } else if (errorString.contains('permission') || errorString.contains('access')) {
-      return 'Please check your app permissions.';
-    } else if (errorString.contains('not found') || errorString.contains('missing')) {
-      return 'The requested content could not be found. Please try again.';
-    } else if (errorString.contains('timeout')) {
-      return 'The operation took too long. Please try again.';
-    } else if (errorString.contains('invalid') || errorString.contains('malformed')) {
-      return 'Invalid data received. Please try again.';
+    // Check if there is any data to save
+    if (gpsPositions.isEmpty) {
+      print('⚠️ RunScreen: No GPS data to save. Navigating to summary.');
+      _showToast('No run data to save.', isError: true);
+      if (mounted) {
+        context.go('/run/summary');
+      }
+      return;
+    }
+    
+    print('📍 RunScreen: Finalizing run with ${gpsPositions.length} GPS points');
+    
+    // 2. Use the dedicated RunCompletionService to handle all saving logic
+    final runCompletionService = RunCompletionService(ProviderScope.containerOf(context));
+    
+    // Pass all necessary data to the service
+    final summaryData = await runCompletionService.completeRunWithData(
+      gpsPositions,
+      duration: managerStats?.elapsedTime ?? _elapsedTime,
+      distance: managerStats?.distance ?? _totalDistance,
+      episodeId: _getEpisodeIdFromQuery() ?? 'unknown',
+    );
+
+    // 3. Wait for the service to complete successfully
+    if (summaryData != null) {
+      print('✅ RunScreen: Run completed successfully and saved!');
+      _showToast('Run saved successfully!', isError: false);
+      
+      // 4. Navigate to the summary screen with the summary data
+      if (mounted) {
+        // You might want to pass the summary data to the next screen for display
+        context.go('/run/summary', extra: summaryData);
+      }
     } else {
-      return 'An unexpected error occurred. Please try again.';
+      // Handle the case where the service returns null, indicating a failure
+      print('❌ RunScreen: Run completion failed. Summary data is null.');
+      _showToast('Error saving run data. Try again later.', isError: true);
+      
+      // Navigate to summary anyway, but let the user know something went wrong
+      if (mounted) {
+        context.go('/run/summary');
+      }
+    }
+    
+  } catch (e) {
+    print('❌ RunScreen: Unhandled error in _finishRun: $e');
+    _showToast('An unexpected error occurred. Data might not be saved.', isError: true);
+    
+    if (mounted) {
+      context.go('/run/summary');
+    }
+  } finally {
+    // Hide the loading indicator
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
-  
-  /// Build toast notification
-  Widget _buildToastNotification() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
-            ? Colors.red.shade100
-            : Colors.green.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
-              ? Colors.red.shade300
-              : Colors.green.shade300,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
-                ? Icons.error_outline
-                : Icons.check_circle_outline,
-            color: _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
-                ? Colors.red.shade600
-                : Colors.green.shade600,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              _currentErrorMessage ?? '',
-              style: TextStyle(
-                color: _currentErrorMessage?.contains('lost') == true || _currentErrorMessage?.contains('Failed') == true
-                    ? Colors.red.shade600
-                    : Colors.green.shade600,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _showErrorToast = false;
-                _currentErrorMessage = null;
-              });
-            },
-            icon: const Icon(Icons.close, size: 20),
-            color: Colors.grey.shade600,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  /// Build loading overlay
-  Widget _buildLoadingOverlay() {
-    return Container(
-      color: Colors.black.withOpacity(0.5),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(kElectricAqua),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _currentErrorMessage ?? 'Loading...',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+}
 }

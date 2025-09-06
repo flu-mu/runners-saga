@@ -506,6 +506,111 @@ class AuthService {
     }
   }
 
+  /// Get user's height (cm) from Firestore preferences
+  Future<int?> getUserHeightCm() async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return null;
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (!doc.exists) return null;
+      final data = doc.data();
+      if (data == null) return null;
+      final prefs = data['preferences'] as Map<String, dynamic>?;
+      final h = prefs != null ? prefs['heightCm'] : null;
+      if (h == null) return null;
+      return int.tryParse(h.toString());
+    } catch (e) {
+      developer.log('Error reading user height: $e');
+      return null;
+    }
+  }
+
+  /// Update user's height (cm) in Firestore preferences
+  Future<void> setUserHeightCm(int heightCm) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) throw Exception('Not authenticated');
+      await _firestore.collection('users').doc(uid).set({
+        'preferences': {'heightCm': heightCm},
+        'lastActive': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      developer.log('User height updated to $heightCm cm');
+    } catch (e) {
+      developer.log('Error updating user height: $e');
+      rethrow;
+    }
+  }
+
+  /// Get user's age (years) from Firestore preferences
+  Future<int?> getUserAgeYears() async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return null;
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (!doc.exists) return null;
+      final data = doc.data();
+      if (data == null) return null;
+      final prefs = data['preferences'] as Map<String, dynamic>?;
+      final a = prefs != null ? prefs['ageYears'] : null;
+      if (a == null) return null;
+      return int.tryParse(a.toString());
+    } catch (e) {
+      developer.log('Error reading user age: $e');
+      return null;
+    }
+  }
+
+  /// Update user's age (years) in Firestore preferences
+  Future<void> setUserAgeYears(int ageYears) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) throw Exception('Not authenticated');
+      await _firestore.collection('users').doc(uid).set({
+        'preferences': {'ageYears': ageYears},
+        'lastActive': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      developer.log('User age updated to $ageYears');
+    } catch (e) {
+      developer.log('Error updating user age: $e');
+      rethrow;
+    }
+  }
+
+  /// Get user's gender from Firestore preferences (female/male/nonBinary/preferNotToSay)
+  Future<String?> getUserGender() async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return null;
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (!doc.exists) return null;
+      final data = doc.data();
+      if (data == null) return null;
+      final prefs = data['preferences'] as Map<String, dynamic>?;
+      final g = prefs != null ? prefs['gender'] : null;
+      if (g == null) return null;
+      return g.toString();
+    } catch (e) {
+      developer.log('Error reading user gender: $e');
+      return null;
+    }
+  }
+
+  /// Update user's gender in Firestore preferences
+  Future<void> setUserGender(String gender) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) throw Exception('Not authenticated');
+      await _firestore.collection('users').doc(uid).set({
+        'preferences': {'gender': gender},
+        'lastActive': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      developer.log('User gender updated to $gender');
+    } catch (e) {
+      developer.log('Error updating user gender: $e');
+      rethrow;
+    }
+  }
+
   /// Create user profile in Firestore
   Future<void> _createUserProfile({
     required String uid,

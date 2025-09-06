@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -11,8 +12,11 @@ import '../../../shared/models/run_model.dart';
 import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
 import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/services/settings/settings_service.dart';
+import '../../../shared/providers/run_config_providers.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/themes/theme_selector_widget.dart';
+import '../../../shared/widgets/ui/seasonal_background.dart';
+import '../../../core/themes/theme_factory.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -35,27 +39,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final user = ref.watch(currentUserProvider).value;
+    final theme = ThemeFactory.getCurrentTheme();
 
     return Scaffold(
-      backgroundColor: kMidnightNavy,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        title: const Text('Settings', style: TextStyle(color: Colors.white)),
+        foregroundColor: theme.colorScheme.onBackground,
+        title: Text(
+          'Settings',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onBackground,
+          ),
+        ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(
+            Icons.arrow_back,
+            color: theme.colorScheme.onBackground,
+          ),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.home, color: Colors.white),
+            icon: Icon(
+              Icons.home,
+              color: theme.colorScheme.onBackground,
+            ),
             onPressed: () => context.go('/'),
             tooltip: 'Go Home',
           ),
         ],
       ),
-      body: ListView(
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 100,
+        child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           _sectionTitle('Account'),
@@ -70,13 +89,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               children: [
                 Icon(
                   authState == AuthState.authenticated ? Icons.verified_user : Icons.person_outline,
-                  color: authState == AuthState.authenticated ? Colors.greenAccent : Colors.white70,
+                  color: authState == AuthState.authenticated ? kElectricAqua : Colors.white70,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     authState == AuthState.authenticated ? (user?.email ?? 'Signed in') : 'Not signed in',
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
                 TextButton(
@@ -100,6 +119,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           
           _sectionTitle('ENERGY UNITS'),
           _buildEnergyUnitsSection(),
+
+          _sectionTitle('FITNESS PROFILE'),
+          _buildFitnessProfileSection(),
           
           _sectionTitle('Audio & vibration notifications'),
           _buildAudioNotificationsSection(),
@@ -109,6 +131,42 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           
           _sectionTitle('APP THEME'),
           const ThemeSelectorWidget(),
+          
+          // Background Test Link
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: ElevatedButton.icon(
+              onPressed: () => context.go('/test/background'),
+              icon: const Icon(Icons.palette),
+              label: const Text('Test Background Patterns'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          
+          // Landscape Design Link
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            child: ElevatedButton.icon(
+              onPressed: () => context.go('/test/landscape'),
+              icon: const Icon(Icons.landscape),
+              label: const Text('Sunset Landscape Design'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.secondary,
+                foregroundColor: theme.colorScheme.onSecondary,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
           
           _sectionTitle('APP VOLUME'),
           _buildAppVolumeSection(),
@@ -134,7 +192,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Expanded(
                       child: Text(
                         'Import GPX Run',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -290,7 +348,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Expanded(
                       child: Text(
                         'Clear App Cache',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -313,7 +371,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Cache cleared successfully!'),
-                          backgroundColor: Colors.green,
+                          backgroundColor: kElectricAqua,
                           duration: Duration(seconds: 2),
                         ),
                       );
@@ -364,7 +422,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(message),
-                          backgroundColor: fixedCount > 0 ? Colors.green : Colors.blue,
+                          backgroundColor: fixedCount > 0 ? kElectricAqua : Colors.blue,
                           duration: Duration(seconds: 4),
                         ),
                       );
@@ -412,7 +470,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(message),
-                          backgroundColor: updatedCount > 0 ? Colors.green : Colors.blue,
+                          backgroundColor: updatedCount > 0 ? kElectricAqua : Colors.blue,
                           duration: Duration(seconds: 4),
                         ),
                       );
@@ -432,7 +490,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: const Icon(Icons.update),
                 label: const Text('Force Update All Timestamps'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
                 ),
               ),
@@ -441,6 +499,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
         ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationWidget(
         currentIndex: BottomNavIndex.settings.value,
@@ -450,7 +509,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _sectionTitle(String title) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Text(title, style: const TextStyle(color: Colors.white70)),
+        child: Text(title, style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
       );
 
   Widget _buildPreviewItem(String label, String value, IconData icon) {
@@ -494,7 +553,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 distanceUnit == DistanceUnit.kilometers,
                 () => ref.read(distanceUnitProvider.notifier).setDistanceUnit(DistanceUnit.kilometers),
               ),
-              const Divider(color: Colors.white24),
+              Divider(color: Colors.white24),
               _buildUnitOption(
                 'Miles',
                 distanceUnit == DistanceUnit.miles,
@@ -526,11 +585,215 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 energyUnit == EnergyUnit.kcal,
                 () => ref.read(energyUnitProvider.notifier).setEnergyUnit(EnergyUnit.kcal),
               ),
-              const Divider(color: Colors.white24),
+              Divider(color: Colors.white24),
               _buildUnitOption(
                 'kJ',
                 energyUnit == EnergyUnit.kj,
                 () => ref.read(energyUnitProvider.notifier).setEnergyUnit(EnergyUnit.kj),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFitnessProfileSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurfaceBase,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+      ),
+      child: Consumer(
+        builder: (context, ref, child) {
+          final weight = ref.watch(userWeightKgProvider) ?? 70.0;
+          final height = ref.watch(heightCmProvider);
+          final age = ref.watch(ageYearsProvider);
+          final gender = ref.watch(genderProvider);
+
+          String genderLabel(Gender g) {
+            switch (g) {
+              case Gender.female:
+                return 'Female';
+              case Gender.male:
+                return 'Male';
+              case Gender.nonBinary:
+                return 'Non-binary';
+              case Gender.preferNotToSay:
+                return 'Prefer not to say';
+            }
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Weight
+              Row(
+                children: [
+                  Icon(Icons.monitor_weight, color: kElectricAqua),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Weight (kg)', style: TextStyle(color: Colors.white)),
+                        Slider(
+                          min: 40,
+                          max: 130,
+                          divisions: 90,
+                          value: weight,
+                          label: weight.toStringAsFixed(0),
+                          onChanged: (v) async {
+                            ref.read(userWeightKgProvider.notifier).state = v;
+                            // Persist locally
+                            await ref.read(settingsServiceProvider).setUserWeightKg(v);
+                            // Best-effort sync to Firestore
+                            try {
+                              final auth = ref.read(authServiceProvider);
+                              await auth.setUserWeightKg(v);
+                            } catch (_) {}
+                          },
+                        ),
+                        Text('${weight.toStringAsFixed(0)} kg', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Height
+              Row(
+                children: [
+                  Icon(Icons.height, color: kElectricAqua),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Height (cm)', style: TextStyle(color: Colors.white)),
+                        Slider(
+                          min: 120,
+                          max: 220,
+                          divisions: 100,
+                          value: height.toDouble(),
+                          label: height.toString(),
+                          onChanged: (v) async {
+                            final val = v.round();
+                            ref.read(heightCmProvider.notifier).setHeight(val);
+                            await ref.read(settingsServiceProvider).setUserHeightCm(val);
+                            try {
+                              final auth = ref.read(authServiceProvider);
+                              await auth.setUserHeightCm(val);
+                            } catch (_) {}
+                          },
+                        ),
+                        Text('$height cm', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Age
+              Row(
+                children: [
+                  Icon(Icons.cake, color: kElectricAqua),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Age (years)', style: TextStyle(color: Colors.white)),
+                        Slider(
+                          min: 10,
+                          max: 100,
+                          divisions: 90,
+                          value: age.toDouble(),
+                          label: age.toString(),
+                          onChanged: (v) async {
+                            final val = v.round();
+                            ref.read(ageYearsProvider.notifier).setAge(val);
+                            await ref.read(settingsServiceProvider).setUserAgeYears(val);
+                            try {
+                              final auth = ref.read(authServiceProvider);
+                              await auth.setUserAgeYears(val);
+                            } catch (_) {}
+                          },
+                        ),
+                        Text('$age years', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Gender
+              Row(
+                children: [
+                  Icon(Icons.person, color: kElectricAqua),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Gender', style: TextStyle(color: Colors.white)),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+                          ),
+                          child: DropdownButton<Gender>(
+                            value: gender,
+                            dropdownColor: kSurfaceBase,
+                            underline: SizedBox.shrink(),
+                            isExpanded: true,
+                            iconEnabledColor: Colors.white70,
+                            items: Gender.values
+                                .map((g) => DropdownMenuItem(
+                                      value: g,
+                                      child: Text(genderLabel(g), style: const TextStyle(color: Colors.white)),
+                                    ))
+                                .toList(),
+                            onChanged: (g) async {
+                              if (g != null) {
+                                ref.read(genderProvider.notifier).setGender(g);
+                                await ref.read(settingsServiceProvider).setUserGender(g);
+                                try {
+                                  final auth = ref.read(authServiceProvider);
+                                  // Persist as string token
+                                  String token;
+                                  switch (g) {
+                                    case Gender.female:
+                                      token = 'female';
+                                      break;
+                                    case Gender.male:
+                                      token = 'male';
+                                      break;
+                                    case Gender.nonBinary:
+                                      token = 'nonBinary';
+                                      break;
+                                    case Gender.preferNotToSay:
+                                      token = 'preferNotToSay';
+                                      break;
+                                  }
+                                  await auth.setUserGender(token);
+                                } catch (_) {}
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -549,13 +812,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
+                style: TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 16),
               ),
             ),
             if (isSelected)
               Icon(
                 Icons.check,
-                color: kElectricAqua,
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
           ],
@@ -568,21 +831,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.notifications_active, color: kElectricAqua),
+          Icon(Icons.notifications_active, color: Theme.of(context).colorScheme.primary),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
               'Audio & vibration notifications',
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 16),
             ),
           ),
-          Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+          Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7), size: 16),
         ],
       ),
     );
@@ -592,9 +855,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
       ),
       child: Consumer(
         builder: (context, ref, child) {
@@ -605,29 +868,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             children: [
               Text(
                 'Set the volume of clips and notifications relative to music tracks',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7), fontSize: 14),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(Icons.volume_down, color: Colors.white70),
+                  Icon(Icons.volume_down, color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7)),
                   Expanded(
                     child: Slider(
                       value: appVolume,
                       onChanged: (value) {
                         ref.read(appVolumeProvider.notifier).setAppVolume(value);
                       },
-                      activeColor: kElectricAqua,
-                      inactiveColor: Colors.white24,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      inactiveColor: Theme.of(context).colorScheme.onBackground.withOpacity(0.2),
                     ),
                   ),
-                  Icon(Icons.volume_up, color: Colors.white70),
+                  Icon(Icons.volume_up, color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7)),
                 ],
               ),
               Center(
                 child: Text(
                   '${(appVolume * 100).round()}%',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -641,9 +904,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
       ),
       child: Consumer(
         builder: (context, ref, child) {
@@ -654,29 +917,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             children: [
               Text(
                 'Useful if you are having issues balancing music and story clips',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7), fontSize: 14),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(Icons.volume_down, color: Colors.white70),
+                  Icon(Icons.volume_down, color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7)),
                   Expanded(
                     child: Slider(
                       value: musicVolume,
                       onChanged: (value) {
                         ref.read(musicVolumeProvider.notifier).setMusicVolume(value);
                       },
-                      activeColor: kElectricAqua,
-                      inactiveColor: Colors.white24,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      inactiveColor: Theme.of(context).colorScheme.onBackground.withOpacity(0.2),
                     ),
                   ),
-                  Icon(Icons.volume_up, color: Colors.white70),
+                  Icon(Icons.volume_up, color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7)),
                 ],
               ),
               Center(
                 child: Text(
                   'Volume: ${(musicVolume * 100).round()}%',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -690,16 +953,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Manage your downloaded episodes',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
+            style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7), fontSize: 14),
           ),
           const SizedBox(height: 16),
           ListTile(
@@ -708,33 +971,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: kElectricAqua.withValues(alpha: 0.2),
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.download_done,
-                color: kElectricAqua,
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
             ),
-            title: const Text(
+            title: Text(
               'Episode Downloads',
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onBackground,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'View and delete downloaded episodes',
               style: TextStyle(
-                color: Colors.white70,
+                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 14,
               ),
             ),
-            trailing: const Icon(
+            trailing: Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white70,
+              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
               size: 16,
             ),
             onTap: () {
@@ -759,15 +1022,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         });
         
         final file = File(result.files.first.path!);
-        final gpxData = _parseGpxFile(file);
+        final content = await file.readAsString();
+        // Parse in a background isolate to avoid jank
+        final gpxData = await compute(_parseGpxContentIsolate, content);
         
         setState(() {
-          _importedDistance = gpxData['distance'];
-          _importedDuration = gpxData['duration'];
-          _importedGpsPoints = gpxData['gpsPoints'];
-          _importedAveragePace = gpxData['averagePace'];
-          _importedStartTime = gpxData['startTime'];
-          _importedEndTime = gpxData['endTime'];
+          _importedDistance = (gpxData['distance'] as num?)?.toDouble();
+          _importedDuration = Duration(seconds: (gpxData['durationSeconds'] as int? ?? 0));
+          _importedGpsPoints = ((gpxData['gpsPoints'] as List<dynamic>? ?? const []))
+              .map((p) => LocationPoint(
+                    latitude: (p['latitude'] as num).toDouble(),
+                    longitude: (p['longitude'] as num).toDouble(),
+                    accuracy: (p['accuracy'] as num).toDouble(),
+                    altitude: (p['altitude'] as num).toDouble(),
+                    speed: (p['speed'] as num).toDouble(),
+                    elapsedSeconds: (p['elapsedSeconds'] as int),
+                    heading: (p['heading'] as num?)?.toDouble() ?? -1,
+                    elapsedTimeFormatted: p['elapsedTimeFormatted'] as String?,
+                  ))
+              .toList();
+          _importedAveragePace = (gpxData['averagePace'] as num?)?.toDouble();
+          final startIso = gpxData['startTime'] as String?;
+          final endIso = gpxData['endTime'] as String?;
+          _importedStartTime = startIso != null ? DateTime.tryParse(startIso) : null;
+          _importedEndTime = endIso != null ? DateTime.tryParse(endIso) : null;
         });
       }
     } catch (e) {
@@ -783,116 +1061,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-    Map<String, dynamic> _parseGpxFile(File file) {
-    try {
-      final content = file.readAsStringSync();
-      final document = XmlDocument.parse(content);
-      
-      // Find all track points
-      final trackPoints = document.findAllElements('trkpt');
-      
-      if (trackPoints.isEmpty) {
-        throw Exception('No track points found in GPX file');
-      }
-      
-      double totalDistance = 0.0;
-      DateTime? startTime;
-      DateTime? endTime;
-      List<Map<String, double>> coordinates = [];
-      List<LocationPoint> gpsPoints = [];
-      
-            // Extract coordinates, timestamps, and create LocationPoint objects
-      for (int i = 0; i < trackPoints.length; i++) {
-        final point = trackPoints.elementAt(i);
-        final lat = double.tryParse(point.getAttribute('lat') ?? '');
-        final lon = double.tryParse(point.getAttribute('lon') ?? '');
-        final timeElement = point.findElements('time').firstOrNull;
-        final elevationElement = point.findElements('ele').firstOrNull;
-        
-        if (lat != null && lon != null) {
-          coordinates.add({'lat': lat, 'lon': lon});
-          
-          // Parse elevation if available
-          double altitude = 0.0;
-          if (elevationElement != null && elevationElement.value != null) {
-            altitude = double.tryParse(elevationElement.value!) ?? 0.0;
-          }
-          
-          // Parse time if available
-          DateTime? pointTime;
-                      if (timeElement != null && timeElement.value != null) {
-              try {
-                pointTime = DateTime.parse(timeElement.value!);
-                // Set start time from first valid track point
-                startTime ??= pointTime;
-                // Always update end time to the last valid track point
-                endTime = pointTime;
-              } catch (e) {
-                // Skip invalid time formats
-              }
-            }
-          
-          // Calculate elapsed seconds from start time
-          int elapsedSeconds = 0;
-          if (startTime != null && pointTime != null) {
-            elapsedSeconds = pointTime.difference(startTime).inSeconds;
-          }
-          
-          // Create LocationPoint object
-          final locationPoint = LocationPoint(
-            latitude: lat,
-            longitude: lon,
-            accuracy: 5.0, // Default accuracy for imported GPX
-            altitude: altitude,
-            speed: 0.0, // Will be calculated if we have time data
-            elapsedSeconds: elapsedSeconds,
-            heading: -1, // Default heading for imported GPX
-            elapsedTimeFormatted: _formatDuration(Duration(seconds: elapsedSeconds)),
-          );
-          
-          gpsPoints.add(locationPoint);
-        }
-      }
-      
-      // Calculate total distance using Haversine formula
-      for (int i = 0; i < coordinates.length - 1; i++) {
-        final lat1 = coordinates[i]['lat']!;
-        final lon1 = coordinates[i]['lon']!;
-        final lat2 = coordinates[i + 1]['lat']!;
-        final lon2 = coordinates[i + 1]['lon']!;
-        
-        totalDistance += _calculateDistance(lat1, lon1, lat2, lon2);
-      }
-      
-      // Calculate duration
-      Duration duration = Duration.zero;
-      if (startTime != null && endTime != null) {
-        duration = endTime.difference(startTime);
-      }
-      
-      // Calculate average pace (minutes per kilometer)
-      double averagePace = 0.0;
-      if (totalDistance > 0 && duration.inSeconds > 0) {
-        averagePace = duration.inMinutes / totalDistance;
-      }
-      
-      // Ensure we have valid timing data
-      if (startTime == null || endTime == null) {
-        throw Exception('No valid timing data found in GPX file');
-      }
-      
-      return {
-        'distance': totalDistance,
-        'duration': duration,
-        'gpsPoints': gpsPoints,
-        'averagePace': averagePace,
-        'startTime': startTime,
-        'endTime': endTime,
-      };
-    } catch (e) {
-      throw Exception('Failed to parse GPX file: $e');
+    // Parsing now handled in background isolate via _parseGpxContentIsolate
+    Future<Map<String, dynamic>> _parseGpxFile(File file) async {
+      final content = await file.readAsString();
+      return compute(_parseGpxContentIsolate, content);
     }
-  }
 
   double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     const double earthRadius = 6371; // Earth's radius in kilometers
@@ -929,11 +1102,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         totalTime: _importedDuration!,
         averagePace: _importedAveragePace ?? 0.0,
         status: RunStatus.completed,
+        achievements: [], // Add empty achievements list
         metadata: {
           'gpxFile': _selectedFileName!,
           'imported': true,
           'notes': 'Imported from GPX file',
           'gpsPointsCount': _importedGpsPoints?.length ?? 0,
+          'anomalySlowPace': (_importedAveragePace != null && _importedAveragePace! > 0)
+              ? (_importedAveragePace! >= 20.0)
+              : false,
+          'avgSpeedKmh': (_importedAveragePace != null && _importedAveragePace! > 0)
+              ? (60.0 / _importedAveragePace!)
+              : 0.0,
         },
       );
 
@@ -943,7 +1123,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Run imported successfully!'),
-            backgroundColor: Colors.green,
+            backgroundColor: kElectricAqua,
             duration: Duration(seconds: 3),
           ),
         );
@@ -978,4 +1158,189 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final seconds = duration.inSeconds.remainder(60);
     return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
+}
+
+// Top-level isolate function to parse GPX without blocking UI
+Map<String, dynamic> _parseGpxContentIsolate(String content) {
+  try {
+    final document = XmlDocument.parse(content);
+
+    // Find all track points
+    final trackPoints = document.findAllElements('trkpt');
+    if (trackPoints.isEmpty) {
+      throw Exception('No track points found in GPX file');
+    }
+
+    double totalDistance = 0.0;
+    DateTime? startTime;
+    DateTime? endTime;
+    final List<Map<String, double>> coordinates = [];
+    final List<double> altitudes = [];
+    final List<Map<String, dynamic>> rawPoints = [];
+
+    // Extract coordinates and timestamps
+    for (final point in trackPoints) {
+      final lat = double.tryParse(point.getAttribute('lat') ?? '');
+      final lon = double.tryParse(point.getAttribute('lon') ?? '');
+      if (lat == null || lon == null) continue;
+
+      coordinates.add({'lat': lat, 'lon': lon});
+
+      final elevationElement = point.findElements('ele').firstOrNull;
+      double altitude = 0.0;
+      if (elevationElement != null) {
+        altitude = double.tryParse(elevationElement.text.trim()) ?? 0.0;
+      }
+      altitudes.add(altitude);
+
+      // Parse time if available
+      DateTime? pointTime;
+      final timeElement = point.findElements('time').firstOrNull;
+      if (timeElement != null) {
+        final t = timeElement.text.trim();
+        pointTime = DateTime.tryParse(t);
+        if (pointTime != null) {
+          startTime ??= pointTime;
+          endTime = pointTime;
+        }
+      }
+
+      int elapsedSeconds = 0;
+      if (startTime != null && pointTime != null) {
+        elapsedSeconds = pointTime.difference(startTime!).inSeconds;
+      }
+
+      rawPoints.add({
+        'latitude': lat,
+        'longitude': lon,
+        'accuracy': 5.0,
+        'altitude': altitude,
+        'speed': 0.0,
+        'elapsedSeconds': elapsedSeconds,
+        'heading': -1,
+        'elapsedTimeFormatted': _formatDurationIsolate(Duration(seconds: elapsedSeconds)),
+      });
+    }
+
+    // Compute distance
+    for (int i = 0; i < coordinates.length - 1; i++) {
+      totalDistance += _calculateDistanceKmIsolate(
+        coordinates[i]['lat']!,
+        coordinates[i]['lon']!,
+        coordinates[i + 1]['lat']!,
+        coordinates[i + 1]['lon']!,
+      );
+    }
+
+    Duration duration = Duration.zero;
+    if (startTime == null || endTime == null) {
+      // Fallback timing
+      final pointsCount = coordinates.length;
+      if (pointsCount < 2) {
+        throw Exception('Not enough points to infer timing');
+      }
+
+      double totalSeconds = (pointsCount - 1).toDouble();
+      double inferredPaceMinPerKm = 6.0;
+      if (totalDistance > 0) {
+        inferredPaceMinPerKm = (totalSeconds / 60.0) / totalDistance;
+      }
+
+      DateTime? metadataTime;
+      final metaTimeElement = document
+          .findAllElements('metadata')
+          .firstOrNull
+          ?.findElements('time')
+          .firstOrNull;
+      if (metaTimeElement != null) {
+        metadataTime = DateTime.tryParse(metaTimeElement.text.trim());
+      }
+
+      List<Map<String, dynamic>> rebuilt = [];
+      double cumulative = 0.0;
+      for (int i = 0; i < pointsCount; i++) {
+        if (i > 0) {
+          final segKm = _calculateDistanceKmIsolate(
+            coordinates[i - 1]['lat']!,
+            coordinates[i - 1]['lon']!,
+            coordinates[i]['lat']!,
+            coordinates[i]['lon']!,
+          );
+          double segSeconds;
+          if (totalDistance > 0) {
+            segSeconds = segKm * inferredPaceMinPerKm * 60.0;
+          } else {
+            segSeconds = 1.0;
+          }
+          cumulative += segSeconds;
+        }
+
+        final elapsed = cumulative.round();
+        rebuilt.add({
+          'latitude': coordinates[i]['lat']!,
+          'longitude': coordinates[i]['lon']!,
+          'accuracy': 5.0,
+          'altitude': altitudes.length == pointsCount ? altitudes[i] : 0.0,
+          'speed': 0.0,
+          'elapsedSeconds': elapsed,
+          'heading': -1,
+          'elapsedTimeFormatted': _formatDurationIsolate(Duration(seconds: elapsed)),
+        });
+      }
+
+      rawPoints
+        ..clear()
+        ..addAll(rebuilt);
+
+      duration = Duration(seconds: cumulative.round());
+      if (metadataTime != null) {
+        startTime = metadataTime;
+        endTime = metadataTime.add(duration);
+      } else {
+        endTime = DateTime.now();
+        startTime = endTime!.subtract(duration);
+      }
+    } else {
+      duration = endTime!.difference(startTime!);
+    }
+
+    double averagePace = 0.0;
+    if (totalDistance > 0 && duration.inSeconds > 0) {
+      averagePace = (duration.inSeconds / 60.0) / totalDistance;
+    }
+
+    if (startTime == null || endTime == null) {
+      throw Exception('No valid timing data found in GPX file');
+    }
+
+    return {
+      'distance': totalDistance,
+      'durationSeconds': duration.inSeconds,
+      'gpsPoints': rawPoints,
+      'averagePace': averagePace,
+      'startTime': startTime!.toIso8601String(),
+      'endTime': endTime!.toIso8601String(),
+    };
+  } catch (e) {
+    throw Exception('Failed to parse GPX file: $e');
+  }
+}
+
+double _calculateDistanceKmIsolate(double lat1, double lon1, double lat2, double lon2) {
+  const double earthRadius = 6371; // km
+  final dLat = _degreesToRadiansIsolate(lat2 - lat1);
+  final dLon = _degreesToRadiansIsolate(lon2 - lon1);
+  final a =
+      (sin(dLat / 2) * sin(dLat / 2)) + cos(lat1 * pi / 180) * cos(lat2 * pi / 180) * (sin(dLon / 2) * sin(dLon / 2));
+  final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+  return earthRadius * c;
+}
+
+double _degreesToRadiansIsolate(double degrees) => degrees * pi / 180;
+
+String _formatDurationIsolate(Duration duration) {
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes.remainder(60);
+  final seconds = duration.inSeconds.remainder(60);
+  return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
 }

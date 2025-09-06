@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/services/firebase_service.dart';
 import '../../core/constants/app_theme.dart';
+import '../../core/themes/theme_factory.dart';
+import '../../core/themes/theme_config.dart';
+import 'theme_providers.dart';
 
 /// Provider for app theme management
 class AppTheme {
@@ -31,7 +34,14 @@ class AppTheme {
 
 /// Provider for app theme
 final appThemeProvider = StateNotifierProvider<AppThemeNotifier, AppTheme>((ref) {
-  return AppThemeNotifier();
+  final notifier = AppThemeNotifier();
+  
+  // Listen to theme changes and update app theme
+  ref.listen<ThemeType>(themeProvider, (previous, next) {
+    notifier.updateTheme(next);
+  });
+  
+  return notifier;
 });
 
 /// Notifier for app theme changes
@@ -40,18 +50,10 @@ class AppThemeNotifier extends StateNotifier<AppTheme> {
   
   static AppTheme _createDefaultTheme() {
     return AppTheme(
-      lightTheme: _createLightTheme(),
-      darkTheme: _createDarkTheme(),
+      lightTheme: ThemeFactory.getCurrentTheme(),
+      darkTheme: ThemeFactory.getCurrentTheme(),
       themeMode: ThemeMode.system,
     );
-  }
-  
-  static ThemeData _createLightTheme() {
-    return createLightTheme();
-  }
-  
-  static ThemeData _createDarkTheme() {
-    return createDarkTheme();
   }
   
   void setThemeMode(ThemeMode mode) {
@@ -63,6 +65,14 @@ class AppThemeNotifier extends StateNotifier<AppTheme> {
         ? ThemeMode.dark 
         : ThemeMode.light;
     state = state.copyWith(themeMode: newMode);
+  }
+  
+  void updateTheme(ThemeType themeType) {
+    final newTheme = ThemeFactory.getTheme(themeType);
+    state = state.copyWith(
+      lightTheme: newTheme,
+      darkTheme: newTheme,
+    );
   }
 }
 

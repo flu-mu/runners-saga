@@ -59,14 +59,14 @@ class _StoryIntroScreenState extends State<StoryIntroScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF1A1A2E),
-              Color(0xFF16213E),
-              Color(0xFF0F3460),
+              Theme.of(context).colorScheme.background,
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).scaffoldBackgroundColor,
             ],
           ),
         ),
@@ -79,15 +79,14 @@ class _StoryIntroScreenState extends State<StoryIntroScreen>
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor ?? Theme.of(context).colorScheme.onBackground),
                       onPressed: () => context.go('/onboarding/welcome'),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Choose Your Saga',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onBackground,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -135,23 +134,23 @@ class _StoryIntroScreenState extends State<StoryIntroScreen>
                               child: Column(
                                 children: [
                                   // Title
-                                  const Text(
+                                  Text(
                                     'The Fantasy Quest',
-                                    style: TextStyle(
+                                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                                      color: Theme.of(context).colorScheme.onBackground,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
                                   
                                   const SizedBox(height: 16),
                                   
-                                  const Text(
+                                  Text(
                                     'Embark on an epic journey through mystical lands',
-                                    style: TextStyle(
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                       fontSize: 16,
-                                      color: Colors.white70,
+                                      color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -174,24 +173,24 @@ class _StoryIntroScreenState extends State<StoryIntroScreen>
                                   Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: Colors.amber.withValues(alpha: 0.1),
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: Colors.amber.withValues(alpha: 0.3),
+                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                                       ),
                                     ),
-                                    child: const Column(
+                                    child: Column(
                                       children: [
                                         Icon(
                                           Icons.auto_stories,
-                                          color: Colors.amber,
+                                          color: Theme.of(context).colorScheme.primary,
                                           size: 24,
                                         ),
                                         SizedBox(height: 8),
                                         Text(
                                           'Complete missions, unlock stories, and become a legendary runner',
                                           style: TextStyle(
-                                            color: Colors.amber,
+                                            color: Theme.of(context).colorScheme.primary,
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -219,17 +218,17 @@ class _StoryIntroScreenState extends State<StoryIntroScreen>
                   child: ElevatedButton(
                     onPressed: () => context.go('/onboarding/account-creation'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: const Color(0xFF1A1A2E),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 4,
-                      shadowColor: Colors.amber.withOpacity(0.4),
+                      shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.4),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Choose Your Saga',
-                      style: TextStyle(
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),

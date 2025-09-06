@@ -5,10 +5,11 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../shared/providers/run_providers.dart';
 import '../../../shared/models/run_model.dart';
-import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/services/settings/settings_service.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
+import '../../../shared/widgets/ui/seasonal_background.dart';
+import '../../../core/themes/theme_factory.dart';
 import 'dart:math';
 
 class RunHistoryScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class RunHistoryScreen extends ConsumerStatefulWidget {
 class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _splitMultiplier = 1; // 1 unit or 5 units per split
 
   @override
   void initState() {
@@ -44,8 +46,10 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
     final runsAsync = ref.watch(userRunsProvider);
     final statsAsync = ref.watch(userRunStatsProvider);
 
+    final theme = ThemeFactory.getCurrentTheme();
+    
     return Scaffold(
-      backgroundColor: kMidnightNavy,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
@@ -84,7 +88,10 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
           ),
         ],
       ),
-      body: runsAsync.when(
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 120,
+        child: runsAsync.when(
         data: (runs) => _buildRunHistory(context, ref, runs, statsAsync),
         loading: () => const Center(
           child: CircularProgressIndicator(color: kElectricAqua),
@@ -158,6 +165,7 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
               ),
             ],
           ),
+        ),
         ),
       ),
       bottomNavigationBar: BottomNavigationWidget(
@@ -269,8 +277,26 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
   }
 
   Widget _buildRunCard(BuildContext context, RunModel run) {
-    final statusColor = _getStatusColor(run.status ?? RunStatus.notStarted);
-    final statusIcon = _getStatusIcon(run.status ?? RunStatus.notStarted);
+    // Derive metrics if missing (e.g., some runs lack persisted stats but have route)
+    final route = run.route ?? const [];
+    final derivedDistanceKm = (run.totalDistance == null || (run.totalDistance ?? 0) <= 0)
+        ? _computeDistanceFromRoute(route)
+        : (run.totalDistance ?? 0);
+    final derivedDuration = (run.totalTime == null || (run.totalTime?.inSeconds ?? 0) <= 0)
+        ? _computeDurationFromRun(run)
+        : (run.totalTime ?? Duration.zero);
+    final derivedAvgPace = (run.averagePace == null || (run.averagePace ?? 0) <= 0)
+        ? _computeAveragePace(derivedDistanceKm, derivedDuration)
+        : (run.averagePace ?? 0);
+    // Derive a sensible status when field is missing in older documents
+    final derivedStatus = run.status ??
+        (run.completedAt != null
+            ? RunStatus.completed
+            : (run.totalTime != null && (run.totalTime!.inSeconds > 0)
+                ? RunStatus.inProgress
+                : RunStatus.notStarted));
+    final statusColor = _getStatusColor(derivedStatus);
+    final statusIcon = _getStatusIcon(derivedStatus);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -309,7 +335,7 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                (run.status ?? RunStatus.notStarted).name.toUpperCase(),
+                derivedStatus.name.toUpperCase(),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -326,18 +352,18 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             Row(
               children: [
                 FutureBuilder<String>(
-                  future: _formatDistanceAsync(run.totalDistance ?? 0.0),
+                  future: _formatDistanceAsync(derivedDistanceKm),
                   builder: (context, snapshot) {
-                    return _buildRunStat('Distance', snapshot.data ?? _formatDistance(run.totalDistance ?? 0.0));
+                    return _buildRunStat('Distance', snapshot.data ?? _formatDistance(derivedDistanceKm));
                   },
                 ),
                 const SizedBox(width: 24),
-                _buildRunStat('Time', _formatDuration(run.totalTime ?? Duration.zero)),
+                _buildRunStat('Time', _formatDuration(derivedDuration)),
                 const SizedBox(width: 24),
                 FutureBuilder<String>(
-                  future: _formatPaceWithUnitsAsync(run.averagePace ?? 0.0),
+                  future: _formatPaceWithUnitsAsync(derivedAvgPace),
                   builder: (context, snapshot) {
-                    return _buildRunStat('Pace', snapshot.data ?? _formatPaceWithUnits(run.averagePace ?? 0.0));
+                    return _buildRunStat('Pace', snapshot.data ?? _formatPaceWithUnits(derivedAvgPace));
                   },
                 ),
               ],
@@ -456,16 +482,32 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
     return await settingsService.formatEnergy(energyInKcal);
   }
 
-  // Format pace with units (synchronous fallback)
+  // Format pace with units (synchronous fallback) with slow cap
   String _formatPaceWithUnits(double paceInMinPerKm) {
-    // For now, use the existing format - we'll make this async in the detailed view
+    const double capPaceMinPerKm = 20.0; // display cap for anomalously slow pace
+    if (paceInMinPerKm > 0 && paceInMinPerKm >= capPaceMinPerKm) {
+      return '+20:00 min/km';
+    }
     return '${_formatPace(paceInMinPerKm)}/km';
   }
 
-  // Format pace with units using settings service
+  // Format pace with units using settings service + slow cap
   Future<String> _formatPaceWithUnitsAsync(double paceInMinPerKm) async {
+    const double capPaceMinPerKm = 20.0;
+    if (paceInMinPerKm > 0 && paceInMinPerKm >= capPaceMinPerKm) {
+      return '+20:00 min/km';
+    }
     final settingsService = SettingsService();
     return await settingsService.formatPace(paceInMinPerKm);
+  }
+
+  // Format pace for splits with slow cap (no units)
+  String _formatPaceCapped(double paceInMinPerKm) {
+    const double capPaceMinPerKm = 20.0;
+    if (paceInMinPerKm > 0 && paceInMinPerKm >= capPaceMinPerKm) {
+      return '+20:00';
+    }
+    return _formatPace(paceInMinPerKm);
   }
 
   // Format speed using settings service
@@ -623,21 +665,39 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
 
   /// Build workout summary section
   Widget _buildWorkoutSummary(RunModel run) {
-    final totalDistance = run.totalDistance ?? 0.0;
-    final totalTime = run.totalTime ?? Duration.zero;
-    final averagePace = run.averagePace ?? 0.0;
+    final route = run.route ?? const [];
+    final totalDistance = (run.totalDistance == null || (run.totalDistance ?? 0) <= 0)
+        ? _computeDistanceFromRoute(route)
+        : (run.totalDistance ?? 0.0);
+    final totalTime = (run.totalTime == null || (run.totalTime?.inSeconds ?? 0) <= 0)
+        ? _computeDurationFromRun(run)
+        : (run.totalTime ?? Duration.zero);
+    final averagePace = (run.averagePace == null || (run.averagePace ?? 0) <= 0)
+        ? _computeAveragePace(totalDistance, totalTime)
+        : (run.averagePace ?? 0.0);
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title
-        Text(
-          'Outdoor Run',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        // Title + Delete action
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Outdoor Run',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Delete run',
+              icon: const Icon(Icons.delete_outline, color: Colors.white70),
+              onPressed: () => _confirmAndDeleteRun(context, run),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         
@@ -704,13 +764,27 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
               Row(
                 children: [
                   Expanded(child: _buildSummaryStat('Workout Time', _formatDuration(totalTime), Icons.timer)),
-                  Expanded(child: _buildSummaryStat('Calories', '${_calculateCalories(totalDistance, totalTime)}', Icons.local_fire_department)),
+                  Expanded(
+                    child: FutureBuilder<String>(
+                      future: _formatEnergyAsync(_calculateCalories(totalDistance, totalTime).toDouble()),
+                      builder: (context, snapshot) {
+                        return _buildSummaryStat('Calories', snapshot.data ?? '${_calculateCalories(totalDistance, totalTime)} kcal', Icons.local_fire_department);
+                      },
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildSummaryStat('Avg Pace', _formatPace(averagePace), Icons.speed)),
+                  Expanded(
+                    child: FutureBuilder<String>(
+                      future: _formatPaceWithUnitsAsync(averagePace),
+                      builder: (context, snapshot) {
+                        return _buildSummaryStat('Avg Pace', snapshot.data ?? _formatPace(averagePace), Icons.speed);
+                      },
+                    ),
+                  ),
                   Expanded(child: _buildSummaryStat('Route Points', '${run.route?.length ?? 0}', Icons.map)),
                 ],
               ),
@@ -744,6 +818,62 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
         ),
       ],
     );
+  }
+
+  Future<void> _confirmAndDeleteRun(BuildContext context, RunModel run) async {
+    // Ensure we have a valid ID
+    if (run.id == null || run.id!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot delete: invalid run ID')),
+      );
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Run?'),
+        content: const Text(
+          'This will permanently delete this workout from your history and Firebase.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final firestore = ref.read(firestoreServiceProvider);
+      await firestore.deleteRun(run.id!);
+
+      // Refresh lists
+      ref.refresh(userRunsProvider);
+      ref.refresh(userCompletedRunsProvider);
+
+      // Close the bottom sheet
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Notify user
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Run deleted')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete run: $e')),
+      );
+    }
   }
 
   /// Build map tab
@@ -865,8 +995,6 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
 
   /// Build pace details tab
   Widget _buildPaceDetailsTab(RunModel run) {
-    final segments = _calculateKilometerSegments(run);
-    
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -896,41 +1024,58 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
               ),
             ],
           ),
-          
-          Text(
-            '${segments.length} records',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Distance filter buttons
+          const SizedBox(height: 8),
+
+          // Distance filter buttons (labels reflect unit)
           FutureBuilder<String>(
             future: _getDistanceUnitText(),
             builder: (context, snapshot) {
               final unit = snapshot.data ?? 'km';
               return Row(
                 children: [
-                  _buildFilterButton('1 $unit', true),
+                  _buildFilterButton('1 $unit', _splitMultiplier == 1, () {
+                    setState(() => _splitMultiplier = 1);
+                  }),
                   const SizedBox(width: 12),
-                  _buildFilterButton('5 $unit', false),
+                  _buildFilterButton('5 $unit', _splitMultiplier == 5, () {
+                    setState(() => _splitMultiplier = 5);
+                  }),
                 ],
               );
             },
           ),
-          
-          const SizedBox(height: 20),
-          
-          // Pace table
-          if (segments.isNotEmpty) ...[
-            _buildPaceTableHeader(),
-            ...segments.map((segment) => _buildPaceTableRow(segment)),
-          ] else ...[
-            _buildNoDataPlaceholder(),
-          ],
+          const SizedBox(height: 12),
+
+          // Build segments and table based on current distance unit
+          FutureBuilder<DistanceUnit>(
+            future: SettingsService().getDistanceUnit(),
+            builder: (context, snapshot) {
+              final unit = snapshot.data ?? DistanceUnit.kilometers;
+              final unitSymbol = unit == DistanceUnit.miles ? 'mi' : 'km';
+              final baseKm = unit == DistanceUnit.miles ? 1.60934 : 1.0;
+              final segments = _calculateSplitSegments(run, baseKm * _splitMultiplier);
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${segments.length} records',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (segments.isNotEmpty) ...[
+                    _buildPaceTableHeader(unitSymbol),
+                    ...segments.map((segment) => _buildPaceTableRow(segment)),
+                  ] else ...[
+                    _buildNoDataPlaceholder(),
+                  ],
+                ],
+              );
+            },
+          ),
           
           const SizedBox(height: 24),
           
@@ -973,19 +1118,23 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
     );
   }
 
-  /// Calculate kilometer segments from GPS route
+  /// Calculate kilometer segments from GPS route (uses derived metrics when needed)
   List<KilometerSegment> _calculateKilometerSegments(RunModel run) {
     if (run.route == null || run.route!.isEmpty) return [];
-    
     final route = run.route!;
-    final totalDistance = run.totalDistance ?? 0.0;
-    final totalTime = run.totalTime ?? Duration.zero;
-    
+    // Use derived fallbacks so splits appear when stored metrics are missing
+    final totalDistance = (run.totalDistance == null || (run.totalDistance ?? 0) <= 0)
+        ? _computeDistanceFromRoute(route)
+        : (run.totalDistance ?? 0.0);
+    final totalTime = (run.totalTime == null || (run.totalTime?.inSeconds ?? 0) <= 0)
+        ? _computeDurationFromRun(run)
+        : (run.totalTime ?? Duration.zero);
     if (totalDistance <= 0 || totalTime.inSeconds <= 0) return [];
     
     final segments = <KilometerSegment>[];
     double accumulatedDistance = 0.0;
     int startIndex = 0;
+    int allocatedTimeSec = 0; // For fallback timing distribution
     
     for (int i = 1; i < route.length; i++) {
       final prev = route[i - 1];
@@ -1049,53 +1198,162 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
     return degrees * (pi / 180);
   }
 
+  // Compute distance (km) from route when not persisted
+  double _computeDistanceFromRoute(List<LocationPoint> route) {
+    if (route.length < 2) return 0.0;
+    double total = 0.0;
+    for (int i = 1; i < route.length; i++) {
+      final a = route[i - 1];
+      final b = route[i];
+      total += _calculateDistance(a.latitude, a.longitude, b.latitude, b.longitude);
+    }
+    return total;
+  }
+
+  // Compute duration from route elapsedSeconds or from createdAt/completedAt
+  Duration _computeDurationFromRun(RunModel run) {
+    final route = run.route ?? const [];
+    if (route.length >= 2) {
+      final start = route.first.elapsedSeconds;
+      final end = route.last.elapsedSeconds;
+      if (end > start) {
+        return Duration(seconds: end - start);
+      }
+    }
+    if (run.completedAt != null) {
+      return run.completedAt!.difference(run.createdAt);
+    }
+    return Duration.zero;
+  }
+
+  // Compute average pace (min/km)
+  double _computeAveragePace(double distanceKm, Duration duration) {
+    if (distanceKm > 0 && duration.inSeconds > 0) {
+      return (duration.inSeconds / 60.0) / distanceKm;
+    }
+    return 0.0;
+  }
+
+  /// Calculate generic split segments by unit length (in km)
+  List<KilometerSegment> _calculateSplitSegments(RunModel run, double splitLengthKm) {
+    if (run.route == null || run.route!.isEmpty) return [];
+    final route = run.route!;
+    // Use derived fallbacks for robustness
+    final totalDistance = (run.totalDistance == null || (run.totalDistance ?? 0) <= 0)
+        ? _computeDistanceFromRoute(route)
+        : (run.totalDistance ?? 0.0);
+    final totalTime = (run.totalTime == null || (run.totalTime?.inSeconds ?? 0) <= 0)
+        ? _computeDurationFromRun(run)
+        : (run.totalTime ?? Duration.zero);
+    if (totalDistance <= 0 || totalTime.inSeconds <= 0) return [];
+
+    final segments = <KilometerSegment>[];
+    double accumulatedDistance = 0.0;
+    int startIndex = 0;
+
+    for (int i = 1; i < route.length; i++) {
+      final prev = route[i - 1];
+      final curr = route[i];
+      final segmentDistance = _calculateDistance(
+        prev.latitude, prev.longitude,
+        curr.latitude, curr.longitude,
+      );
+      accumulatedDistance += segmentDistance;
+
+      if (accumulatedDistance >= splitLengthKm || i == route.length - 1) {
+        final startTime = route[startIndex].elapsedSeconds;
+        final endTime = curr.elapsedSeconds;
+        int segmentTimeSec = endTime - startTime; // seconds
+
+        // Distance covered in this segment (km)
+        final segmentDistanceKm = accumulatedDistance;
+
+        // Fallback if elapsedSeconds are missing/non-increasing: distribute by distance share
+        if (segmentTimeSec <= 0) {
+          if (i == route.length - 1) {
+            // Last segment gets remaining time
+            segmentTimeSec = (totalTime.inSeconds - allocatedTimeSec).clamp(0, totalTime.inSeconds);
+          } else {
+            segmentTimeSec = ((totalTime.inSeconds * (segmentDistanceKm / totalDistance))).round();
+          }
+        }
+
+        // Pace in min per split unit length
+        final pace = segmentDistanceKm > 0 ? (segmentTimeSec / 60.0) / segmentDistanceKm : 0.0;
+        final simulatedHeartRate = 120 + (pace * 10).round();
+
+        // Determine cumulative time consistently
+        allocatedTimeSec += segmentTimeSec;
+        final cumulativeSec = (endTime > 0 && startTime >= 0 && (endTime - startTime) > 0)
+            ? endTime
+            : allocatedTimeSec;
+
+        segments.add(KilometerSegment(
+          kilometer: segments.length + 1,
+          pace: pace,
+          heartRate: simulatedHeartRate,
+          cumulativeTime: Duration(seconds: cumulativeSec),
+          distance: segmentDistanceKm,
+        ));
+
+        accumulatedDistance = 0.0;
+        startIndex = i;
+      }
+    }
+    return segments;
+  }
+
   /// Build filter button
-  Widget _buildFilterButton(String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? kElectricAqua : Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isSelected ? kElectricAqua : Colors.white70.withValues(alpha: 0.3),
+  Widget _buildFilterButton(String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? kElectricAqua : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? kElectricAqua : Colors.white70.withValues(alpha: 0.3),
+          ),
         ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.black : Colors.white70,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white70,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
         ),
       ),
     );
   }
 
   /// Build pace table header
-  Widget _buildPaceTableHeader() {
+  Widget _buildPaceTableHeader(String unitSymbol) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: theme.cardTheme.color ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+        border: Border.all(color: theme.dividerTheme.color ?? theme.colorScheme.onBackground.withOpacity(0.3)),
       ),
       child: Row(
         children: [
           SizedBox(
             width: 40,
             child: Text(
-              'km',
+              unitSymbol,
               style: TextStyle(
-                color: Colors.white70,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
           Expanded(
             child: Text(
-              'Pace (km)',
+              'Pace ($unitSymbol)',
               style: TextStyle(
-                color: Colors.white70,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1105,7 +1363,7 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             child: Text(
               'Heart Rate',
               style: TextStyle(
-                color: Colors.white70,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1115,7 +1373,7 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             child: Text(
               'Time',
               style: TextStyle(
-                color: Colors.white70,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1128,15 +1386,16 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
   /// Build pace table row
   Widget _buildPaceTableRow(KilometerSegment segment) {
     final paceZone = _getPaceZone(segment.pace);
-    final zoneColor = _getPaceZoneColor(paceZone);
+    final zoneColor = _getPaceZoneColor(context, paceZone);
     
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: theme.cardTheme.color ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+        border: Border.all(color: theme.dividerTheme.color ?? theme.colorScheme.onBackground.withOpacity(0.3)),
       ),
       child: Row(
         children: [
@@ -1146,7 +1405,7 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             child: Text(
               '${segment.kilometer}',
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.onBackground,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1157,9 +1416,9 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             child: Row(
               children: [
                 Text(
-                  _formatPace(segment.pace),
+                  _formatPaceCapped(segment.pace),
                   style: TextStyle(
-                    color: Colors.white,
+                    color: theme.colorScheme.onBackground,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1182,7 +1441,7 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             child: Text(
               '${segment.heartRate}',
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.onBackground,
               ),
             ),
           ),
@@ -1193,7 +1452,7 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             child: Text(
               _formatDuration(segment.cumulativeTime),
               style: TextStyle(
-                color: Colors.white,
+                color: theme.colorScheme.onBackground,
               ),
             ),
           ),
@@ -1204,12 +1463,13 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
 
   /// Build no route placeholder
   Widget _buildNoRoutePlaceholder() {
+    final theme = Theme.of(context);
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: theme.cardTheme.color ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+        border: Border.all(color: theme.dividerTheme.color ?? theme.colorScheme.onBackground.withOpacity(0.3)),
       ),
       child: Center(
         child: Column(
@@ -1218,20 +1478,20 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             Icon(
               Icons.map,
               size: 48,
-              color: Colors.white70.withValues(alpha: 0.5),
+              color: theme.colorScheme.onBackground.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(
               'No Route Data',
               style: TextStyle(
-                color: Colors.white70,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 16,
               ),
             ),
             Text(
               'GPS route data not available for this run',
               style: TextStyle(
-                color: Colors.white70,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 12,
               ),
             ),
@@ -1243,12 +1503,13 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
 
   /// Build no data placeholder
   Widget _buildNoDataPlaceholder() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: theme.cardTheme.color ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white70.withValues(alpha: 0.3)),
+        border: Border.all(color: theme.dividerTheme.color ?? theme.colorScheme.onBackground.withOpacity(0.3)),
       ),
       child: Center(
         child: Column(
@@ -1256,20 +1517,20 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
             Icon(
               Icons.analytics,
               size: 48,
-              color: Colors.white70.withValues(alpha: 0.5),
+              color: theme.colorScheme.onBackground.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(
               'No Pace Data',
               style: TextStyle(
-                color: Colors.white70,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 16,
               ),
             ),
             Text(
               'Pace data not available for this run',
               style: TextStyle(
-                color: Colors.white70,
+                color: theme.colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 12,
               ),
             ),
@@ -1288,17 +1549,18 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
   }
 
   /// Get color for pace zone
-  Color _getPaceZoneColor(String zone) {
+  Color _getPaceZoneColor(BuildContext context, String zone) {
+    final theme = Theme.of(context);
     switch (zone) {
       case 'fast':
-        return kEmberCoral;
+        return theme.colorScheme.error;
       case 'good':
-        return kMeadowGreen;
+        return theme.colorScheme.tertiary;
       case 'moderate':
-        return kElectricAqua;
+        return theme.colorScheme.primary;
       case 'slow':
       default:
-        return Colors.white70;
+        return theme.colorScheme.onBackground.withOpacity(0.6);
     }
   }
 

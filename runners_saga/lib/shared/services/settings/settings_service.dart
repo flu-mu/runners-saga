@@ -10,17 +10,33 @@ enum EnergyUnit {
   kj,
 }
 
+/// Gender options for fitness statistics
+enum Gender {
+  female,
+  male,
+  nonBinary,
+  preferNotToSay,
+}
+
 class SettingsService {
   static const String _distanceUnitKey = 'distance_unit';
   static const String _energyUnitKey = 'energy_unit';
   static const String _appVolumeKey = 'app_volume';
   static const String _musicVolumeKey = 'music_volume';
+  static const String _userWeightKgKey = 'user_weight_kg';
+  static const String _userHeightCmKey = 'user_height_cm';
+  static const String _userAgeKey = 'user_age_years';
+  static const String _userGenderKey = 'user_gender';
 
   // Default values
   static const DistanceUnit _defaultDistanceUnit = DistanceUnit.kilometers;
   static const EnergyUnit _defaultEnergyUnit = EnergyUnit.kcal;
   static const double _defaultAppVolume = 1.0;
   static const double _defaultMusicVolume = 1.0;
+  static const double _defaultUserWeightKg = 70.0;
+  static const int _defaultUserHeightCm = 170;
+  static const int _defaultUserAgeYears = 30;
+  static const Gender _defaultUserGender = Gender.preferNotToSay;
 
   // Distance unit conversion constants
   static const double _kmToMiles = 0.621371;
@@ -78,6 +94,59 @@ class SettingsService {
   Future<void> setMusicVolume(double volume) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_musicVolumeKey, volume.clamp(0.0, 1.0));
+  }
+
+  // -------- Fitness profile (weight, height, age, gender) --------
+
+  /// Get user weight in kg
+  Future<double> getUserWeightKg() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_userWeightKgKey) ?? _defaultUserWeightKg;
+  }
+
+  /// Set user weight in kg
+  Future<void> setUserWeightKg(double weightKg) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_userWeightKgKey, weightKg.clamp(30.0, 250.0));
+  }
+
+  /// Get user height in cm
+  Future<int> getUserHeightCm() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_userHeightCmKey) ?? _defaultUserHeightCm;
+  }
+
+  /// Set user height in cm
+  Future<void> setUserHeightCm(int heightCm) async {
+    final prefs = await SharedPreferences.getInstance();
+    final clamped = heightCm.clamp(100, 230);
+    await prefs.setInt(_userHeightCmKey, clamped);
+  }
+
+  /// Get user age in years
+  Future<int> getUserAgeYears() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_userAgeKey) ?? _defaultUserAgeYears;
+  }
+
+  /// Set user age in years
+  Future<void> setUserAgeYears(int ageYears) async {
+    final prefs = await SharedPreferences.getInstance();
+    final clamped = ageYears.clamp(10, 100);
+    await prefs.setInt(_userAgeKey, clamped);
+  }
+
+  /// Get user gender
+  Future<Gender> getUserGender() async {
+    final prefs = await SharedPreferences.getInstance();
+    final idx = prefs.getInt(_userGenderKey) ?? _defaultUserGender.index;
+    return Gender.values[idx];
+  }
+
+  /// Set user gender
+  Future<void> setUserGender(Gender gender) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_userGenderKey, gender.index);
   }
 
   // Distance conversion methods
@@ -196,4 +265,13 @@ class SettingsService {
     return '${convertedPace.toStringAsFixed(1)} $unit';
   }
 }
+
+
+
+
+
+
+
+
+
 

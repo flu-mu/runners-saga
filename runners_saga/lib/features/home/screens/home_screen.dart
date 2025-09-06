@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/auth_providers.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
+import '../../../shared/widgets/ui/seasonal_background.dart';
+import '../../../core/themes/theme_factory.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -12,35 +14,22 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
     final user = ref.watch(currentUserProvider).value;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: kMidnightNavy,
-      body: SafeArea(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 120,
+        child: SafeArea(
         child: Column(
           children: [
             // Hero section with app branding (reduced height)
             Expanded(
               flex: 1,
               child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      kRoyalPlum,
-                      kDeepTeal,
-                      kMidnightNavy,
-                    ],
-                  ),
-                ),
                 child: Stack(
                   children: [
-                    // Background pattern
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: BackgroundPatternPainter(),
-                      ),
-                    ),
                     // App logo, title, and settings/login status
                     Center(
                       child: SingleChildScrollView(
@@ -52,11 +41,11 @@ class HomeScreen extends ConsumerWidget {
                               width: 80,
                               height: 80,
                               decoration: BoxDecoration(
-                                color: kElectricAqua,
+                                color: theme.colorScheme.secondary,
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: kElectricAqua.withOpacity(0.3),
+                                    color: theme.colorScheme.secondary.withOpacity(0.3),
                                     blurRadius: 20,
                                     spreadRadius: 5,
                                   ),
@@ -65,14 +54,14 @@ class HomeScreen extends ConsumerWidget {
                               child: Icon(
                                 Icons.directions_run,
                                 size: 40,
-                                color: kMidnightNavy,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                             const SizedBox(height: 20),
                             Text(
                               'THE RUNNER\'S SAGA',
                               style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                                color: Colors.white,
+                                color: theme.colorScheme.onBackground,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 2.0,
                               ),
@@ -81,7 +70,7 @@ class HomeScreen extends ConsumerWidget {
                             Text(
                               'Embark on an epic journey through time and space',
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: kTextHigh,
+                                color: theme.colorScheme.onBackground.withOpacity(0.85),
                                 fontWeight: FontWeight.w500,
                               ),
                               textAlign: TextAlign.center,
@@ -98,9 +87,9 @@ class HomeScreen extends ConsumerWidget {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: theme.colorScheme.surface.withOpacity(0.5),
                                   borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(color: kElectricAqua.withOpacity(0.5)),
+                                  border: Border.all(color: theme.colorScheme.secondary.withOpacity(0.5)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -108,7 +97,7 @@ class HomeScreen extends ConsumerWidget {
                                     Icon(
                                       authState == AuthState.authenticated ? Icons.verified_user : Icons.person_outline,
                                       size: 18,
-                                      color: authState == AuthState.authenticated ? kMeadowGreen : kElectricAqua,
+                                      color: authState == AuthState.authenticated ? theme.colorScheme.tertiary : theme.colorScheme.secondary,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
@@ -139,7 +128,7 @@ class HomeScreen extends ConsumerWidget {
             Expanded(
               flex: 3,
               child: Container(
-                color: kMidnightNavy,
+                color: theme.colorScheme.primary,
                 padding: const EdgeInsets.all(20.0),
                 child: SingleChildScrollView(
                   child: Column(
@@ -150,10 +139,10 @@ class HomeScreen extends ConsumerWidget {
                 width: double.infinity,
                         padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                          color: kSurfaceBase,
+                          color: theme.cardTheme.color ?? theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: kElectricAqua.withOpacity(0.3),
+                            color: theme.colorScheme.secondary.withOpacity(0.3),
                             width: 1,
                           ),
                           boxShadow: [
@@ -173,13 +162,13 @@ class HomeScreen extends ConsumerWidget {
                                 Text(
                                   'Abel Township Saga',
                                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    color: Colors.white,
+                                    color: theme.colorScheme.onBackground,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 Icon(
                                   Icons.arrow_forward_ios,
-                                  color: kElectricAqua,
+                                  color: theme.colorScheme.secondary,
                                   size: 20,
                         ),
                       ],
@@ -188,7 +177,7 @@ class HomeScreen extends ConsumerWidget {
                             Text(
                               'Begin your journey in the mysterious town of Abel, where every run reveals a new chapter of the story.',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: kTextHigh,
+                                color: theme.colorScheme.onBackground.withOpacity(0.85),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -201,8 +190,8 @@ class HomeScreen extends ConsumerWidget {
                                   context.push('/seasons');
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: kElectricAqua,
-                                  foregroundColor: kMidnightNavy,
+                                  backgroundColor: theme.colorScheme.secondary,
+                                  foregroundColor: theme.colorScheme.primary,
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -213,7 +202,7 @@ class HomeScreen extends ConsumerWidget {
                                   'Enter Abel Township',
                                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: kMidnightNavy,
+                                    color: theme.colorScheme.primary,
                                   ),
                                 ),
                               ),
@@ -229,10 +218,10 @@ class HomeScreen extends ConsumerWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(20.0),
                         decoration: BoxDecoration(
-                          color: kSurfaceElev,
+                          color: theme.cardTheme.color ?? theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: kRoyalPlum.withOpacity(0.3),
+                            color: theme.colorScheme.secondary.withOpacity(0.3),
                             width: 1,
                           ),
                         ),
@@ -245,7 +234,7 @@ class HomeScreen extends ConsumerWidget {
                                 Text(
                                   'More Episodes',
                                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                    color: Colors.white,
+                                    color: theme.colorScheme.onBackground,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -319,6 +308,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           ],
         ),
+        ),
       ),
       bottomNavigationBar: BottomNavigationWidget(
         currentIndex: BottomNavIndex.home.value,
@@ -390,5 +380,4 @@ class BackgroundPatternPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
 

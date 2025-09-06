@@ -32,6 +32,24 @@ final musicVolumeProvider = StateNotifierProvider<MusicVolumeNotifier, double>((
   return MusicVolumeNotifier(settingsService);
 });
 
+// Height (cm) provider
+final heightCmProvider = StateNotifierProvider<HeightCmNotifier, int>((ref) {
+  final settingsService = ref.read(settingsServiceProvider);
+  return HeightCmNotifier(settingsService);
+});
+
+// Age (years) provider
+final ageYearsProvider = StateNotifierProvider<AgeYearsNotifier, int>((ref) {
+  final settingsService = ref.read(settingsServiceProvider);
+  return AgeYearsNotifier(settingsService);
+});
+
+// Gender provider
+final genderProvider = StateNotifierProvider<GenderNotifier, Gender>((ref) {
+  final settingsService = ref.read(settingsServiceProvider);
+  return GenderNotifier(settingsService);
+});
+
 // Distance unit notifier
 class DistanceUnitNotifier extends StateNotifier<DistanceUnit> {
   final SettingsService _settingsService;
@@ -129,5 +147,59 @@ class MusicVolumeNotifier extends StateNotifier<double> {
   Future<void> setMusicVolume(double volume) async {
     await _settingsService.setMusicVolume(volume);
     state = volume;
+  }
+}
+
+// Height notifier
+class HeightCmNotifier extends StateNotifier<int> {
+  final SettingsService _settingsService;
+
+  HeightCmNotifier(this._settingsService) : super(170) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    state = await _settingsService.getUserHeightCm();
+  }
+
+  Future<void> setHeight(int heightCm) async {
+    await _settingsService.setUserHeightCm(heightCm);
+    state = heightCm;
+  }
+}
+
+// Age notifier
+class AgeYearsNotifier extends StateNotifier<int> {
+  final SettingsService _settingsService;
+
+  AgeYearsNotifier(this._settingsService) : super(30) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    state = await _settingsService.getUserAgeYears();
+  }
+
+  Future<void> setAge(int ageYears) async {
+    await _settingsService.setUserAgeYears(ageYears);
+    state = ageYears;
+  }
+}
+
+// Gender notifier
+class GenderNotifier extends StateNotifier<Gender> {
+  final SettingsService _settingsService;
+
+  GenderNotifier(this._settingsService) : super(Gender.preferNotToSay) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    state = await _settingsService.getUserGender();
+  }
+
+  Future<void> setGender(Gender gender) async {
+    await _settingsService.setUserGender(gender);
+    state = gender;
   }
 }

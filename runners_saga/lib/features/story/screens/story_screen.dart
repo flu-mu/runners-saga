@@ -6,6 +6,8 @@ import '../../../shared/providers/story_providers.dart';
 import '../../../shared/models/season_model.dart';
 import '../../../shared/models/episode_model.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../shared/widgets/ui/seasonal_background.dart';
+import '../../../core/themes/theme_factory.dart';
 
 class StoryScreen extends ConsumerWidget {
   final String seasonId;
@@ -14,19 +16,32 @@ class StoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ThemeFactory.getCurrentTheme();
+    
     return Scaffold(
-      backgroundColor: kMidnightNavy,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Story Hub', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'Story Hub',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: theme.colorScheme.onBackground,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: theme.colorScheme.onBackground),
       ),
-      body: const Center(
-        child: Text(
-          'Story content will be available here.',
-          style: TextStyle(color: Colors.white),
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 120,
+        child: Center(
+          child: Text(
+            'Story content will be available here.',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onBackground,
+            ),
+          ),
         ),
       ),
     );

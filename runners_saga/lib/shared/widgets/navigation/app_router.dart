@@ -21,6 +21,8 @@ import '../../../features/onboarding/screens/account_creation_screen.dart';
 import 'splash_screen.dart';
 import '../../../features/settings/screens/settings_screen.dart';
 import '../../../features/settings/screens/episode_downloads_screen.dart';
+import '../../../features/test/screens/background_test_screen.dart';
+import '../../../features/test/screens/landscape_design_screen.dart';
 
 /// App router configuration using GoRouter
 class AppRouter {
@@ -200,6 +202,20 @@ class AppRouter {
         name: 'seasons',
         builder: (context, state) => const SeasonsScreen(),
       ),
+      
+      // Test route for background preview
+      GoRoute(
+        path: '/test/background',
+        name: 'background_test',
+        builder: (context, state) => const BackgroundTestScreen(),
+      ),
+      
+      // Landscape design screen
+      GoRoute(
+        path: '/test/landscape',
+        name: 'landscape_design',
+        builder: (context, state) => const LandscapeDesignScreen(),
+      ),
     ],
     
     // Error handling
@@ -208,10 +224,10 @@ class AppRouter {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.red,
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 16),
             Text(

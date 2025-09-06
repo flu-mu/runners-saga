@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/providers/auth_providers.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../shared/widgets/ui/seasonal_background.dart';
+import '../../../core/themes/theme_factory.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -53,9 +55,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       });
     }
 
+    final theme = ThemeFactory.getCurrentTheme();
+    
     return Scaffold(
-      backgroundColor: kMidnightNavy,
-      body: SafeArea(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 150,
+        child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Form(
@@ -323,6 +330,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

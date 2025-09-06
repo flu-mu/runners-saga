@@ -28,10 +28,13 @@ class RunModel with _$RunModel {
     double? minPace, // slowest pace achieved - can be null for incomplete runs
     @JsonKey(name: 'episodeId') // Map to the actual Firestore field name
     String? episodeId, // Make optional since it might not exist in old data
+    @JsonKey(name: 'achievements') // Map to the actual Firestore field name
+    List<String>? achievements, // Make optional since it might not exist in old data
     @JsonKey(name: 'status', fromJson: _stringToRunStatus, toJson: _runStatusToString)
     RunStatus? status, // Make optional since it might not exist in old data
     RunTarget? runTarget, // Make optional since it might not exist in old data
     Map<String, dynamic>? metadata, // for additional data like calories, elevation, etc.
+    
     double? elevationGain, // Total elevation gain in meters
     double? maxSpeed, // Maximum speed in km/h
     double? avgHeartRate, // Average heart rate in bpm

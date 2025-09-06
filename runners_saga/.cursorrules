@@ -12,6 +12,7 @@
 - Use hot reload when possible
 - Fix issues incrementally
 - Preserve existing working code
+- Always test the build after modifying code (quick compile)
 
 ## 🎯 Project-Specific Context:
 - This is a Flutter app with **background audio functionality**
@@ -86,3 +87,6 @@
   - Purpose: Primary development device for coding and testing
 - **Rule**: NEVER overwrite the release version on iPhone with debug builds
 - **Rule**: ALWAYS use iPad for development flutter run commands
+
+
+Test the build to make sure there are no compilation errors:

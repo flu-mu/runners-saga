@@ -62,29 +62,23 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: kMidnightNavy,
-          title: const Text(
+          backgroundColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+          title: Text(
             'Delete Episode',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
           ),
           content: Text(
             'Are you sure you want to delete "${episode.title}" from your device? This action cannot be undone.',
-            style: const TextStyle(color: Colors.white70),
+            style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7)),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white70),
-              ),
+              child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7))),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: kElectricAqua),
-              ),
+              child: Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
             ),
           ],
         ),
@@ -104,7 +98,7 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${episode.title} deleted successfully'),
-              backgroundColor: kElectricAqua,
+              backgroundColor: Theme.of(context).colorScheme.primary,
             ),
           );
         }
@@ -115,7 +109,7 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error deleting episode: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -125,30 +119,19 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kMidnightNavy,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: kMidnightNavy,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor ?? Theme.of(context).colorScheme.onBackground),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Episode Downloads',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text('Episode Downloads', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Theme.of(context).appBarTheme.foregroundColor ?? Theme.of(context).colorScheme.onBackground, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(kElectricAqua),
-              ),
-            )
+          ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary)))
           : _downloadedEpisodes.isEmpty
               ? _buildEmptyState()
               : _buildEpisodesList(),
@@ -166,7 +149,7 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
           Icon(
             Icons.download_done_outlined,
             size: 80,
-            color: Colors.white.withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.onBackground.withOpacity(0.3),
           ),
           const SizedBox(height: 24),
           Text(
@@ -174,7 +157,7 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white.withValues(alpha: 0.8),
+              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.8),
             ),
           ),
           const SizedBox(height: 16),
@@ -182,7 +165,7 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
             'Download episodes to listen to them offline',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -206,9 +189,9 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Theme.of(context).dividerTheme.color ?? Theme.of(context).colorScheme.onBackground.withOpacity(0.1)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
@@ -216,22 +199,14 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: kElectricAqua.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Icon(
-            Icons.play_circle_outline,
-            color: kElectricAqua,
-            size: 24,
-          ),
+          child: Icon(Icons.play_circle_outline, color: Theme.of(context).colorScheme.primary, size: 24),
         ),
         title: Text(
           episode.title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Theme.of(context).colorScheme.onBackground, fontSize: 16, fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +215,7 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
             Text(
               episode.description,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                 fontSize: 14,
               ),
               maxLines: 2,
@@ -252,13 +227,13 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
                 Icon(
                   Icons.route,
                   size: 16,
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.5),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${episode.targetDistance.toStringAsFixed(1)} km',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: Theme.of(context).colorScheme.onBackground.withOpacity(0.5),
                     fontSize: 12,
                   ),
                 ),
@@ -266,13 +241,13 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
                 Icon(
                   Icons.access_time,
                   size: 16,
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.5),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${(episode.targetTime / 60000).toStringAsFixed(0)} min',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: Theme.of(context).colorScheme.onBackground.withOpacity(0.5),
                     fontSize: 12,
                   ),
                 ),
@@ -281,14 +256,20 @@ class _EpisodeDownloadsScreenState extends ConsumerState<EpisodeDownloadsScreen>
           ],
         ),
         trailing: IconButton(
-          icon: const Icon(
-            Icons.delete_outline,
-            color: Colors.red,
-          ),
+          icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
           onPressed: () => _deleteEpisode(episode),
         ),
       ),
     );
   }
 }
+
+
+
+
+
+
+
+
+
 

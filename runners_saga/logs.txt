@@ -1,0 +1,2283 @@
+    deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range
+    of supported deployment target versions is 12.0 to 18.5.99. (in target
+    'flutter_local_notifications-flutter_local_notifications_privacy' from
+    project 'Pods')
+    /Users/hp/saga_run/runners_saga/ios/Pods/Pods.xcodeproj: warning: The iOS
+    deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 11.0, but the range
+    of supported deployment target versions is 12.0 to 18.5.99. (in target
+    'geolocator_apple-geolocator_apple_privacy' from project 'Pods')
+    /Users/hp/saga_run/runners_saga/ios/Pods/Pods.xcodeproj: warning: The iOS
+    deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range
+    of supported deployment target versions is 12.0 to 18.5.99. (in target
+    'permission_handler_apple-permission_handler_apple_privacy' from project
+    'Pods')
+    note: Run script build phase 'Run Script' will be run during every build
+    because the option to run the script phase "Based on dependency analysis" is
+    unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build
+    because the option to run the script phase "Based on dependency analysis" is
+    unchecked. (in target 'Runner' from project 'Runner')
+
+
+Error launching application on iPad (wireless).
+hp@MacBook-Air runners_saga % clear                                   
+
+hp@MacBook-Air runners_saga % flutter run -d 00008101-000209612293A01E
+Resolving dependencies... 
+Downloading packages... 
+  _fe_analyzer_shared 67.0.0 (88.0.0 available)
+  _flutterfire_internals 1.3.59 (1.3.61 available)
+  analyzer 6.4.1 (8.1.1 available)
+  analyzer_plugin 0.11.3 (0.13.7 available)
+  archive 3.6.1 (4.0.7 available)
+  audio_session 0.1.25 (0.2.2 available)
+  build 2.4.1 (4.0.0 available)
+  build_config 1.1.2 (1.2.0 available)
+  build_resolvers 2.4.2 (3.0.4 available)
+  build_runner 2.4.13 (2.7.2 available)
+  build_runner_core 7.3.2 (9.3.2 available)
+  characters 1.4.0 (1.4.1 available)
+  cloud_firestore 5.6.12 (6.0.1 available)
+  cloud_firestore_platform_interface 6.6.12 (7.0.1 available)
+  cloud_firestore_web 4.4.12 (5.0.1 available)
+  custom_lint_core 0.6.3 (0.8.0 available)
+  dart_style 2.3.6 (3.1.2 available)
+  device_info_plus 10.1.2 (11.5.0 available)
+  file_picker 8.3.7 (10.3.2 available)
+  firebase_auth 5.7.0 (6.0.2 available)
+  firebase_auth_platform_interface 7.7.3 (8.1.1 available)
+  firebase_auth_web 5.15.3 (6.0.2 available)
+  firebase_core 3.15.2 (4.1.0 available)
+  firebase_core_web 2.24.1 (3.1.0 available)
+  firebase_storage 12.4.10 (13.0.1 available)
+  firebase_storage_platform_interface 5.2.10 (5.2.12 available)
+  firebase_storage_web 3.10.17 (3.10.19 available)
+  flutter_lints 5.0.0 (6.0.0 available)
+  flutter_local_notifications 16.3.3 (19.4.1 available)
+  flutter_local_notifications_linux 4.0.1 (6.0.0 available)
+  flutter_local_notifications_platform_interface 7.2.0 (9.1.0 available)
+  flutter_map 7.0.2 (8.2.1 available)
+  flutter_svg 2.0.13 (2.2.0 available)
+  freezed 2.5.2 (3.2.0 available)
+  freezed_annotation 2.4.4 (3.1.0 available)
+  geolocator 12.0.0 (14.0.2 available)
+  geolocator_android 4.6.2 (5.0.2 available)
+  go_router 14.8.1 (16.2.1 available)
+  google_fonts 6.3.0 (6.3.1 available)
+  google_sign_in 6.3.0 (7.1.1 available)
+  google_sign_in_android 6.2.1 (7.0.5 available)
+  google_sign_in_ios 5.9.0 (6.1.0 available)
+  google_sign_in_platform_interface 2.5.0 (3.0.0 available)
+  google_sign_in_web 0.12.4+4 (1.0.0 available)
+  image 3.3.0 (4.5.4 available)
+  json_serializable 6.8.0 (6.11.0 available)
+  lints 5.1.1 (6.0.0 available)
+  material_color_utilities 0.11.1 (0.13.0 available)
+  meta 1.16.0 (1.17.0 available)
+  path_provider_android 2.2.17 (2.2.18 available)
+  permission_handler 11.4.0 (12.0.1 available)
+  permission_handler_android 12.1.0 (13.0.1 available)
+  riverpod_analyzer_utils 0.5.1 (0.5.10 available)
+  riverpod_generator 2.4.0 (2.6.5 available)
+  shared_preferences_android 2.4.11 (2.4.12 available)
+  shelf_web_socket 2.0.1 (3.0.0 available)
+  source_gen 1.5.0 (4.0.0 available)
+  source_helper 1.3.5 (1.3.7 available)
+  sqflite_android 2.4.1 (2.4.2+2 available)
+  test_api 0.7.6 (0.7.7 available)
+  timezone 0.9.4 (0.10.1 available)
+  unicode 0.3.1 (1.1.8 available)
+  vector_graphics_codec 1.1.11+1 (1.1.13 available)
+  vector_graphics_compiler 1.1.11+1 (1.1.19 available)
+  vm_service 15.0.0 (15.0.2 available)
+  watcher 1.1.2 (1.1.3 available)
+  win32_registry 1.1.5 (2.1.0 available)
+  workmanager 0.5.2 (0.9.0+3 available)
+Got dependencies!
+68 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Launching lib/main.dart on iPad (wireless) in debug mode...
+Automatically signing iOS for device deployment using specified development team
+in Xcode project: L864D92J98
+Running Xcode build...                                                  
+Xcode build done.                                           24,6s
+You may be prompted to give access to control Xcode. Flutter uses Xcode to run
+your app. If access is not allowed, you can change this through your Settings >
+Privacy & Security > Automation.
+Installing and launching...                                        59,2s
+Syncing files to device iPad (wireless)...                         763ms
+
+Flutter run key commands.
+r Hot reload. 🔥🔥🔥
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+A Dart VM Service on iPad (wireless) is available at:
+http://127.0.0.1:51788/bNlky-wfxrU=/
+The Flutter DevTools debugger and profiler on iPad (wireless) is available at:
+http://127.0.0.1:9100?uri=http://127.0.0.1:51788/bNlky-wfxrU=/
+flutter: === APP ROUTER: Redirect called for path: /seasons ===
+flutter: === APP ROUTER: Current auth state: AuthState.authenticated ===
+flutter: === APP ROUTER: No redirect needed for /seasons ===
+flutter: 🎬 SeasonsProvider: Fetching seasons
+flutter: 🔍 StoryService: Attempting to fetch seasons
+flutter: 🎬 EpisodesProvider: Fetching episodes for season 1
+flutter: 🔍 StoryService: Attempting to fetch episodes for season 1
+flutter: 🔍 StoryService: Collection: episodes
+flutter: 🎬 SeasonsScreen: Building with season index: 0
+flutter: 🎬 SeasonsScreen: Seasons provider state: AsyncLoading<List<SeasonModel>>()
+flutter: 🎬 SeasonsScreen: Episodes provider state: AsyncLoading<List<EpisodeModel>>()
+flutter: 🔍 StoryService: Query successful, found 5 episodes
+flutter: 🔍 StoryService: Processing episode 1: S01E01
+flutter: 🔍 StoryService: Episode data keys: [id, description, rewards, updatedAt, seasonId, metadata, targetTime, targetDistance, title, unlockedAt, audioFiles, order, objective, completedAt, requirements, status, createdAt]
+flutter: 🔍 StoryService: audioFiles field type: List<dynamic>
+flutter: 🔍 StoryService: audioFiles field value: [https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_1_quick.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_2_mission_briefing.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_3_the_journey.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_4_first_contact.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_5_the_crisis.mp3]
+flutter: 🔍 StoryService: Successfully parsed episode S01E01
+flutter: 🔍 StoryService: Processing episode 2: S01E02
+flutter: 🔍 StoryService: Episode data keys: [sceneTimestamps, id, rewards, description, updatedAt, seasonId, metadata, targetTime, targetDistance, audioFile, title, audioFiles, order, objective, unlockedAt, completedAt, requirements, createdAt, status]
+flutter: 🔍 StoryService: audioFile field type: String
+flutter: 🔍 StoryService: audioFile field value: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E02%2FS01E02.mp3?alt=media&token=923b2927-1ca7-4388-b466-0e8c9d7b683c
+flutter: 🔍 StoryService: audioFiles field type: List<dynamic>
+flutter: 🔍 StoryService: audioFiles field value: [https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3]
+flutter: 🔍 StoryService: sceneTimestamps field type: List<dynamic>
+flutter: 🔍 StoryService: sceneTimestamps field value: [{startTime: 0:00, startSeconds: 0, endTime: 0:07, endSeconds: 7, sceneType: missionBriefing}, {startTime: 0:08, startSeconds: 8, endTime: 2:06, endSeconds: 126, sceneType: theJourney}, {startTime: 2:07, startSeconds: 127, endTime: 3:52, endSeconds: 232, sceneType: firstContact}, {startTime: 3:53, startSeconds: 233, endTime: 5:28, endSeconds: 328, sceneType: theCrisis}, {startTime: 5:29, startSeconds: 329, endTime: 6:40, endSeconds: 400, sceneType: extractionDebrief}]
+flutter: 🔍 StoryService: Successfully parsed episode S01E02
+flutter: 🔍 StoryService: Processing episode 3: S01E03
+flutter: 🔍 StoryService: Episode data keys: [sceneTimestamps, id, rewards, description, updatedAt, seasonId, metadata, targetTime, targetDistance, audioFile, title, audioFiles, order, objective, unlockedAt, completedAt, requirements, createdAt, status]
+flutter: 🔍 StoryService: audioFile field type: String
+flutter: 🔍 StoryService: audioFile field value: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03.mp3?alt=media&token=ac56d2b9-c95d-4020-8202-d964f912706c
+flutter: 🔍 StoryService: audioFiles field type: List<dynamic>
+flutter: 🔍 StoryService: audioFiles field value: [https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S03.mp3?alt=media&token=ece0051b-1f30-432d-95f0-b16df3e13039, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S04.mp3?alt=media&token=6cba2e17-0e84-44e9-9014-a64c173d593e, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S05.mp3?alt=media&token=ddcb8215-91e5-407f-b8bf-06f99ccb90bb]
+flutter: 🔍 StoryService: sceneTimestamps field type: List<dynamic>
+flutter: 🔍 StoryService: sceneTimestamps field value: [{startTime: 0:00, startSeconds: 0, endTime: 0:09, endSeconds: 9, sceneType: missionBriefing}, {startTime: 0:10, startSeconds: 10, endTime: 0:19, endSeconds: 19, sceneType: theJourney}, {startTime: 0:20, startSeconds: 20, endTime: 0:29, endSeconds: 29, sceneType: firstContact}, {startTime: 0:30, startSeconds: 30, endTime: 0:39, endSeconds: 39, sceneType: theCrisis}, {startTime: 0:40, startSeconds: 40, endTime: 0:49, endSeconds: 49, sceneType: extractionDebrief}]
+flutter: 🔍 StoryService: Successfully parsed episode S01E03
+flutter: 🔍 StoryService: Processing episode 4: S01E04
+flutter: 🔍 StoryService: Episode data keys: [id, description, rewards, updatedAt, seasonId, metadata, targetTime, targetDistance, audioFile, title, order, objective, unlockedAt, completedAt, requirements, status, createdAt]
+flutter: 🔍 StoryService: audioFile field type: List<dynamic>
+flutter: 🔍 StoryService: audioFile field value: [https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3]
+flutter: 🔍 StoryService: Successfully parsed episode S01E04
+flutter: 🔍 StoryService: Processing episode 5: S01E05
+flutter: 🔍 StoryService: Episode data keys: [id, description, rewards, updatedAt, seasonId, metadata, targetTime, targetDistance, audioFile, title, order, objective, unlockedAt, completedAt, requirements, status, createdAt]
+flutter: 🔍 StoryService: audioFile field type: List<dynamic>
+flutter: 🔍 StoryService: audioFile field value: [https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3]
+flutter: 🔍 StoryService: Successfully parsed episode S01E05
+flutter: 🔍 StoryService: Parsed 5 episodes successfully
+flutter: 🎬 EpisodesProvider: Retrieved 5 episodes for season 1
+flutter: 🎬 SeasonsScreen: Building with season index: 0
+flutter: 🎬 SeasonsScreen: Seasons provider state: AsyncLoading<List<SeasonModel>>()
+flutter: 🎬 SeasonsScreen: Episodes provider state: AsyncData<List<EpisodeModel>>(value: [EpisodeModel(id: S01E01, seasonId: fantasy_quest_season_1, title: First Contact, description: Your journey begins in the mystical realm of Eldoria. As you take your first steps, ancient forces awaken, sensing your presence., status: unlocked, order: 1, createdAt: 2025-08-10 21:52:52.427, updatedAt: 2025-08-10 21:52:52.427, objective: Complete your first 5km run and discover the secrets of Eldoria., targetDistance: 5.0, targetTime: 1800000, audioFiles: [https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_1_quick.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_2_mission_briefing.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_3_the_journey.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_4_first_contact.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_5_the_crisis.mp3], audioFile: null, sceneTimestamps: [], requirements: {totalRuns: 0, totalDistance: 0}, rewards: {unlockNextEpisode: true, achievement: First Steps, experience: 100}, unlockedAt: 2025-08-10 21:52:52.427, completedAt: 2025-09-06 10:04:18.405458, metadata: {terrain: paved, difficulty: beginner, weather: any}), EpisodeModel(id: S01E02, seasonId: fantasy_quest_season_1, title: The Second Mission, description: Your journey continues with new challenges and discoveries., status: unlocked, order: 2, createdAt: 2025-08-10 21:52:52.590, updatedAt: 2025-08-10 21:52:52.590, objective: Complete a 10km run and face new challenges., targetDistance: 10.0, targetTime: 3600000, audioFiles: [https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3], audioFile: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E02%2FS01E02.mp3?alt=media&token=923b2927-1ca7-4388-b466-0e8c9d7b683c, sceneTimestamps: [{startTime: 0:00, startSeconds: 0, endTime: 0:07, endSeconds: 7, sceneType: missionBriefing}, {startTime: 0:08, startSeconds: 8, endTime: 2:06, endSeconds: 126, sceneType: theJourney}, {startTime: 2:07, startSeconds: 127, endTime: 3:52, endSeconds: 232, sceneType: firstContact}, {startTime: 3:53, startSeconds: 233, endTime: 5:28, endSeconds: 328, sceneType: theCrisis}, {startTime: 5:29, startSeconds: 329, endTime: 6:40, endSeconds: 400, sceneType: extractionDebrief}], requirements: {totalRuns: 1, totalDistance: 5}, rewards: {unlockNextEpisode: true, achievement: Stepping Up, experience: 150}, unlockedAt: 2025-09-06 10:04:18.407038, completedAt: 2025-09-06 10:04:18.407038, metadata: {audioDurationSeconds: 400, singleFileMode: true, sceneCount: 5, difficulty: intermediate, audioDuration: 6:40, weather: any, terrain: mixed}), EpisodeModel(id: S01E03, seasonId: fantasy_quest_season_1, title: The Third Challenge, description: Your skills are tested as you face more complex challenges in the mystical realm., status: unlocked, order: 3, createdAt: 2025-08-10 21:52:52.736, updatedAt: 2025-08-10 21:52:52.736, objective: Complete a 15km run and overcome new obstacles., targetDistance: 15.0, targetTime: 5400000, audioFiles: [https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S03.mp3?alt=media&token=ece0051b-1f30-432d-95f0-b16df3e13039, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S04.mp3?alt=media&token=6cba2e17-0e84-44e9-9014-a64c173d593e, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S05.mp3?alt=media&token=ddcb8215-91e5-407f-b8bf-06f99ccb90bb], audioFile: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03.mp3?alt=media&token=ac56d2b9-c95d-4020-8202-d964f912706c, sceneTimestamps: [{startTime: 0:00, startSeconds: 0, endTime: 0:09, endSeconds: 9, sceneType: missionBriefing}, {startTime: 0:10, startSeconds: 10, endTime: 0:19, endSeconds: 19, sceneType: theJourney}, {startTime: 0:20, startSeconds: 20, endTime: 0:29, endSeconds: 29, sceneType: firstContact}, {startTime: 0:30, startSeconds: 30, endTime: 0:39, endSeconds: 39, sceneType: theCrisis}, {startTime: 0:40, startSeconds: 40, endTime: 0:49, endSeconds: 49, sceneType: extractionDebrief}], requirements: {totalRuns: 2, totalDistance: 15}, rewards: {unlockNextEpisode: true, achievement: Getting Stronger, experience: 200}, unlockedAt: 2025-09-06 10:04:18.408, completedAt: 2025-09-06 10:04:18.408, metadata: {terrain: mixed, difficulty: intermediate, weather: any}), EpisodeModel(id: S01E04, seasonId: fantasy_quest_season_1, title: The Fourth Trial, description: You are now a seasoned adventurer, ready for the most challenging trials yet., status: locked, order: 4, createdAt: 2025-08-10 21:52:52.940, updatedAt: 2025-08-10 21:52:52.940, objective: Complete a 20km run and prove your worth., targetDistance: 20.0, targetTime: 7200000, audioFiles: [], audioFile: https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, sceneTimestamps: [], requirements: {totalRuns: 3, totalDistance: 30}, rewards: {unlockNextEpisode: true, achievement: Seasoned Runner, experience: 250}, unlockedAt: 2025-09-06 10:04:18.408596, completedAt: 2025-09-06 10:04:18.408596, metadata: {terrain: challenging, difficulty: advanced, weather: any}), EpisodeModel(id: S01E05, seasonId: fantasy_quest_season_1, title: The Final Quest, description: The ultimate challenge awaits. Complete this final mission to become a true legend of Eldoria., status: locked, order: 5, createdAt: 2025-08-10 21:52:53.063, updatedAt: 2025-08-10 21:52:53.063, objective: Complete a 25km run and achieve legendary status., targetDistance: 25.0, targetTime: 9000000, audioFiles: [], audioFile: https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, sceneTimestamps: [], requirements: {totalRuns: 4, totalDistance: 50}, rewards: {unlockNextEpisode: false, achievement: Legend of Eldoria, experience: 500}, unlockedAt: 2025-09-06 10:04:18.409019, completedAt: 2025-09-06 10:04:18.409019, metadata: {terrain: extreme, difficulty: expert, weather: any})])
+flutter: 🔍 StoryService: Seasons query successful, found 1 seasons
+flutter: 🔍 StoryService: Parsed 1 seasons successfully
+flutter: 🎬 SeasonsProvider: Retrieved 1 seasons
+flutter: 🎬 SeasonsScreen: Building with season index: 0
+flutter: 🎬 SeasonsScreen: Seasons provider state: AsyncData<List<SeasonModel>>(value: [SeasonModel(id: fantasy_quest_season_1, title: Fantasy Quest - Season 1, description: Embark on an epic journey through mystical realms, where every run brings you closer to uncovering ancient secrets and mastering the art of the runner., episodeIds: [S01E01, S01E02, S01E03, S01E04, S01E05], totalEpisodes: 5, completedEpisodes: 0, createdAt: 2025-08-10 21:52:52.041, updatedAt: 2025-08-10 21:52:52.041, status: active, order: 1, imageUrl: assets/images/fantasy_quest_cover.jpg, metadata: {difficulty: beginner, estimatedDuration: 5-6 weeks, theme: medieval_adventure, genre: fantasy})])
+flutter: 🎬 SeasonsScreen: Episodes provider state: AsyncData<List<EpisodeModel>>(value: [EpisodeModel(id: S01E01, seasonId: fantasy_quest_season_1, title: First Contact, description: Your journey begins in the mystical realm of Eldoria. As you take your first steps, ancient forces awaken, sensing your presence., status: unlocked, order: 1, createdAt: 2025-08-10 21:52:52.427, updatedAt: 2025-08-10 21:52:52.427, objective: Complete your first 5km run and discover the secrets of Eldoria., targetDistance: 5.0, targetTime: 1800000, audioFiles: [https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_1_quick.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_2_mission_briefing.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_3_the_journey.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_4_first_contact.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E01/scene_5_the_crisis.mp3], audioFile: null, sceneTimestamps: [], requirements: {totalRuns: 0, totalDistance: 0}, rewards: {unlockNextEpisode: true, achievement: First Steps, experience: 100}, unlockedAt: 2025-08-10 21:52:52.427, completedAt: 2025-09-06 10:04:18.405458, metadata: {terrain: paved, difficulty: beginner, weather: any}), EpisodeModel(id: S01E02, seasonId: fantasy_quest_season_1, title: The Second Mission, description: Your journey continues with new challenges and discoveries., status: unlocked, order: 2, createdAt: 2025-08-10 21:52:52.590, updatedAt: 2025-08-10 21:52:52.590, objective: Complete a 10km run and face new challenges., targetDistance: 10.0, targetTime: 3600000, audioFiles: [https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3], audioFile: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E02%2FS01E02.mp3?alt=media&token=923b2927-1ca7-4388-b466-0e8c9d7b683c, sceneTimestamps: [{startTime: 0:00, startSeconds: 0, endTime: 0:07, endSeconds: 7, sceneType: missionBriefing}, {startTime: 0:08, startSeconds: 8, endTime: 2:06, endSeconds: 126, sceneType: theJourney}, {startTime: 2:07, startSeconds: 127, endTime: 3:52, endSeconds: 232, sceneType: firstContact}, {startTime: 3:53, startSeconds: 233, endTime: 5:28, endSeconds: 328, sceneType: theCrisis}, {startTime: 5:29, startSeconds: 329, endTime: 6:40, endSeconds: 400, sceneType: extractionDebrief}], requirements: {totalRuns: 1, totalDistance: 5}, rewards: {unlockNextEpisode: true, achievement: Stepping Up, experience: 150}, unlockedAt: 2025-09-06 10:04:18.407038, completedAt: 2025-09-06 10:04:18.407038, metadata: {audioDurationSeconds: 400, singleFileMode: true, sceneCount: 5, difficulty: intermediate, audioDuration: 6:40, weather: any, terrain: mixed}), EpisodeModel(id: S01E03, seasonId: fantasy_quest_season_1, title: The Third Challenge, description: Your skills are tested as you face more complex challenges in the mystical realm., status: unlocked, order: 3, createdAt: 2025-08-10 21:52:52.736, updatedAt: 2025-08-10 21:52:52.736, objective: Complete a 15km run and overcome new obstacles., targetDistance: 15.0, targetTime: 5400000, audioFiles: [https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S03.mp3?alt=media&token=ece0051b-1f30-432d-95f0-b16df3e13039, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S04.mp3?alt=media&token=6cba2e17-0e84-44e9-9014-a64c173d593e, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S05.mp3?alt=media&token=ddcb8215-91e5-407f-b8bf-06f99ccb90bb], audioFile: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03.mp3?alt=media&token=ac56d2b9-c95d-4020-8202-d964f912706c, sceneTimestamps: [{startTime: 0:00, startSeconds: 0, endTime: 0:09, endSeconds: 9, sceneType: missionBriefing}, {startTime: 0:10, startSeconds: 10, endTime: 0:19, endSeconds: 19, sceneType: theJourney}, {startTime: 0:20, startSeconds: 20, endTime: 0:29, endSeconds: 29, sceneType: firstContact}, {startTime: 0:30, startSeconds: 30, endTime: 0:39, endSeconds: 39, sceneType: theCrisis}, {startTime: 0:40, startSeconds: 40, endTime: 0:49, endSeconds: 49, sceneType: extractionDebrief}], requirements: {totalRuns: 2, totalDistance: 15}, rewards: {unlockNextEpisode: true, achievement: Getting Stronger, experience: 200}, unlockedAt: 2025-09-06 10:04:18.408, completedAt: 2025-09-06 10:04:18.408, metadata: {terrain: mixed, difficulty: intermediate, weather: any}), EpisodeModel(id: S01E04, seasonId: fantasy_quest_season_1, title: The Fourth Trial, description: You are now a seasoned adventurer, ready for the most challenging trials yet., status: locked, order: 4, createdAt: 2025-08-10 21:52:52.940, updatedAt: 2025-08-10 21:52:52.940, objective: Complete a 20km run and prove your worth., targetDistance: 20.0, targetTime: 7200000, audioFiles: [], audioFile: https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, sceneTimestamps: [], requirements: {totalRuns: 3, totalDistance: 30}, rewards: {unlockNextEpisode: true, achievement: Seasoned Runner, experience: 250}, unlockedAt: 2025-09-06 10:04:18.408596, completedAt: 2025-09-06 10:04:18.408596, metadata: {terrain: challenging, difficulty: advanced, weather: any}), EpisodeModel(id: S01E05, seasonId: fantasy_quest_season_1, title: The Final Quest, description: The ultimate challenge awaits. Complete this final mission to become a true legend of Eldoria., status: locked, order: 5, createdAt: 2025-08-10 21:52:53.063, updatedAt: 2025-08-10 21:52:53.063, objective: Complete a 25km run and achieve legendary status., targetDistance: 25.0, targetTime: 9000000, audioFiles: [], audioFile: https://runners-saga-app.firebasestorage.app/audio/episodes/S01E02/scene_5_extraction_debrief.mp3, sceneTimestamps: [], requirements: {totalRuns: 4, totalDistance: 50}, rewards: {unlockNextEpisode: false, achievement: Legend of Eldoria, experience: 500}, unlockedAt: 2025-09-06 10:04:18.409019, completedAt: 2025-09-06 10:04:18.409019, metadata: {terrain: extreme, difficulty: expert, weather: any})])
+flutter: === APP ROUTER: Redirect called for path: /episode/S01E03 ===
+flutter: === APP ROUTER: Current auth state: AuthState.authenticated ===
+flutter: === APP ROUTER: No redirect needed for /episode/S01E03 ===
+flutter: 🔍 _episodeDir created: /var/mobile/Containers/Data/Application/6D9E227D-4C34-4C25-92CB-A45560785257/Documents/episodes/S01E03
+flutter: ✅ Episode S01E03 is downloaded with 1 audio files
+flutter: 🔍 Found files: [S01E03.mp3]
+flutter: === APP ROUTER: Redirect called for path: /run ===
+flutter: === APP ROUTER: Current auth state: AuthState.authenticated ===
+flutter: === APP ROUTER: No redirect needed for /run ===
+Another exception was thrown: A RenderFlex overflowed by 16 pixels on the
+bottom.
+Another exception was thrown: A RenderFlex overflowed by 16 pixels on the
+bottom.
+Another exception was thrown: A RenderFlex overflowed by 10.0 pixels on the
+bottom.
+Another exception was thrown: A RenderFlex overflowed by 12 pixels on the
+bottom.
+flutter: 🔗 RunSessionController: onTimeUpdated callback set on manager: connected
+flutter: 🎵 Episode uses multiple audio files mode (audioFiles)
+flutter: 🎵 Audio files count: 5
+flutter: 🎵 Audio files: [https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S03.mp3?alt=media&token=ece0051b-1f30-432d-95f0-b16df3e13039, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S04.mp3?alt=media&token=6cba2e17-0e84-44e9-9014-a64c173d593e, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S05.mp3?alt=media&token=ddcb8215-91e5-407f-b8bf-06f99ccb90bb]
+flutter: ❌ Failed to initialize background audio: PlatformException(-50, The operation couldn’t be completed. (OSStatus error -50.), null, null)
+flutter: 🎵 Audio session state: false
+flutter: 🎵 Recovered audio session with default configuration
+flutter: 🔔 Notification system initialized
+flutter: 🎵 Initializing multiple audio files: 5 files
+flutter: 🎵 Audio files: [https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S03.mp3?alt=media&token=ece0051b-1f30-432d-95f0-b16df3e13039, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S04.mp3?alt=media&token=6cba2e17-0e84-44e9-9014-a64c173d593e, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S05.mp3?alt=media&token=ddcb8215-91e5-407f-b8bf-06f99ccb90bb]
+flutter: 🔍 _episodeDir created: /var/mobile/Containers/Data/Application/6D9E227D-4C34-4C25-92CB-A45560785257/Documents/episodes/S01E03
+flutter: 🔍 getLocalEpisodeFiles scanning directory: /var/mobile/Containers/Data/Application/6D9E227D-4C34-4C25-92CB-A45560785257/Documents/episodes/S01E03
+flutter: 🔍 Found local files: [/var/mobile/Containers/Data/Application/6D9E227D-4C34-4C25-92CB-A45560785257/Documents/episodes/S01E03/S01E03.mp3]
+flutter: 🎵 Found 1 local audio files
+flutter:   File 0: /var/mobile/Containers/Data/Application/6D9E227D-4C34-4C25-92CB-A45560785257/Documents/episodes/S01E03/S01E03.mp3
+flutter: ✅ Multiple audio files initialized successfully
+flutter: 🎵 Episode uses multiple audio files mode (audioFiles) - enabling automatically
+flutter: 📋 Episode audio files: [https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S03.mp3?alt=media&token=ece0051b-1f30-432d-95f0-b16df3e13039, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S04.mp3?alt=media&token=6cba2e17-0e84-44e9-9014-a64c173d593e, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S05.mp3?alt=media&token=ddcb8215-91e5-407f-b8bf-06f99ccb90bb]
+flutter: 📊 Audio files count: 5
+flutter: 🎵 Loading audio files from database: [https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S03.mp3?alt=media&token=ece0051b-1f30-432d-95f0-b16df3e13039, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S04.mp3?alt=media&token=6cba2e17-0e84-44e9-9014-a64c173d593e, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S05.mp3?alt=media&token=ddcb8215-91e5-407f-b8bf-06f99ccb90bb]
+flutter: 📊 Audio files count: 5
+flutter: 🎵 Multiple audio files mode - updated audio files list
+flutter: 🎵 Audio files: [https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S03.mp3?alt=media&token=ece0051b-1f30-432d-95f0-b16df3e13039, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S04.mp3?alt=media&token=6cba2e17-0e84-44e9-9014-a64c173d593e, https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S05.mp3?alt=media&token=ddcb8215-91e5-407f-b8bf-06f99ccb90bb]
+flutter: 🚀 Starting progress monitor (without blocking timers)...
+flutter: 🚀 ProgressMonitorService: Starting progress monitor...
+flutter: Progress monitor start time set to: 2025-09-06 10:04:20.808972
+flutter: Starting progress timer
+flutter: _isMonitoring: true
+flutter: _startTime: 2025-09-06 10:04:20.808972
+flutter: 🎵 Audio player state: ProcessingState.idle
+flutter: ❌ Audio player may have encountered an error
+flutter: 🎵 Audio position: 0s
+flutter: 📍 ProgressMonitorService: Starting GPS location tracking...
+flutter: ✅ Progress monitor started (without blocking timers)
+flutter: 🎬 Starting scene trigger system...
+flutter: 🚀 Scene trigger service started
+flutter: ⚠️ Cannot start audio: singleFileMode=false, audioLoaded=true
+flutter: ✅ Scene trigger system started
+flutter: 🎯 _getSessionState: _isPaused=false, _isSessionActive=true, _sceneTrigger.isScenePlaying=false
+flutter: 🎯 _getSessionState: _globallyStopped=false, _timersStopped=false
+flutter: 🎯 Returning running state
+flutter: 🔄 RunSessionManager: Notifying session state change to: running
+flutter: 🎯 _getSessionState: _isPaused=false, _isSessionActive=true, _sceneTrigger.isScenePlaying=false
+flutter: 🎯 _getSessionState: _globallyStopped=false, _timersStopped=false
+flutter: 🎯 Returning running state
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 0 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+flutter: │ ⚠️ flutter_map
+flutter: │ ⚠️ Avoid using subdomains with OSM's tile server. Support may be become slow or be removed in future.
+flutter: │ ⚠️ See https://github.com/openstreetmap/operations/issues/737 for more info.
+flutter: └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+flutter: 📍 Position added to route: (40.68213844607834, 14.763079765214888) - Total points: 1
+flutter: 📍 Route now contains 1 GPS points
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 1 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: 📍 Position added to route: (40.68213844607834, 14.763079765214888) - Total points: 2
+flutter: 📍 Route now contains 2 GPS points
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 2 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 2 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 2 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: 🎬 Scene triggered: Scene 1
+flutter: 📊 Played scenes: {SceneType.scene1}
+flutter: 🎬 Scene started: Scene 1
+flutter: 🎬 About to call onSceneStarted callback...
+flutter: 🎬 onSceneStarted callback completed
+flutter: 🎵 Checking if episode S01E03 is downloaded...
+flutter: 🔧 [DEBUG] _playSceneAudio called for scene: Scene 1
+flutter: 🔧 [DEBUG] _isSingleFileMode: false
+flutter: 🔧 [DEBUG] Calling _playSceneFromMultipleFiles for scene: Scene 1
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 3
+flutter: 📍 Route now contains 3 GPS points
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 3 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.4%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 3 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.4%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 3 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.4%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 4
+flutter: 📍 Route now contains 4 GPS points
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 4 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.4%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 4 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.4%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 4 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.4%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: 📍 ProgressMonitorService: Initial position captured: (40.68213844607834, 14.763079765214888)
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 5 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.4%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 6
+flutter: 📍 Route now contains 6 GPS points
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: Progress calc: elapsedTime=0s, targetTime=300s, timeProgress=0.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=0s, progress=0.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=0s
+flutter: 🔍 _episodeDir created: /var/mobile/Containers/Data/Application/6D9E227D-4C34-4C25-92CB-A45560785257/Documents/episodes/S01E03
+flutter: ✅ Episode S01E03 is downloaded with 1 audio files
+flutter: 🔍 Found files: [S01E03.mp3]
+flutter: 🎵 Multiple audio files mode - playback handled by SceneTriggerService
+flutter: 🎵 Multiple files mode: scene SceneType.scene1 maps to index 0
+flutter: 🎵 Audio file URL: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca
+flutter: 🎵 Audio player state: ProcessingState.loading
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+flutter: │ ⚠️ flutter_map
+flutter: │ ⚠️ Avoid using subdomains with OSM's tile server. Support may be become slow or be removed in future.
+flutter: │ ⚠️ See https://github.com/openstreetmap/operations/issues/737 for more info.
+flutter: └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:21.810823, elapsedTime=0:00:01.001752
+flutter: ⏰ Time update received: 1s
+flutter: Progress calc: elapsedTime=1s, targetTime=300s, timeProgress=0.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=1s, progress=0.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=1s
+flutter: Progress calc: elapsedTime=1s, targetTime=300s, timeProgress=0.3%
+flutter: 📊 Progress update received: 0.7%
+flutter: Progress calc: elapsedTime=1s, targetTime=300s, timeProgress=0.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=1s, progress=0.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=1s
+flutter: Progress calc: elapsedTime=1s, targetTime=300s, timeProgress=0.3%
+flutter: Simple timer tick: elapsedTime=1s, progress=0.7%
+flutter: Error loading artUri: HttpException: Invalid statusCode: 404, uri = https://example.com/artwork.jpg
+#0      WebHelper._manageResponse (package:flutter_cache_manager/src/web/web_helper.dart:123:7)
+<asynchronous suspension>
+#1      WebHelper._updateFile (package:flutter_cache_manager/src/web/web_helper.dart:97:5)
+<asynchronous suspension>
+#2      WebHelper._downloadOrAddToQueue (package:flutter_cache_manager/src/web/web_helper.dart:64:7)
+<asynchronous suspension>
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:22.811387, elapsedTime=0:00:02.002402
+flutter: ⏰ Time update received: 2s
+flutter: Progress calc: elapsedTime=2s, targetTime=300s, timeProgress=0.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=2s, progress=0.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=2s
+flutter: Progress calc: elapsedTime=2s, targetTime=300s, timeProgress=0.7%
+flutter: 📊 Progress update received: 0.7%
+flutter: Progress calc: elapsedTime=2s, targetTime=300s, timeProgress=0.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=2s, progress=0.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=2s
+flutter: Progress calc: elapsedTime=2s, targetTime=300s, timeProgress=0.7%
+flutter: Simple timer tick: elapsedTime=2s, progress=0.7%
+flutter: 🎵 Audio player state: ProcessingState.ready
+flutter: 🎵 Audio player state: ProcessingState.ready
+flutter: 🎵 Audio player state: ProcessingState.buffering
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:23.856957, elapsedTime=0:00:03.047973
+flutter: ⏰ Time update received: 3s
+flutter: Progress calc: elapsedTime=3s, targetTime=300s, timeProgress=1.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=3s, progress=1.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=3s
+flutter: Progress calc: elapsedTime=3s, targetTime=300s, timeProgress=1.0%
+flutter: 📊 Progress update received: 1.0%
+flutter: Progress calc: elapsedTime=3s, targetTime=300s, timeProgress=1.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=3s, progress=1.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=3s
+flutter: Progress calc: elapsedTime=3s, targetTime=300s, timeProgress=1.0%
+flutter: Simple timer tick: elapsedTime=3s, progress=1.0%
+flutter: 🎵 Audio player state: ProcessingState.ready
+flutter: Error loading artUri: HttpException: Invalid statusCode: 404, uri = https://example.com/artwork.jpg
+#0      WebHelper._manageResponse (package:flutter_cache_manager/src/web/web_helper.dart:123:7)
+<asynchronous suspension>
+#1      WebHelper._updateFile (package:flutter_cache_manager/src/web/web_helper.dart:97:5)
+<asynchronous suspension>
+#2      WebHelper._downloadOrAddToQueue (package:flutter_cache_manager/src/web/web_helper.dart:64:7)
+<asynchronous suspension>
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:24.811298, elapsedTime=0:00:04.002320
+flutter: ⏰ Time update received: 4s
+flutter: Progress calc: elapsedTime=4s, targetTime=300s, timeProgress=1.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=4s, progress=1.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=4s
+flutter: Progress calc: elapsedTime=4s, targetTime=300s, timeProgress=1.3%
+flutter: 📊 Progress update received: 1.3%
+flutter: Progress calc: elapsedTime=4s, targetTime=300s, timeProgress=1.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=4s, progress=1.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=4s
+flutter: Progress calc: elapsedTime=4s, targetTime=300s, timeProgress=1.3%
+flutter: Simple timer tick: elapsedTime=4s, progress=1.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:25.814280, elapsedTime=0:00:05.005301
+flutter: ⏰ Time update received: 5s
+flutter: Progress calc: elapsedTime=5s, targetTime=300s, timeProgress=1.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=5s, progress=1.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=5s
+flutter: Progress calc: elapsedTime=5s, targetTime=300s, timeProgress=1.7%
+flutter: 📊 Progress update received: 1.7%
+flutter: Progress calc: elapsedTime=5s, targetTime=300s, timeProgress=1.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=5s, progress=1.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=5s
+flutter: Progress calc: elapsedTime=5s, targetTime=300s, timeProgress=1.7%
+flutter: Simple timer tick: elapsedTime=5s, progress=1.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:26.813072, elapsedTime=0:00:06.004093
+flutter: ⏰ Time update received: 6s
+flutter: Progress calc: elapsedTime=6s, targetTime=300s, timeProgress=2.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=6s, progress=2.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=6s
+flutter: Progress calc: elapsedTime=6s, targetTime=300s, timeProgress=2.0%
+flutter: 📊 Progress update received: 2.0%
+flutter: Progress calc: elapsedTime=6s, targetTime=300s, timeProgress=2.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 6 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=6s, progress=2.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=6s
+flutter: Progress calc: elapsedTime=6s, targetTime=300s, timeProgress=2.0%
+flutter: Simple timer tick: elapsedTime=6s, progress=2.0%
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 7
+flutter: 📍 Route now contains 7 GPS points
+flutter: Progress calc: elapsedTime=6s, targetTime=300s, timeProgress=2.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=6s, progress=2.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=6s
+flutter: Progress calc: elapsedTime=6s, targetTime=300s, timeProgress=2.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=6s, progress=2.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=6s
+flutter: Progress calc: elapsedTime=6s, targetTime=300s, timeProgress=2.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=6s, progress=2.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=6s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:27.813025, elapsedTime=0:00:07.004049
+flutter: ⏰ Time update received: 7s
+flutter: Progress calc: elapsedTime=7s, targetTime=300s, timeProgress=2.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=7s, progress=2.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=7s
+flutter: Progress calc: elapsedTime=7s, targetTime=300s, timeProgress=2.3%
+flutter: 📊 Progress update received: 2.3%
+flutter: Progress calc: elapsedTime=7s, targetTime=300s, timeProgress=2.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=7s, progress=2.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=7s
+flutter: Progress calc: elapsedTime=7s, targetTime=300s, timeProgress=2.3%
+flutter: Simple timer tick: elapsedTime=7s, progress=2.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:28.812765, elapsedTime=0:00:08.003784
+flutter: ⏰ Time update received: 8s
+flutter: Progress calc: elapsedTime=8s, targetTime=300s, timeProgress=2.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=8s, progress=2.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=8s
+flutter: Progress calc: elapsedTime=8s, targetTime=300s, timeProgress=2.7%
+flutter: 📊 Progress update received: 2.7%
+flutter: Progress calc: elapsedTime=8s, targetTime=300s, timeProgress=2.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=8s, progress=2.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=8s
+flutter: Progress calc: elapsedTime=8s, targetTime=300s, timeProgress=2.7%
+flutter: Simple timer tick: elapsedTime=8s, progress=2.7%
+flutter: 🎵 Audio position: 5s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:29.811658, elapsedTime=0:00:09.002679
+flutter: ⏰ Time update received: 9s
+flutter: Progress calc: elapsedTime=9s, targetTime=300s, timeProgress=3.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=9s, progress=3.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=9s
+flutter: Progress calc: elapsedTime=9s, targetTime=300s, timeProgress=3.0%
+flutter: 📊 Progress update received: 3.0%
+flutter: Progress calc: elapsedTime=9s, targetTime=300s, timeProgress=3.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=9s, progress=3.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=9s
+flutter: Progress calc: elapsedTime=9s, targetTime=300s, timeProgress=3.0%
+flutter: Simple timer tick: elapsedTime=9s, progress=3.0%
+flutter: 🎵 Audio player state: ProcessingState.completed
+flutter: 🎵 Audio file playback completed
+flutter: 🎵 Playing audio for scene: Scene 1
+flutter: 🎵 Audio file URL: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S01.mp3?alt=media&token=cd0f44c3-d1da-4377-8342-3185992b25ca
+flutter: 🎵 MediaItem configured for background audio: The Third Challenge - Scene 1
+flutter: ✅ Scene audio completed: Scene 1
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:30.809858, elapsedTime=0:00:10.000883
+flutter: ⏰ Time update received: 10s
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=10s, progress=3.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=10s
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 📊 Progress update received: 3.3%
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 7 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=10s, progress=3.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=10s
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: Simple timer tick: elapsedTime=10s, progress=3.3%
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 8
+flutter: 📍 Route now contains 8 GPS points
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 8 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=10s, progress=3.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=10s
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 8 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=10s, progress=3.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=10s
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 8 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=10s, progress=3.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=10s
+flutter: 📍 GPS Backup Timer: Adding position (40.68207527066246, 14.762878751016617)
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 9
+flutter: 📍 Route now contains 9 GPS points
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=10s, progress=3.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=10s
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=10s, progress=3.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=10s
+flutter: Progress calc: elapsedTime=10s, targetTime=300s, timeProgress=3.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=10s, progress=3.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=10s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:31.812820, elapsedTime=0:00:11.003832
+flutter: ⏰ Time update received: 11s
+flutter: Progress calc: elapsedTime=11s, targetTime=300s, timeProgress=3.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=11s, progress=3.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=11s
+flutter: Progress calc: elapsedTime=11s, targetTime=300s, timeProgress=3.7%
+flutter: 📊 Progress update received: 3.7%
+flutter: Progress calc: elapsedTime=11s, targetTime=300s, timeProgress=3.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=11s, progress=3.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=11s
+flutter: Progress calc: elapsedTime=11s, targetTime=300s, timeProgress=3.7%
+flutter: Simple timer tick: elapsedTime=11s, progress=3.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:32.811590, elapsedTime=0:00:12.002597
+flutter: ⏰ Time update received: 12s
+flutter: Progress calc: elapsedTime=12s, targetTime=300s, timeProgress=4.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=12s, progress=4.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=12s
+flutter: Progress calc: elapsedTime=12s, targetTime=300s, timeProgress=4.0%
+flutter: 📊 Progress update received: 4.0%
+flutter: Progress calc: elapsedTime=12s, targetTime=300s, timeProgress=4.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=12s, progress=4.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=12s
+flutter: Progress calc: elapsedTime=12s, targetTime=300s, timeProgress=4.0%
+flutter: Simple timer tick: elapsedTime=12s, progress=4.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:33.811676, elapsedTime=0:00:13.002684
+flutter: ⏰ Time update received: 13s
+flutter: Progress calc: elapsedTime=13s, targetTime=300s, timeProgress=4.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=13s, progress=4.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=13s
+flutter: Progress calc: elapsedTime=13s, targetTime=300s, timeProgress=4.3%
+flutter: 📊 Progress update received: 4.3%
+flutter: Progress calc: elapsedTime=13s, targetTime=300s, timeProgress=4.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=13s, progress=4.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=13s
+flutter: Progress calc: elapsedTime=13s, targetTime=300s, timeProgress=4.3%
+flutter: Simple timer tick: elapsedTime=13s, progress=4.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:34.811106, elapsedTime=0:00:14.002116
+flutter: ⏰ Time update received: 14s
+flutter: Progress calc: elapsedTime=14s, targetTime=300s, timeProgress=4.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=14s, progress=4.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=14s
+flutter: Progress calc: elapsedTime=14s, targetTime=300s, timeProgress=4.7%
+flutter: 📊 Progress update received: 4.7%
+flutter: Progress calc: elapsedTime=14s, targetTime=300s, timeProgress=4.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=14s, progress=4.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=14s
+flutter: Progress calc: elapsedTime=14s, targetTime=300s, timeProgress=4.7%
+flutter: Simple timer tick: elapsedTime=14s, progress=4.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:35.811895, elapsedTime=0:00:15.002904
+flutter: ⏰ Time update received: 15s
+flutter: Progress calc: elapsedTime=15s, targetTime=300s, timeProgress=5.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=15s, progress=5.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=15s
+flutter: Progress calc: elapsedTime=15s, targetTime=300s, timeProgress=5.0%
+flutter: 📊 Progress update received: 5.0%
+flutter: Progress calc: elapsedTime=15s, targetTime=300s, timeProgress=5.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=15s, progress=5.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=15s
+flutter: Progress calc: elapsedTime=15s, targetTime=300s, timeProgress=5.0%
+flutter: Simple timer tick: elapsedTime=15s, progress=5.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:36.812613, elapsedTime=0:00:16.003622
+flutter: ⏰ Time update received: 16s
+flutter: Progress calc: elapsedTime=16s, targetTime=300s, timeProgress=5.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=16s, progress=5.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=16s
+flutter: Progress calc: elapsedTime=16s, targetTime=300s, timeProgress=5.3%
+flutter: 📊 Progress update received: 5.3%
+flutter: Progress calc: elapsedTime=16s, targetTime=300s, timeProgress=5.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=16s, progress=5.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=16s
+flutter: Progress calc: elapsedTime=16s, targetTime=300s, timeProgress=5.3%
+flutter: Simple timer tick: elapsedTime=16s, progress=5.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:37.812437, elapsedTime=0:00:17.003449
+flutter: ⏰ Time update received: 17s
+flutter: Progress calc: elapsedTime=17s, targetTime=300s, timeProgress=5.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=17s, progress=5.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=17s
+flutter: Progress calc: elapsedTime=17s, targetTime=300s, timeProgress=5.7%
+flutter: 📊 Progress update received: 5.7%
+flutter: Progress calc: elapsedTime=17s, targetTime=300s, timeProgress=5.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=17s, progress=5.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=17s
+flutter: Progress calc: elapsedTime=17s, targetTime=300s, timeProgress=5.7%
+flutter: Simple timer tick: elapsedTime=17s, progress=5.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:38.811549, elapsedTime=0:00:18.002561
+flutter: ⏰ Time update received: 18s
+flutter: Progress calc: elapsedTime=18s, targetTime=300s, timeProgress=6.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=18s, progress=6.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=18s
+flutter: Progress calc: elapsedTime=18s, targetTime=300s, timeProgress=6.0%
+flutter: 📊 Progress update received: 6.0%
+flutter: Progress calc: elapsedTime=18s, targetTime=300s, timeProgress=6.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=18s, progress=6.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=18s
+flutter: Progress calc: elapsedTime=18s, targetTime=300s, timeProgress=6.0%
+flutter: Simple timer tick: elapsedTime=18s, progress=6.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:39.811634, elapsedTime=0:00:19.002644
+flutter: ⏰ Time update received: 19s
+flutter: Progress calc: elapsedTime=19s, targetTime=300s, timeProgress=6.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=19s, progress=6.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=19s
+flutter: Progress calc: elapsedTime=19s, targetTime=300s, timeProgress=6.3%
+flutter: 📊 Progress update received: 6.3%
+flutter: Progress calc: elapsedTime=19s, targetTime=300s, timeProgress=6.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=19s, progress=6.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=19s
+flutter: Progress calc: elapsedTime=19s, targetTime=300s, timeProgress=6.3%
+flutter: Simple timer tick: elapsedTime=19s, progress=6.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:40.810980, elapsedTime=0:00:20.001994
+flutter: ⏰ Time update received: 20s
+flutter: Progress calc: elapsedTime=20s, targetTime=300s, timeProgress=6.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=20s, progress=6.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=20s
+flutter: Progress calc: elapsedTime=20s, targetTime=300s, timeProgress=6.7%
+flutter: 📊 Progress update received: 6.7%
+flutter: Progress calc: elapsedTime=20s, targetTime=300s, timeProgress=6.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=20s, progress=6.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=20s
+flutter: Progress calc: elapsedTime=20s, targetTime=300s, timeProgress=6.7%
+flutter: Simple timer tick: elapsedTime=20s, progress=6.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:41.811174, elapsedTime=0:00:21.002184
+flutter: ⏰ Time update received: 21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 📊 Progress update received: 7.0%
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 9 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: Simple timer tick: elapsedTime=21s, progress=7.0%
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 10
+flutter: 📍 Route now contains 10 GPS points
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 10 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 10 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 10 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 11
+flutter: 📍 Route now contains 11 GPS points
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 11 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 11 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 11 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: 📍 GPS Backup Timer: Adding position (40.68207527066246, 14.762878751016617)
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 12
+flutter: 📍 Route now contains 12 GPS points
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: Progress calc: elapsedTime=21s, targetTime=300s, timeProgress=7.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=21s, progress=7.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=21s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:42.811023, elapsedTime=0:00:22.002036
+flutter: ⏰ Time update received: 22s
+flutter: Progress calc: elapsedTime=22s, targetTime=300s, timeProgress=7.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=22s, progress=7.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=22s
+flutter: Progress calc: elapsedTime=22s, targetTime=300s, timeProgress=7.3%
+flutter: 📊 Progress update received: 7.3%
+flutter: Progress calc: elapsedTime=22s, targetTime=300s, timeProgress=7.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=22s, progress=7.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=22s
+flutter: Progress calc: elapsedTime=22s, targetTime=300s, timeProgress=7.3%
+flutter: Simple timer tick: elapsedTime=22s, progress=7.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:43.811496, elapsedTime=0:00:23.002511
+flutter: ⏰ Time update received: 23s
+flutter: Progress calc: elapsedTime=23s, targetTime=300s, timeProgress=7.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=23s, progress=7.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=23s
+flutter: Progress calc: elapsedTime=23s, targetTime=300s, timeProgress=7.7%
+flutter: 📊 Progress update received: 7.7%
+flutter: Progress calc: elapsedTime=23s, targetTime=300s, timeProgress=7.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=23s, progress=7.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=23s
+flutter: Progress calc: elapsedTime=23s, targetTime=300s, timeProgress=7.7%
+flutter: Simple timer tick: elapsedTime=23s, progress=7.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:44.808778, elapsedTime=0:00:23.999787
+flutter: ⏰ Time update received: 23s
+flutter: Progress calc: elapsedTime=23s, targetTime=300s, timeProgress=7.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=23s, progress=7.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=23s
+flutter: Progress calc: elapsedTime=23s, targetTime=300s, timeProgress=7.7%
+flutter: 📊 Progress update received: 7.7%
+flutter: Progress calc: elapsedTime=23s, targetTime=300s, timeProgress=7.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=23s, progress=7.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=23s
+flutter: Progress calc: elapsedTime=23s, targetTime=300s, timeProgress=7.7%
+flutter: Simple timer tick: elapsedTime=23s, progress=7.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:45.808912, elapsedTime=0:00:24.999924
+flutter: ⏰ Time update received: 24s
+flutter: Progress calc: elapsedTime=24s, targetTime=300s, timeProgress=8.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=24s, progress=8.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=24s
+flutter: Progress calc: elapsedTime=24s, targetTime=300s, timeProgress=8.0%
+flutter: 📊 Progress update received: 8.0%
+flutter: Progress calc: elapsedTime=24s, targetTime=300s, timeProgress=8.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=24s, progress=8.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=24s
+flutter: Progress calc: elapsedTime=24s, targetTime=300s, timeProgress=8.0%
+flutter: Simple timer tick: elapsedTime=24s, progress=8.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:46.806372, elapsedTime=0:00:25.997388
+flutter: ⏰ Time update received: 25s
+flutter: Progress calc: elapsedTime=25s, targetTime=300s, timeProgress=8.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=25s, progress=8.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=25s
+flutter: Progress calc: elapsedTime=25s, targetTime=300s, timeProgress=8.3%
+flutter: 📊 Progress update received: 8.3%
+flutter: Progress calc: elapsedTime=25s, targetTime=300s, timeProgress=8.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=25s, progress=8.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=25s
+flutter: Progress calc: elapsedTime=25s, targetTime=300s, timeProgress=8.3%
+flutter: Simple timer tick: elapsedTime=25s, progress=8.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:47.806069, elapsedTime=0:00:26.997079
+flutter: ⏰ Time update received: 26s
+flutter: Progress calc: elapsedTime=26s, targetTime=300s, timeProgress=8.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=26s, progress=8.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=26s
+flutter: Progress calc: elapsedTime=26s, targetTime=300s, timeProgress=8.7%
+flutter: 📊 Progress update received: 8.7%
+flutter: Progress calc: elapsedTime=26s, targetTime=300s, timeProgress=8.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=26s, progress=8.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=26s
+flutter: Progress calc: elapsedTime=26s, targetTime=300s, timeProgress=8.7%
+flutter: Simple timer tick: elapsedTime=26s, progress=8.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:48.804509, elapsedTime=0:00:27.995517
+flutter: ⏰ Time update received: 27s
+flutter: Progress calc: elapsedTime=27s, targetTime=300s, timeProgress=9.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=27s, progress=9.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=27s
+flutter: Progress calc: elapsedTime=27s, targetTime=300s, timeProgress=9.0%
+flutter: 📊 Progress update received: 9.0%
+flutter: Progress calc: elapsedTime=27s, targetTime=300s, timeProgress=9.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=27s, progress=9.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=27s
+flutter: Progress calc: elapsedTime=27s, targetTime=300s, timeProgress=9.0%
+flutter: Simple timer tick: elapsedTime=27s, progress=9.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:49.804330, elapsedTime=0:00:28.995345
+flutter: ⏰ Time update received: 28s
+flutter: Progress calc: elapsedTime=28s, targetTime=300s, timeProgress=9.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=28s, progress=9.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=28s
+flutter: Progress calc: elapsedTime=28s, targetTime=300s, timeProgress=9.3%
+flutter: 📊 Progress update received: 9.3%
+flutter: Progress calc: elapsedTime=28s, targetTime=300s, timeProgress=9.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=28s, progress=9.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=28s
+flutter: Progress calc: elapsedTime=28s, targetTime=300s, timeProgress=9.3%
+flutter: Simple timer tick: elapsedTime=28s, progress=9.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:50.803020, elapsedTime=0:00:29.994029
+flutter: ⏰ Time update received: 29s
+flutter: Progress calc: elapsedTime=29s, targetTime=300s, timeProgress=9.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=29s, progress=9.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=29s
+flutter: Progress calc: elapsedTime=29s, targetTime=300s, timeProgress=9.7%
+flutter: 📊 Progress update received: 9.7%
+flutter: Progress calc: elapsedTime=29s, targetTime=300s, timeProgress=9.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=29s, progress=9.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=29s
+flutter: Progress calc: elapsedTime=29s, targetTime=300s, timeProgress=9.7%
+flutter: Simple timer tick: elapsedTime=29s, progress=9.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:51.803189, elapsedTime=0:00:30.994201
+flutter: ⏰ Time update received: 30s
+flutter: Progress calc: elapsedTime=30s, targetTime=300s, timeProgress=10.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=30s, progress=10.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=30s
+flutter: Progress calc: elapsedTime=30s, targetTime=300s, timeProgress=10.0%
+flutter: 📊 Progress update received: 10.0%
+flutter: Progress calc: elapsedTime=30s, targetTime=300s, timeProgress=10.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=30s, progress=10.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=30s
+flutter: Progress calc: elapsedTime=30s, targetTime=300s, timeProgress=10.0%
+flutter: Simple timer tick: elapsedTime=30s, progress=10.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:52.800479, elapsedTime=0:00:31.991490
+flutter: ⏰ Time update received: 31s
+flutter: Progress calc: elapsedTime=31s, targetTime=300s, timeProgress=10.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=31s, progress=10.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=31s
+flutter: Progress calc: elapsedTime=31s, targetTime=300s, timeProgress=10.3%
+flutter: 📊 Progress update received: 10.3%
+flutter: Progress calc: elapsedTime=31s, targetTime=300s, timeProgress=10.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=31s, progress=10.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=31s
+flutter: Progress calc: elapsedTime=31s, targetTime=300s, timeProgress=10.3%
+flutter: Simple timer tick: elapsedTime=31s, progress=10.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:53.800840, elapsedTime=0:00:32.991849
+flutter: ⏰ Time update received: 32s
+flutter: Progress calc: elapsedTime=32s, targetTime=300s, timeProgress=10.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=32s, progress=10.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=32s
+flutter: Progress calc: elapsedTime=32s, targetTime=300s, timeProgress=10.7%
+flutter: 📊 Progress update received: 10.7%
+flutter: Progress calc: elapsedTime=32s, targetTime=300s, timeProgress=10.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=32s, progress=10.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=32s
+flutter: Progress calc: elapsedTime=32s, targetTime=300s, timeProgress=10.7%
+flutter: Simple timer tick: elapsedTime=32s, progress=10.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:54.799629, elapsedTime=0:00:33.990639
+flutter: ⏰ Time update received: 33s
+flutter: Progress calc: elapsedTime=33s, targetTime=300s, timeProgress=11.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=33s, progress=11.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=33s
+flutter: Progress calc: elapsedTime=33s, targetTime=300s, timeProgress=11.0%
+flutter: 📊 Progress update received: 11.0%
+flutter: Progress calc: elapsedTime=33s, targetTime=300s, timeProgress=11.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=33s, progress=11.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=33s
+flutter: Progress calc: elapsedTime=33s, targetTime=300s, timeProgress=11.0%
+flutter: Simple timer tick: elapsedTime=33s, progress=11.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:55.799883, elapsedTime=0:00:34.990893
+flutter: ⏰ Time update received: 34s
+flutter: Progress calc: elapsedTime=34s, targetTime=300s, timeProgress=11.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=34s, progress=11.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=34s
+flutter: Progress calc: elapsedTime=34s, targetTime=300s, timeProgress=11.3%
+flutter: 📊 Progress update received: 11.3%
+flutter: Progress calc: elapsedTime=34s, targetTime=300s, timeProgress=11.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=34s, progress=11.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=34s
+flutter: Progress calc: elapsedTime=34s, targetTime=300s, timeProgress=11.3%
+flutter: Simple timer tick: elapsedTime=34s, progress=11.3%
+flutter: ⚠️ GPS Backup Timer: Failed to get position: TimeoutException after 0:00:05.000000: Future not completed
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:56.798656, elapsedTime=0:00:35.989666
+flutter: ⏰ Time update received: 35s
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=35s, progress=11.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=35s
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 📊 Progress update received: 11.7%
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 12 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=35s, progress=11.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=35s
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: Simple timer tick: elapsedTime=35s, progress=11.7%
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 13
+flutter: 📍 Route now contains 13 GPS points
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 13 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=35s, progress=11.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=35s
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 13 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=35s, progress=11.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=35s
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 13 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=35s, progress=11.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=35s
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 14
+flutter: 📍 Route now contains 14 GPS points
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=35s, progress=11.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=35s
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=35s, progress=11.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=35s
+flutter: Progress calc: elapsedTime=35s, targetTime=300s, timeProgress=11.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=35s, progress=11.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=35s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:57.798076, elapsedTime=0:00:36.989090
+flutter: ⏰ Time update received: 36s
+flutter: Progress calc: elapsedTime=36s, targetTime=300s, timeProgress=12.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=36s, progress=12.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=36s
+flutter: Progress calc: elapsedTime=36s, targetTime=300s, timeProgress=12.0%
+flutter: 📊 Progress update received: 12.0%
+flutter: Progress calc: elapsedTime=36s, targetTime=300s, timeProgress=12.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=36s, progress=12.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=36s
+flutter: Progress calc: elapsedTime=36s, targetTime=300s, timeProgress=12.0%
+flutter: Simple timer tick: elapsedTime=36s, progress=12.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:58.797343, elapsedTime=0:00:37.988353
+flutter: ⏰ Time update received: 37s
+flutter: Progress calc: elapsedTime=37s, targetTime=300s, timeProgress=12.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=37s, progress=12.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=37s
+flutter: Progress calc: elapsedTime=37s, targetTime=300s, timeProgress=12.3%
+flutter: 📊 Progress update received: 12.3%
+flutter: Progress calc: elapsedTime=37s, targetTime=300s, timeProgress=12.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=37s, progress=12.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=37s
+flutter: Progress calc: elapsedTime=37s, targetTime=300s, timeProgress=12.3%
+flutter: Simple timer tick: elapsedTime=37s, progress=12.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:04:59.797828, elapsedTime=0:00:38.988837
+flutter: ⏰ Time update received: 38s
+flutter: Progress calc: elapsedTime=38s, targetTime=300s, timeProgress=12.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=38s, progress=12.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=38s
+flutter: Progress calc: elapsedTime=38s, targetTime=300s, timeProgress=12.7%
+flutter: 📊 Progress update received: 12.7%
+flutter: Progress calc: elapsedTime=38s, targetTime=300s, timeProgress=12.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=38s, progress=12.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=38s
+flutter: Progress calc: elapsedTime=38s, targetTime=300s, timeProgress=12.7%
+flutter: Simple timer tick: elapsedTime=38s, progress=12.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:00.795990, elapsedTime=0:00:39.987001
+flutter: ⏰ Time update received: 39s
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=39s, progress=13.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=39s
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 📊 Progress update received: 13.0%
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 14 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=39s, progress=13.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=39s
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: Simple timer tick: elapsedTime=39s, progress=13.0%
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 15
+flutter: 📍 Route now contains 15 GPS points
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 15 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=39s, progress=13.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=39s
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 15 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=39s, progress=13.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=39s
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 15 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=39s, progress=13.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=39s
+flutter: 📍 GPS Backup Timer: Adding position (40.68207527066246, 14.762878751016617)
+flutter: 📍 Position added to route: (40.68207527066246, 14.762878751016617) - Total points: 16
+flutter: 📍 Route now contains 16 GPS points
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=39s, progress=13.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=39s
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=39s, progress=13.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=39s
+flutter: Progress calc: elapsedTime=39s, targetTime=300s, timeProgress=13.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=39s, progress=13.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=39s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:01.796257, elapsedTime=0:00:40.987270
+flutter: ⏰ Time update received: 40s
+flutter: Progress calc: elapsedTime=40s, targetTime=300s, timeProgress=13.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=40s, progress=13.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=40s
+flutter: Progress calc: elapsedTime=40s, targetTime=300s, timeProgress=13.3%
+flutter: 📊 Progress update received: 13.3%
+flutter: Progress calc: elapsedTime=40s, targetTime=300s, timeProgress=13.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=40s, progress=13.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=40s
+flutter: Progress calc: elapsedTime=40s, targetTime=300s, timeProgress=13.3%
+flutter: Simple timer tick: elapsedTime=40s, progress=13.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:02.795356, elapsedTime=0:00:41.986367
+flutter: ⏰ Time update received: 41s
+flutter: Progress calc: elapsedTime=41s, targetTime=300s, timeProgress=13.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=41s, progress=13.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=41s
+flutter: Progress calc: elapsedTime=41s, targetTime=300s, timeProgress=13.7%
+flutter: 📊 Progress update received: 13.7%
+flutter: Progress calc: elapsedTime=41s, targetTime=300s, timeProgress=13.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=41s, progress=13.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=41s
+flutter: Progress calc: elapsedTime=41s, targetTime=300s, timeProgress=13.7%
+flutter: Simple timer tick: elapsedTime=41s, progress=13.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:03.795807, elapsedTime=0:00:42.986818
+flutter: ⏰ Time update received: 42s
+flutter: Progress calc: elapsedTime=42s, targetTime=300s, timeProgress=14.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=42s, progress=14.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=42s
+flutter: Progress calc: elapsedTime=42s, targetTime=300s, timeProgress=14.0%
+flutter: 📊 Progress update received: 14.0%
+flutter: Progress calc: elapsedTime=42s, targetTime=300s, timeProgress=14.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=42s, progress=14.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=42s
+flutter: Progress calc: elapsedTime=42s, targetTime=300s, timeProgress=14.0%
+flutter: Simple timer tick: elapsedTime=42s, progress=14.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:04.794326, elapsedTime=0:00:43.985335
+flutter: ⏰ Time update received: 43s
+flutter: Progress calc: elapsedTime=43s, targetTime=300s, timeProgress=14.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=43s, progress=14.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=43s
+flutter: Progress calc: elapsedTime=43s, targetTime=300s, timeProgress=14.3%
+flutter: 📊 Progress update received: 14.3%
+flutter: Progress calc: elapsedTime=43s, targetTime=300s, timeProgress=14.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=43s, progress=14.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=43s
+flutter: Progress calc: elapsedTime=43s, targetTime=300s, timeProgress=14.3%
+flutter: Simple timer tick: elapsedTime=43s, progress=14.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:05.795380, elapsedTime=0:00:44.986393
+flutter: ⏰ Time update received: 44s
+flutter: Progress calc: elapsedTime=44s, targetTime=300s, timeProgress=14.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=44s, progress=14.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=44s
+flutter: Progress calc: elapsedTime=44s, targetTime=300s, timeProgress=14.7%
+flutter: 📊 Progress update received: 14.7%
+flutter: Progress calc: elapsedTime=44s, targetTime=300s, timeProgress=14.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=44s, progress=14.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=44s
+flutter: Progress calc: elapsedTime=44s, targetTime=300s, timeProgress=14.7%
+flutter: Simple timer tick: elapsedTime=44s, progress=14.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:06.793838, elapsedTime=0:00:45.984852
+flutter: ⏰ Time update received: 45s
+flutter: Progress calc: elapsedTime=45s, targetTime=300s, timeProgress=15.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=45s, progress=15.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=45s
+flutter: Progress calc: elapsedTime=45s, targetTime=300s, timeProgress=15.0%
+flutter: 📊 Progress update received: 15.0%
+flutter: Progress calc: elapsedTime=45s, targetTime=300s, timeProgress=15.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=45s, progress=15.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=45s
+flutter: Progress calc: elapsedTime=45s, targetTime=300s, timeProgress=15.0%
+flutter: Simple timer tick: elapsedTime=45s, progress=15.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:07.794698, elapsedTime=0:00:46.985700
+flutter: ⏰ Time update received: 46s
+flutter: Progress calc: elapsedTime=46s, targetTime=300s, timeProgress=15.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=46s, progress=15.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=46s
+flutter: Progress calc: elapsedTime=46s, targetTime=300s, timeProgress=15.3%
+flutter: 📊 Progress update received: 15.3%
+flutter: Progress calc: elapsedTime=46s, targetTime=300s, timeProgress=15.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=46s, progress=15.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=46s
+flutter: Progress calc: elapsedTime=46s, targetTime=300s, timeProgress=15.3%
+flutter: Simple timer tick: elapsedTime=46s, progress=15.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:08.793177, elapsedTime=0:00:47.984190
+flutter: ⏰ Time update received: 47s
+flutter: Progress calc: elapsedTime=47s, targetTime=300s, timeProgress=15.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=47s, progress=15.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=47s
+flutter: Progress calc: elapsedTime=47s, targetTime=300s, timeProgress=15.7%
+flutter: 📊 Progress update received: 15.7%
+flutter: Progress calc: elapsedTime=47s, targetTime=300s, timeProgress=15.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=47s, progress=15.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=47s
+flutter: Progress calc: elapsedTime=47s, targetTime=300s, timeProgress=15.7%
+flutter: Simple timer tick: elapsedTime=47s, progress=15.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:09.794029, elapsedTime=0:00:48.985038
+flutter: ⏰ Time update received: 48s
+flutter: Progress calc: elapsedTime=48s, targetTime=300s, timeProgress=16.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=48s, progress=16.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=48s
+flutter: Progress calc: elapsedTime=48s, targetTime=300s, timeProgress=16.0%
+flutter: 📊 Progress update received: 16.0%
+flutter: Progress calc: elapsedTime=48s, targetTime=300s, timeProgress=16.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=48s, progress=16.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=48s
+flutter: Progress calc: elapsedTime=48s, targetTime=300s, timeProgress=16.0%
+flutter: Simple timer tick: elapsedTime=48s, progress=16.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:10.793, elapsedTime=0:00:49.984015
+flutter: ⏰ Time update received: 49s
+flutter: Progress calc: elapsedTime=49s, targetTime=300s, timeProgress=16.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=49s, progress=16.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=49s
+flutter: Progress calc: elapsedTime=49s, targetTime=300s, timeProgress=16.3%
+flutter: 📊 Progress update received: 16.3%
+flutter: Progress calc: elapsedTime=49s, targetTime=300s, timeProgress=16.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=49s, progress=16.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=49s
+flutter: Progress calc: elapsedTime=49s, targetTime=300s, timeProgress=16.3%
+flutter: Simple timer tick: elapsedTime=49s, progress=16.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:11.792871, elapsedTime=0:00:50.983880
+flutter: ⏰ Time update received: 50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 📊 Progress update received: 16.7%
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 16 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: Simple timer tick: elapsedTime=50s, progress=16.7%
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 17
+flutter: 📍 Route now contains 17 GPS points
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 17 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 17 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 17 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: 📍 GPS Backup Timer: Adding position (40.68207527066246, 14.76287875101662)
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 18
+flutter: 📍 Route now contains 18 GPS points
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 18 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 18 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 18 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 19
+flutter: 📍 Route now contains 19 GPS points
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: Progress calc: elapsedTime=50s, targetTime=300s, timeProgress=16.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=50s, progress=16.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=50s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:12.792254, elapsedTime=0:00:51.983268
+flutter: ⏰ Time update received: 51s
+flutter: Progress calc: elapsedTime=51s, targetTime=300s, timeProgress=17.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=51s, progress=17.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=51s
+flutter: Progress calc: elapsedTime=51s, targetTime=300s, timeProgress=17.0%
+flutter: 📊 Progress update received: 17.0%
+flutter: Progress calc: elapsedTime=51s, targetTime=300s, timeProgress=17.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=51s, progress=17.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=51s
+flutter: Progress calc: elapsedTime=51s, targetTime=300s, timeProgress=17.0%
+flutter: Simple timer tick: elapsedTime=51s, progress=17.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:13.792852, elapsedTime=0:00:52.983862
+flutter: ⏰ Time update received: 52s
+flutter: Progress calc: elapsedTime=52s, targetTime=300s, timeProgress=17.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=52s, progress=17.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=52s
+flutter: Progress calc: elapsedTime=52s, targetTime=300s, timeProgress=17.3%
+flutter: 📊 Progress update received: 17.3%
+flutter: Progress calc: elapsedTime=52s, targetTime=300s, timeProgress=17.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=52s, progress=17.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=52s
+flutter: Progress calc: elapsedTime=52s, targetTime=300s, timeProgress=17.3%
+flutter: Simple timer tick: elapsedTime=52s, progress=17.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:14.791455, elapsedTime=0:00:53.982468
+flutter: ⏰ Time update received: 53s
+flutter: Progress calc: elapsedTime=53s, targetTime=300s, timeProgress=17.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=53s, progress=17.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=53s
+flutter: Progress calc: elapsedTime=53s, targetTime=300s, timeProgress=17.7%
+flutter: 📊 Progress update received: 17.7%
+flutter: Progress calc: elapsedTime=53s, targetTime=300s, timeProgress=17.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=53s, progress=17.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=53s
+flutter: Progress calc: elapsedTime=53s, targetTime=300s, timeProgress=17.7%
+flutter: Simple timer tick: elapsedTime=53s, progress=17.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:15.792065, elapsedTime=0:00:54.983078
+flutter: ⏰ Time update received: 54s
+flutter: Progress calc: elapsedTime=54s, targetTime=300s, timeProgress=18.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=54s, progress=18.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=54s
+flutter: Progress calc: elapsedTime=54s, targetTime=300s, timeProgress=18.0%
+flutter: 📊 Progress update received: 18.0%
+flutter: Progress calc: elapsedTime=54s, targetTime=300s, timeProgress=18.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=54s, progress=18.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=54s
+flutter: Progress calc: elapsedTime=54s, targetTime=300s, timeProgress=18.0%
+flutter: Simple timer tick: elapsedTime=54s, progress=18.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:16.790962, elapsedTime=0:00:55.981972
+flutter: ⏰ Time update received: 55s
+flutter: Progress calc: elapsedTime=55s, targetTime=300s, timeProgress=18.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=55s, progress=18.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=55s
+flutter: Progress calc: elapsedTime=55s, targetTime=300s, timeProgress=18.3%
+flutter: 📊 Progress update received: 18.3%
+flutter: Progress calc: elapsedTime=55s, targetTime=300s, timeProgress=18.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=55s, progress=18.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=55s
+flutter: Progress calc: elapsedTime=55s, targetTime=300s, timeProgress=18.3%
+flutter: Simple timer tick: elapsedTime=55s, progress=18.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:17.791708, elapsedTime=0:00:56.982717
+flutter: ⏰ Time update received: 56s
+flutter: Progress calc: elapsedTime=56s, targetTime=300s, timeProgress=18.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=56s, progress=18.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=56s
+flutter: Progress calc: elapsedTime=56s, targetTime=300s, timeProgress=18.7%
+flutter: 📊 Progress update received: 18.7%
+flutter: Progress calc: elapsedTime=56s, targetTime=300s, timeProgress=18.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=56s, progress=18.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=56s
+flutter: Progress calc: elapsedTime=56s, targetTime=300s, timeProgress=18.7%
+flutter: Simple timer tick: elapsedTime=56s, progress=18.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:18.791594, elapsedTime=0:00:57.982604
+flutter: ⏰ Time update received: 57s
+flutter: Progress calc: elapsedTime=57s, targetTime=300s, timeProgress=19.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=57s, progress=19.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=57s
+flutter: Progress calc: elapsedTime=57s, targetTime=300s, timeProgress=19.0%
+flutter: 📊 Progress update received: 19.0%
+flutter: Progress calc: elapsedTime=57s, targetTime=300s, timeProgress=19.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=57s, progress=19.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=57s
+flutter: Progress calc: elapsedTime=57s, targetTime=300s, timeProgress=19.0%
+flutter: Simple timer tick: elapsedTime=57s, progress=19.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:19.791744, elapsedTime=0:00:58.982754
+flutter: ⏰ Time update received: 58s
+flutter: Progress calc: elapsedTime=58s, targetTime=300s, timeProgress=19.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=58s, progress=19.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=58s
+flutter: Progress calc: elapsedTime=58s, targetTime=300s, timeProgress=19.3%
+flutter: 📊 Progress update received: 19.3%
+flutter: Progress calc: elapsedTime=58s, targetTime=300s, timeProgress=19.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=58s, progress=19.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=58s
+flutter: Progress calc: elapsedTime=58s, targetTime=300s, timeProgress=19.3%
+flutter: Simple timer tick: elapsedTime=58s, progress=19.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:20.790423, elapsedTime=0:00:59.981431
+flutter: ⏰ Time update received: 59s
+flutter: Progress calc: elapsedTime=59s, targetTime=300s, timeProgress=19.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=59s, progress=19.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=59s
+flutter: Progress calc: elapsedTime=59s, targetTime=300s, timeProgress=19.7%
+flutter: 📊 Progress update received: 19.7%
+flutter: Progress calc: elapsedTime=59s, targetTime=300s, timeProgress=19.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=59s, progress=19.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=59s
+flutter: Progress calc: elapsedTime=59s, targetTime=300s, timeProgress=19.7%
+flutter: Simple timer tick: elapsedTime=59s, progress=19.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:21.791056, elapsedTime=0:01:00.982069
+flutter: ⏰ Time update received: 60s
+flutter: Progress calc: elapsedTime=60s, targetTime=300s, timeProgress=20.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=60s, progress=20.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=60s
+flutter: Progress calc: elapsedTime=60s, targetTime=300s, timeProgress=20.0%
+flutter: 📊 Progress update received: 20.0%
+flutter: Progress calc: elapsedTime=60s, targetTime=300s, timeProgress=20.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=60s, progress=20.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=60s
+flutter: Progress calc: elapsedTime=60s, targetTime=300s, timeProgress=20.0%
+flutter: Simple timer tick: elapsedTime=60s, progress=20.0%
+flutter: 🎬 Scene triggered: Scene 2
+flutter: 📊 Played scenes: {SceneType.scene1, SceneType.scene2}
+flutter: 🎬 Scene started: Scene 2
+flutter: 🎬 About to call onSceneStarted callback...
+flutter: 🎬 onSceneStarted callback completed
+flutter: 🎵 Checking if episode S01E03 is downloaded...
+flutter: 🔧 [DEBUG] _playSceneAudio called for scene: Scene 2
+flutter: 🔧 [DEBUG] _isSingleFileMode: false
+flutter: 🔧 [DEBUG] Calling _playSceneFromMultipleFiles for scene: Scene 2
+flutter: 🎬 Scene triggered: Scene 2
+flutter: 📊 Played scenes: {SceneType.scene1, SceneType.scene2}
+flutter: 🎬 Scene started: Scene 2
+flutter: 🎬 About to call onSceneStarted callback...
+flutter: 🎬 onSceneStarted callback completed
+flutter: 🎵 Checking if episode S01E03 is downloaded...
+flutter: 🔧 [DEBUG] _playSceneAudio called for scene: Scene 2
+flutter: 🔧 [DEBUG] _isSingleFileMode: false
+flutter: 🔧 [DEBUG] Calling _playSceneFromMultipleFiles for scene: Scene 2
+flutter: 🔍 _episodeDir created: /var/mobile/Containers/Data/Application/6D9E227D-4C34-4C25-92CB-A45560785257/Documents/episodes/S01E03
+flutter: ✅ Episode S01E03 is downloaded with 1 audio files
+flutter: 🔍 Found files: [S01E03.mp3]
+flutter: 🎵 Multiple audio files mode - playback handled by SceneTriggerService
+flutter: 🔍 _episodeDir created: /var/mobile/Containers/Data/Application/6D9E227D-4C34-4C25-92CB-A45560785257/Documents/episodes/S01E03
+flutter: ✅ Episode S01E03 is downloaded with 1 audio files
+flutter: 🔍 Found files: [S01E03.mp3]
+flutter: 🎵 Multiple audio files mode - playback handled by SceneTriggerService
+flutter: 🎵 Multiple files mode: scene SceneType.scene2 maps to index 1
+flutter: 🎵 Audio file URL: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f
+flutter: 🎵 Multiple files mode: scene SceneType.scene2 maps to index 1
+flutter: 🎵 Audio file URL: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f
+flutter: 🎵 Audio player state: ProcessingState.buffering
+flutter: 🎵 Audio position: 0s
+flutter: Error loading artUri: HttpException: Invalid statusCode: 404, uri = https://example.com/artwork.jpg
+#0      WebHelper._manageResponse (package:flutter_cache_manager/src/web/web_helper.dart:123:7)
+<asynchronous suspension>
+#1      WebHelper._updateFile (package:flutter_cache_manager/src/web/web_helper.dart:97:5)
+<asynchronous suspension>
+#2      WebHelper._downloadOrAddToQueue (package:flutter_cache_manager/src/web/web_helper.dart:64:7)
+<asynchronous suspension>
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:22.790973, elapsedTime=0:01:01.981993
+flutter: ⏰ Time update received: 61s
+flutter: Progress calc: elapsedTime=61s, targetTime=300s, timeProgress=20.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=61s, progress=20.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=61s
+flutter: Progress calc: elapsedTime=61s, targetTime=300s, timeProgress=20.3%
+flutter: 📊 Progress update received: 20.3%
+flutter: Progress calc: elapsedTime=61s, targetTime=300s, timeProgress=20.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=61s, progress=20.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=61s
+flutter: Progress calc: elapsedTime=61s, targetTime=300s, timeProgress=20.3%
+flutter: Simple timer tick: elapsedTime=61s, progress=20.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:23.789848, elapsedTime=0:01:02.980864
+flutter: ⏰ Time update received: 62s
+flutter: Progress calc: elapsedTime=62s, targetTime=300s, timeProgress=20.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=62s, progress=20.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=62s
+flutter: Progress calc: elapsedTime=62s, targetTime=300s, timeProgress=20.7%
+flutter: 📊 Progress update received: 20.7%
+flutter: Progress calc: elapsedTime=62s, targetTime=300s, timeProgress=20.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=62s, progress=20.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=62s
+flutter: Progress calc: elapsedTime=62s, targetTime=300s, timeProgress=20.7%
+flutter: Simple timer tick: elapsedTime=62s, progress=20.7%
+flutter: 🎵 Playing audio for scene: Scene 2
+flutter: 🎵 Audio file URL: https://firebasestorage.googleapis.com/v0/b/runners-saga-app.firebasestorage.app/o/audio%2Fepisodes%2FS01E03%2FS01E03S02.mp3?alt=media&token=fc05e631-1195-4f44-8145-7d597146413f
+flutter: 🎵 MediaItem configured for background audio: The Third Challenge - Scene 2
+flutter: 🎵 Audio player state: ProcessingState.ready
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:24.790019, elapsedTime=0:01:03.981040
+flutter: ⏰ Time update received: 63s
+flutter: Progress calc: elapsedTime=63s, targetTime=300s, timeProgress=21.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=63s, progress=21.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=63s
+flutter: Progress calc: elapsedTime=63s, targetTime=300s, timeProgress=21.0%
+flutter: 📊 Progress update received: 21.0%
+flutter: Progress calc: elapsedTime=63s, targetTime=300s, timeProgress=21.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=63s, progress=21.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=63s
+flutter: Progress calc: elapsedTime=63s, targetTime=300s, timeProgress=21.0%
+flutter: Simple timer tick: elapsedTime=63s, progress=21.0%
+flutter: Error loading artUri: HttpException: Invalid statusCode: 404, uri = https://example.com/artwork.jpg
+#0      WebHelper._manageResponse (package:flutter_cache_manager/src/web/web_helper.dart:123:7)
+<asynchronous suspension>
+#1      WebHelper._updateFile (package:flutter_cache_manager/src/web/web_helper.dart:97:5)
+<asynchronous suspension>
+#2      WebHelper._downloadOrAddToQueue (package:flutter_cache_manager/src/web/web_helper.dart:64:7)
+<asynchronous suspension>
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:25.790507, elapsedTime=0:01:04.981527
+flutter: ⏰ Time update received: 64s
+flutter: Progress calc: elapsedTime=64s, targetTime=300s, timeProgress=21.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=64s, progress=21.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=64s
+flutter: Progress calc: elapsedTime=64s, targetTime=300s, timeProgress=21.3%
+flutter: 📊 Progress update received: 21.3%
+flutter: Progress calc: elapsedTime=64s, targetTime=300s, timeProgress=21.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 19 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=64s, progress=21.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=64s
+flutter: Progress calc: elapsedTime=64s, targetTime=300s, timeProgress=21.3%
+flutter: Simple timer tick: elapsedTime=64s, progress=21.3%
+flutter: ⚠️ GPS Backup Timer: Failed to get position: TimeoutException after 0:00:05.000000: Future not completed
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 20
+flutter: 📍 Route now contains 20 GPS points
+flutter: Progress calc: elapsedTime=64s, targetTime=300s, timeProgress=21.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=64s, progress=21.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=64s
+flutter: Progress calc: elapsedTime=64s, targetTime=300s, timeProgress=21.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=64s, progress=21.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=64s
+flutter: Progress calc: elapsedTime=64s, targetTime=300s, timeProgress=21.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=64s, progress=21.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=64s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:26.789900, elapsedTime=0:01:05.980908
+flutter: ⏰ Time update received: 65s
+flutter: Progress calc: elapsedTime=65s, targetTime=300s, timeProgress=21.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=65s, progress=21.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=65s
+flutter: Progress calc: elapsedTime=65s, targetTime=300s, timeProgress=21.7%
+flutter: 📊 Progress update received: 21.7%
+flutter: Progress calc: elapsedTime=65s, targetTime=300s, timeProgress=21.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=65s, progress=21.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=65s
+flutter: Progress calc: elapsedTime=65s, targetTime=300s, timeProgress=21.7%
+flutter: Simple timer tick: elapsedTime=65s, progress=21.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:27.789996, elapsedTime=0:01:06.981012
+flutter: ⏰ Time update received: 66s
+flutter: Progress calc: elapsedTime=66s, targetTime=300s, timeProgress=22.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=66s, progress=22.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=66s
+flutter: Progress calc: elapsedTime=66s, targetTime=300s, timeProgress=22.0%
+flutter: 📊 Progress update received: 22.0%
+flutter: Progress calc: elapsedTime=66s, targetTime=300s, timeProgress=22.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=66s, progress=22.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=66s
+flutter: Progress calc: elapsedTime=66s, targetTime=300s, timeProgress=22.0%
+flutter: Simple timer tick: elapsedTime=66s, progress=22.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:28.790213, elapsedTime=0:01:07.981229
+flutter: ⏰ Time update received: 67s
+flutter: Progress calc: elapsedTime=67s, targetTime=300s, timeProgress=22.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=67s, progress=22.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=67s
+flutter: Progress calc: elapsedTime=67s, targetTime=300s, timeProgress=22.3%
+flutter: 📊 Progress update received: 22.3%
+flutter: Progress calc: elapsedTime=67s, targetTime=300s, timeProgress=22.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=67s, progress=22.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=67s
+flutter: Progress calc: elapsedTime=67s, targetTime=300s, timeProgress=22.3%
+flutter: Simple timer tick: elapsedTime=67s, progress=22.3%
+flutter: 🎵 Audio position: 5s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:29.789234, elapsedTime=0:01:08.980250
+flutter: ⏰ Time update received: 68s
+flutter: Progress calc: elapsedTime=68s, targetTime=300s, timeProgress=22.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=68s, progress=22.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=68s
+flutter: Progress calc: elapsedTime=68s, targetTime=300s, timeProgress=22.7%
+flutter: 📊 Progress update received: 22.7%
+flutter: Progress calc: elapsedTime=68s, targetTime=300s, timeProgress=22.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=68s, progress=22.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=68s
+flutter: Progress calc: elapsedTime=68s, targetTime=300s, timeProgress=22.7%
+flutter: Simple timer tick: elapsedTime=68s, progress=22.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:30.790471, elapsedTime=0:01:09.981483
+flutter: ⏰ Time update received: 69s
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=69s, progress=23.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=69s
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 📊 Progress update received: 23.0%
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 20 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=69s, progress=23.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=69s
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: Simple timer tick: elapsedTime=69s, progress=23.0%
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 21
+flutter: 📍 Route now contains 21 GPS points
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 21 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=69s, progress=23.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=69s
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 21 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=69s, progress=23.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=69s
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 21 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=69s, progress=23.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=69s
+flutter: 📍 GPS Backup Timer: Adding position (40.68207527066246, 14.76287875101662)
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 22
+flutter: 📍 Route now contains 22 GPS points
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=69s, progress=23.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=69s
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=69s, progress=23.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=69s
+flutter: Progress calc: elapsedTime=69s, targetTime=300s, timeProgress=23.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=69s, progress=23.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=69s
+flutter: 🎵 Audio player state: ProcessingState.completed
+flutter: 🎵 Audio file playback completed
+flutter: ✅ Scene audio completed: Scene 1
+flutter: ✅ Scene audio completed: Scene 2
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:31.791064, elapsedTime=0:01:10.982076
+flutter: ⏰ Time update received: 70s
+flutter: Progress calc: elapsedTime=70s, targetTime=300s, timeProgress=23.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=70s, progress=23.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=70s
+flutter: Progress calc: elapsedTime=70s, targetTime=300s, timeProgress=23.3%
+flutter: 📊 Progress update received: 23.3%
+flutter: Progress calc: elapsedTime=70s, targetTime=300s, timeProgress=23.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=70s, progress=23.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=70s
+flutter: Progress calc: elapsedTime=70s, targetTime=300s, timeProgress=23.3%
+flutter: Simple timer tick: elapsedTime=70s, progress=23.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:32.789259, elapsedTime=0:01:11.980267
+flutter: ⏰ Time update received: 71s
+flutter: Progress calc: elapsedTime=71s, targetTime=300s, timeProgress=23.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=71s, progress=23.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=71s
+flutter: Progress calc: elapsedTime=71s, targetTime=300s, timeProgress=23.7%
+flutter: 📊 Progress update received: 23.7%
+flutter: Progress calc: elapsedTime=71s, targetTime=300s, timeProgress=23.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=71s, progress=23.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=71s
+flutter: Progress calc: elapsedTime=71s, targetTime=300s, timeProgress=23.7%
+flutter: Simple timer tick: elapsedTime=71s, progress=23.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:33.789679, elapsedTime=0:01:12.980694
+flutter: ⏰ Time update received: 72s
+flutter: Progress calc: elapsedTime=72s, targetTime=300s, timeProgress=24.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=72s, progress=24.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=72s
+flutter: Progress calc: elapsedTime=72s, targetTime=300s, timeProgress=24.0%
+flutter: 📊 Progress update received: 24.0%
+flutter: Progress calc: elapsedTime=72s, targetTime=300s, timeProgress=24.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=72s, progress=24.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=72s
+flutter: Progress calc: elapsedTime=72s, targetTime=300s, timeProgress=24.0%
+flutter: Simple timer tick: elapsedTime=72s, progress=24.0%
+flutter: 📱 AppLifecycleManager: App going to background at 2025-09-06 10:05:33.822273
+flutter: 📱 ProgressMonitorService: App backgrounded, ensuring GPS continues...
+flutter: 📱 ProgressMonitorService: App backgrounded
+flutter: 🔄 App lifecycle changed: AppLifecycleState.paused, background: true
+flutter: 🎵 App going to background - audio will continue playing
+flutter: 🔇 AppLifecycleManager: Audio paused for background
+flutter: 📱 App lifecycle changed: AppLifecycleState.inactive
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:34.788971, elapsedTime=0:01:13.979990
+flutter: ⏰ Time update received: 73s
+flutter: Progress calc: elapsedTime=73s, targetTime=300s, timeProgress=24.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=73s, progress=24.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=73s
+flutter: Progress calc: elapsedTime=73s, targetTime=300s, timeProgress=24.3%
+flutter: 📊 Progress update received: 24.3%
+flutter: Progress calc: elapsedTime=73s, targetTime=300s, timeProgress=24.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=73s, progress=24.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=73s
+flutter: Progress calc: elapsedTime=73s, targetTime=300s, timeProgress=24.3%
+flutter: Simple timer tick: elapsedTime=73s, progress=24.3%
+flutter: 📱 AppLifecycleManager: App being hidden
+flutter: 📱 App lifecycle changed: AppLifecycleState.hidden
+flutter: 📱 App lifecycle changed: AppLifecycleState.paused
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:35.791252, elapsedTime=0:01:14.982202
+flutter: ⏰ Time update received: 74s
+flutter: Progress calc: elapsedTime=74s, targetTime=300s, timeProgress=24.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=74s, progress=24.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=74s
+flutter: Progress calc: elapsedTime=74s, targetTime=300s, timeProgress=24.7%
+flutter: 📊 Progress update received: 24.7%
+flutter: Progress calc: elapsedTime=74s, targetTime=300s, timeProgress=24.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=74s, progress=24.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=74s
+flutter: Progress calc: elapsedTime=74s, targetTime=300s, timeProgress=24.7%
+flutter: Simple timer tick: elapsedTime=74s, progress=24.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:36.788961, elapsedTime=0:01:15.979973
+flutter: ⏰ Time update received: 75s
+flutter: Progress calc: elapsedTime=75s, targetTime=300s, timeProgress=25.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=75s, progress=25.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=75s
+flutter: Progress calc: elapsedTime=75s, targetTime=300s, timeProgress=25.0%
+flutter: 📊 Progress update received: 25.0%
+flutter: Progress calc: elapsedTime=75s, targetTime=300s, timeProgress=25.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=75s, progress=25.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=75s
+flutter: Progress calc: elapsedTime=75s, targetTime=300s, timeProgress=25.0%
+flutter: Simple timer tick: elapsedTime=75s, progress=25.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:37.790349, elapsedTime=0:01:16.981358
+flutter: ⏰ Time update received: 76s
+flutter: Progress calc: elapsedTime=76s, targetTime=300s, timeProgress=25.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=76s, progress=25.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=76s
+flutter: Progress calc: elapsedTime=76s, targetTime=300s, timeProgress=25.3%
+flutter: 📊 Progress update received: 25.3%
+flutter: Progress calc: elapsedTime=76s, targetTime=300s, timeProgress=25.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=76s, progress=25.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=76s
+flutter: Progress calc: elapsedTime=76s, targetTime=300s, timeProgress=25.3%
+flutter: Simple timer tick: elapsedTime=76s, progress=25.3%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:38.789550, elapsedTime=0:01:17.980560
+flutter: ⏰ Time update received: 77s
+flutter: Progress calc: elapsedTime=77s, targetTime=300s, timeProgress=25.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=77s, progress=25.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=77s
+flutter: Progress calc: elapsedTime=77s, targetTime=300s, timeProgress=25.7%
+flutter: 📊 Progress update received: 25.7%
+flutter: Progress calc: elapsedTime=77s, targetTime=300s, timeProgress=25.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=77s, progress=25.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=77s
+flutter: Progress calc: elapsedTime=77s, targetTime=300s, timeProgress=25.7%
+flutter: Simple timer tick: elapsedTime=77s, progress=25.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:39.790575, elapsedTime=0:01:18.981553
+flutter: ⏰ Time update received: 78s
+flutter: Progress calc: elapsedTime=78s, targetTime=300s, timeProgress=26.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=78s, progress=26.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=78s
+flutter: Progress calc: elapsedTime=78s, targetTime=300s, timeProgress=26.0%
+flutter: 📊 Progress update received: 26.0%
+flutter: Progress calc: elapsedTime=78s, targetTime=300s, timeProgress=26.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=78s, progress=26.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=78s
+flutter: Progress calc: elapsedTime=78s, targetTime=300s, timeProgress=26.0%
+flutter: Simple timer tick: elapsedTime=78s, progress=26.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:40.788962, elapsedTime=0:01:19.979970
+flutter: ⏰ Time update received: 79s
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=79s, progress=26.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=79s
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 📊 Progress update received: 26.3%
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 22 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=79s, progress=26.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=79s
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: Simple timer tick: elapsedTime=79s, progress=26.3%
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 23
+flutter: 📍 Route now contains 23 GPS points
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 23 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=79s, progress=26.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=79s
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 23 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=79s, progress=26.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=79s
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 23 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=79s, progress=26.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=79s
+flutter: 📍 GPS Backup Timer: Adding position (40.68207527066246, 14.76287875101662)
+flutter: 📍 Position added to route: (40.68207527066246, 14.76287875101662) - Total points: 24
+flutter: 📍 Route now contains 24 GPS points
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=79s, progress=26.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=79s
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=79s, progress=26.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=79s
+flutter: Progress calc: elapsedTime=79s, targetTime=300s, timeProgress=26.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=79s, progress=26.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=79s
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:41.790821, elapsedTime=0:01:20.981832
+flutter: ⏰ Time update received: 80s
+flutter: Progress calc: elapsedTime=80s, targetTime=300s, timeProgress=26.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=80s, progress=26.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=80s
+flutter: Progress calc: elapsedTime=80s, targetTime=300s, timeProgress=26.7%
+flutter: 📊 Progress update received: 26.7%
+flutter: Progress calc: elapsedTime=80s, targetTime=300s, timeProgress=26.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=80s, progress=26.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=80s
+flutter: Progress calc: elapsedTime=80s, targetTime=300s, timeProgress=26.7%
+flutter: Simple timer tick: elapsedTime=80s, progress=26.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:42.788417, elapsedTime=0:01:21.979433
+flutter: ⏰ Time update received: 81s
+flutter: Progress calc: elapsedTime=81s, targetTime=300s, timeProgress=27.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=81s, progress=27.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=81s
+flutter: Progress calc: elapsedTime=81s, targetTime=300s, timeProgress=27.0%
+flutter: 📊 Progress update received: 27.0%
+flutter: Progress calc: elapsedTime=81s, targetTime=300s, timeProgress=27.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=81s, progress=27.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=81s
+flutter: Progress calc: elapsedTime=81s, targetTime=300s, timeProgress=27.0%
+flutter: Simple timer tick: elapsedTime=81s, progress=27.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:43.789451, elapsedTime=0:01:22.980464
+flutter: ⏰ Time update received: 82s
+flutter: Progress calc: elapsedTime=82s, targetTime=300s, timeProgress=27.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=82s, progress=27.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=82s
+flutter: Progress calc: elapsedTime=82s, targetTime=300s, timeProgress=27.3%
+flutter: 📊 Progress update received: 27.3%
+flutter: Progress calc: elapsedTime=82s, targetTime=300s, timeProgress=27.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=82s, progress=27.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=82s
+flutter: Progress calc: elapsedTime=82s, targetTime=300s, timeProgress=27.3%
+flutter: Simple timer tick: elapsedTime=82s, progress=27.3%
+flutter: 📱 AppLifecycleManager: App being hidden
+flutter: 📱 App lifecycle changed: AppLifecycleState.hidden
+flutter: 📱 App lifecycle changed: AppLifecycleState.inactive
+flutter: 📱 AppLifecycleManager: App coming to foreground after 0:00:10.752668 in background
+flutter: 📱 BackgroundTimerManager: App foregrounded after 44767s in background
+flutter: 📱 BackgroundTimerManager: App foregrounded
+flutter: 📱 ProgressMonitorService: App foregrounded, checking GPS continuity...
+flutter: 📱 ProgressMonitorService: App foregrounded
+flutter: 🔄 App lifecycle changed: AppLifecycleState.resumed, background: false
+flutter: 🔊 AppLifecycleManager: Audio resumed from background
+flutter: 📱 App lifecycle changed: AppLifecycleState.resumed
+flutter: ⚠️ AppLifecycleManager: Background service is not running
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:44.808844, elapsedTime=0:01:23.999863
+flutter: ⏰ Time update received: 83s
+flutter: Progress calc: elapsedTime=83s, targetTime=300s, timeProgress=27.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=83s, progress=27.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=83s
+flutter: Progress calc: elapsedTime=83s, targetTime=300s, timeProgress=27.7%
+flutter: 📊 Progress update received: 27.7%
+flutter: Progress calc: elapsedTime=83s, targetTime=300s, timeProgress=27.7%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=83s, progress=27.7%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=83s
+flutter: Progress calc: elapsedTime=83s, targetTime=300s, timeProgress=27.7%
+flutter: Simple timer tick: elapsedTime=83s, progress=27.7%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:45.789826, elapsedTime=0:01:24.980847
+flutter: ⏰ Time update received: 84s
+flutter: Progress calc: elapsedTime=84s, targetTime=300s, timeProgress=28.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=84s, progress=28.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=84s
+flutter: Progress calc: elapsedTime=84s, targetTime=300s, timeProgress=28.0%
+flutter: 📊 Progress update received: 28.0%
+flutter: Progress calc: elapsedTime=84s, targetTime=300s, timeProgress=28.0%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=84s, progress=28.0%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=84s
+flutter: Progress calc: elapsedTime=84s, targetTime=300s, timeProgress=28.0%
+flutter: Simple timer tick: elapsedTime=84s, progress=28.0%
+flutter: _updateElapsedTime called: _startTime=2025-09-06 10:04:20.808972, _isMonitoring=true
+flutter: Time update: startTime=2025-09-06 10:04:20.808972, now=2025-09-06 10:05:46.789073, elapsedTime=0:01:25.980086
+flutter: ⏰ Time update received: 85s
+flutter: Progress calc: elapsedTime=85s, targetTime=300s, timeProgress=28.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=85s, progress=28.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=85s
+flutter: Progress calc: elapsedTime=85s, targetTime=300s, timeProgress=28.3%
+flutter: 📊 Progress update received: 28.3%
+flutter: Progress calc: elapsedTime=85s, targetTime=300s, timeProgress=28.3%
+flutter: 🔍 RunSessionManager: getCurrentRoute() called - Progress monitor route has 24 points
+flutter: 🔍 RunSessionManager: _isSessionActive: true, _isPaused: false
+flutter: 📊 Updating stats: elapsedTime=85s, progress=28.3%
+flutter: 📊 Calling onStatsUpdated callback with elapsedTime=85s
+flutter: Progress calc: elapsedTime=85s, targetTime=300s, timeProgress=28.3%
+flutter: Simple timer tick: elapsedTime=85s, progress=28.3%
+flutter: 🚨 BUTTON CLICKED: Finish Run button pressed!
+flutter: 🚨 RunScreen: _finishRun() method called!
+flutter: ✅ GPS DATA PRESERVATION: Cached 24 points
+flutter: ✅ GPS DATA PRESERVATION: Cached distance=0.037km, time=85s
+flutter: 🛑 RunScreen: Starting comprehensive timer cleanup...
+flutter: 🛑 RunScreen: All timers and services stopped successfully
+flutter: 📍 ProgressMonitorService: Stopping GPS location tracking...
+flutter: 📍 ProgressMonitorService: Route contains 24 GPS points before stopping
+flutter: ☢️ ProgressMonitorService: NUCLEAR STOP - All timers killed - route data preserved
+flutter: ⏹️ Scene trigger service stopped
+flutter: 🛑 RunSessionManager: All callbacks cleared
+flutter: ☢️ RunSessionManager: NUCLEAR STOP - Everything killed
+flutter: 📍 RunScreen: Finalizing run with 24 cached GPS points
+flutter: 📍 RunScreen: Using cached values - Time: 85s, Distance: 0.03673750913045793km
+flutter: 🏁 RunCompletionService: Starting run completion with provided GPS data...
+flutter: 📍 RunCompletionService: Using 24 captured GPS points
+flutter: 📍 RunCompletionService: Received duration: 85s, distance: 0.03673750913045793km
+flutter: 📍 RunCompletionService: Converted 24 GPS points to LocationPoint objects.
+flutter: 💾 FirestoreService.saveRun: Starting save process...
+flutter: ✅ FirestoreService: Firebase Auth instance ready
+flutter: 💾 FirestoreService.saveRun: Firebase Auth instance: FirebaseAuth(app: [DEFAULT])
+flutter: ✅ FirestoreService: Firebase Auth instance ready
+flutter: 💾 FirestoreService.saveRun: Firebase Auth app: FirebaseApp([DEFAULT])
+flutter: ✅ FirestoreService: Firebase Auth instance ready
+flutter: 💾 FirestoreService.saveRun: currentUserId = dDH48ONvo7e4kn2LvH0FNhI17ia2
+flutter: ✅ FirestoreService: Firebase Auth instance ready
+flutter: 💾 FirestoreService.saveRun: _authInstance.currentUser: dDH48ONvo7e4kn2LvH0FNhI17ia2
+flutter: 💾 FirestoreService.saveRun: User authenticated: true
+flutter: 💾 FirestoreService.saveRun: User email: jthanmur@yahoo.com
+flutter: 💾 FirestoreService.saveRun: User display name: null
+flutter: 💾 FirestoreService.saveRun: Converting run to Firestore JSON...
+flutter: 🔧 RunModel.toFirestore() called
+flutter: 🔧 RunModel.toFirestore() - createdAt type: Timestamp
+flutter: 🔧 RunModel.toFirestore() - createdAt value: Timestamp(seconds=1757145947, nanoseconds=252000000)
+flutter: ⚠️ RunModel.toFirestore() - createdAt is not DateTime: Timestamp
+flutter: 🔧 RunModel.toFirestore() - Final createdAt type: Timestamp
+flutter: 💾 FirestoreService.saveRun: Firestore JSON conversion successful, 19 keys
+flutter: 💾 FirestoreService.saveRun: Timestamps - createdAt: Timestamp(seconds=1757145947, nanoseconds=252000000)
+flutter: 💾 FirestoreService.saveRun: Saving to main runs collection...
+flutter: ✅ FirestoreService: Firestore instance ready
+flutter: ✅ FirestoreService.saveRun: Saved to main collection with ID: 01HDQPY81kLdco19v628
+flutter: ✅ FirestoreService.saveRun: Run saved to main collection only
+flutter: 💾 RunCompletionService: Run data saved successfully to Firestore with ID: 01HDQPY81kLdco19v628
+flutter: ✅ RunCompletionService: Run summary data prepared.
+flutter: ✅ GOOD: Firebase save includes GPS coordinates: 40.68213844607834, 14.763079765214888 ...
+flutter: === APP ROUTER: Redirect called for path: /run/summary ===
+flutter: === APP ROUTER: Current auth state: AuthState.authenticated ===
+flutter: === APP ROUTER: No redirect needed for /run/summary ===
+flutter: 📊 RunSummaryScreen: Loading run data...
+flutter: ✅ RunSummaryScreen: Using completion service data
+flutter: 📊 RunSummaryScreen: Data loaded - Time: 1m, Distance: 0.03673750913045793km, Achievements: 0
+flutter: 🛑 RunScreen: Starting comprehensive timer cleanup...
+flutter: 🛑 RunScreen: _errorToastTimer stopped
+flutter: 🛑 RunScreen: All timers and services stopped successfully
+

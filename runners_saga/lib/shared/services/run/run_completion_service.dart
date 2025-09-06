@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:runners_saga/shared/models/episode_model.dart';
 import 'package:runners_saga/shared/models/run_model.dart';
 import 'package:runners_saga/shared/models/run_target_model.dart';
@@ -6,6 +7,8 @@ import 'package:runners_saga/shared/providers/run_session_providers.dart';
 import 'package:runners_saga/shared/providers/run_providers.dart';
 import 'package:runners_saga/shared/providers/story_providers.dart';
 import 'package:runners_saga/shared/providers/auth_providers.dart';
+import 'package:runners_saga/shared/providers/run_completion_providers.dart';
+import 'package:runners_saga/shared/providers/run_config_providers.dart';
 
 /// Service to handle run completion and prepare data for summary screen
 class RunCompletionService {
@@ -13,6 +16,98 @@ class RunCompletionService {
   
   RunCompletionService(this._container);
   
+/// Complete a run with provided data
+  Future<RunSummaryData> completeRunWithData(
+    List<Position> capturedGpsData, {
+    required Duration duration,
+    required double distance,
+    required String episodeId,
+  }) async {
+    try {
+      print('🏁 RunCompletionService: Starting run completion with provided GPS data...');
+      print('📍 RunCompletionService: Using ${capturedGpsData.length} captured GPS points');
+      print('📍 RunCompletionService: Received duration: ${duration.inSeconds}s, distance: ${distance}km');
+
+    if (capturedGpsData.isEmpty) {
+      print('⚠️ RunCompletionService: Received empty GPS data. Run will be saved with 0 distance and no route.');
+    }
+    
+    // Convert Position objects to LocationPoint objects using the extension method
+    final route = capturedGpsData.map((pos) => pos.toLocationPoint()).toList();
+    print('📍 RunCompletionService: Converted ${capturedGpsData.length} GPS points to LocationPoint objects.');
+
+    // Step 1: Create the RunModel object
+    final currentUser = _container.read(currentUserProvider).value;
+    if (currentUser == null) {
+      print('❌ RunCompletionService: User not logged in. Cannot save run.');
+      return Future.error('User not logged in');
+    }
+
+    // Compute calories using MET formula and user weight (fallback 70kg)
+    final weightFromSettings = _container.read(userWeightKgProvider);
+    final weightKg = (weightFromSettings ?? 70.0);
+    final computedCalories = _calculateCaloriesMet(distance, duration, weightKg);
+
+    // Use the parameters passed from the RunScreen
+    final completedAt = DateTime.now();
+    final createdAt = completedAt.subtract(duration);
+    final avgSpeedKmh = (distance > 0 && duration.inSeconds > 0)
+        ? (distance / (duration.inSeconds / 3600.0))
+        : 0.0;
+    const double minReasonableSpeedKmh = 3.0; // aligns with +20:00 min/km cap
+    final isAnomalousSlow = avgSpeedKmh > 0 && avgSpeedKmh < minReasonableSpeedKmh;
+
+    final run = RunModel(
+      id: '', // Firestore will generate this
+      userId: currentUser.uid,
+      totalDistance: distance, // Use provided distance
+      totalTime: duration, // Use provided duration
+      averagePace: distance > 0 ? (duration.inMinutes / distance) : 0.0,
+      caloriesBurned: computedCalories.toDouble(),
+      route: route,
+      createdAt: createdAt,
+      completedAt: completedAt,
+      episodeId: episodeId, // Use provided episodeId
+      achievements: [],
+      status: RunStatus.completed,
+      metadata: {
+        'anomalySlowPace': isAnomalousSlow,
+        'avgSpeedKmh': avgSpeedKmh,
+      },
+    );
+
+    // Step 2: Save the run data to Firestore
+    final firestoreService = _container.read(firestoreServiceProvider);
+    final runId = await firestoreService.saveRun(run);
+    print('💾 RunCompletionService: Run data saved successfully to Firestore with ID: $runId');
+
+    // Step 4: Create the summary data object
+    final storyService = _container.read(storyServiceProvider);
+    final episode = await storyService.getEpisodeById(episodeId);
+    final RunSummaryData summaryData = RunSummaryData(
+      totalTime: run.totalTime ?? Duration.zero,
+      totalDistance: run.totalDistance ?? 0.0,
+      averagePace: run.averagePace ?? 0.0,
+      caloriesBurned: run.caloriesBurned?.round() ?? computedCalories,
+      episode: episode,
+      achievements: run.achievements ?? [],
+      route: run.route ?? [],
+      createdAt: run.createdAt,
+      completedAt: run.completedAt ?? DateTime.now(),
+    );
+
+    print('✅ RunCompletionService: Run summary data prepared.');
+    
+    // Set the summary data in the provider for the summary screen
+    _container.read(currentRunSummaryProvider.notifier).state = summaryData;
+    
+    return summaryData;
+    
+  } catch (e) {
+    print('❌ RunCompletionService: Error during run completion: $e');
+    rethrow; // Re-throw the error to be handled by the caller
+  }
+}
   /// Complete a run and prepare summary data
   Future<RunSummaryData> completeRun() async {
     try {
@@ -80,6 +175,7 @@ class RunCompletionService {
               route: route,
               // Store full episode identifier in episodeId
               episodeId: episode?.id ?? 'S01E01',
+              achievements: [], // Add empty achievements list
               runTarget: RunTarget(
                 id: 'completed_time_${totalTime.inMinutes}',
                 type: RunTargetType.time,
@@ -253,6 +349,13 @@ class RunCompletionService {
         return;
       }
       
+      // Debug: Log GPS data before creating RunModel
+      print('💾 RunCompletionService: SummaryData route has ${summaryData.route.length} GPS points');
+      if (summaryData.route.isNotEmpty) {
+        print('💾 RunCompletionService: First route point: ${summaryData.route.first.latitude}, ${summaryData.route.first.longitude}');
+        print('💾 RunCompletionService: Route point type: ${summaryData.route.first.runtimeType}');
+      }
+      
       // Create a RunModel from the summary data
       final runModel = RunModel(
         userId: user.uid,
@@ -266,6 +369,7 @@ class RunCompletionService {
         minPace: summaryData.averagePace, // Use average as min for now
         status: RunStatus.completed,
         episodeId: summaryData.episode?.id ?? 'S01E01',
+        achievements: summaryData.achievements, // Add achievements
         runTarget: RunTarget(
           id: 'completed_time_${summaryData.totalTime.inMinutes}',
           type: RunTargetType.time,
@@ -275,9 +379,21 @@ class RunCompletionService {
           createdAt: DateTime.now(),
           isCustom: true,
         ),
+        metadata: {
+          'anomalySlowPace': (summaryData.averagePace > 0) && (summaryData.averagePace >= 20.0),
+          'avgSpeedKmh': summaryData.averagePace > 0 ? (60.0 / summaryData.averagePace) : 0.0,
+        },
       );
       
       print('💾 RunCompletionService: Created run model with ${runModel.route?.length ?? 0} GPS points');
+      
+      // Debug: Verify RunModel route data
+      if (runModel.route != null && runModel.route!.isNotEmpty) {
+        print('💾 RunCompletionService: RunModel route type: ${runModel.route!.first.runtimeType}');
+        print('💾 RunCompletionService: RunModel first point: ${runModel.route!.first.latitude}, ${runModel.route!.first.longitude}');
+      } else {
+        print('❌ RunCompletionService: RunModel route is null or empty!');
+      }
       
       // Save the run to Firestore
       final firestoreService = _container.read(firestoreServiceProvider);

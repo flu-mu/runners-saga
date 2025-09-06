@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_providers.dart';
+import '../../../core/themes/theme_factory.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -111,18 +112,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     // Don't listen for auth state changes here - only redirect once in initState
+    final theme = ThemeFactory.getCurrentTheme();
+    final themeColors = ThemeFactory.getThemeColors(ThemeFactory.getAvailableThemes().first);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF6750A4),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF6750A4),
-              Color(0xFF9C27B0),
+              theme.colorScheme.primary.withValues(alpha: 0.8),
+              theme.colorScheme.secondary.withValues(alpha: 0.6),
+              theme.scaffoldBackgroundColor,
             ],
+            stops: const [0.0, 0.6, 1.0],
           ),
         ),
         child: SafeArea(
@@ -134,62 +139,95 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // App Logo
+                    // Hero Image Background
                     Container(
-                      width: 120,
-                      height: 120,
+                      width: double.infinity,
+                      height: 260,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(60),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF6750A4).withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            spreadRadius: 5,
+                        image: const DecorationImage(
+                          image: AssetImage('assets/images/splash_hero.png'),
+                          fit: BoxFit.cover,
+                          alignment: Alignment.topCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                              theme.scaffoldBackgroundColor,
+                            ],
+                            stops: const [0.0, 0.6, 1.0],
                           ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.directions_run,
-                        size: 60,
-                        color: Colors.white,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 40),
-                    
-                    // App Title
-                    const Text(
-                      "The Runner's Saga",
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // App Subtitle
-                    Text(
-                      'Your Run. Your Story.',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white.withValues(alpha: 0.8),
-                        letterSpacing: 0.5,
+                        ),
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // App Logo
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(40),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                                      blurRadius: 20,
+                                      spreadRadius: 5,
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.directions_run,
+                                  size: 40,
+                                  color: theme.colorScheme.onPrimary,
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 20),
+                              
+                              // App Title
+                              Text(
+                                "RUNNER'S SAGA",
+                                style: theme.textTheme.headlineLarge?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
+                                  letterSpacing: 1.2,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 8),
+                              
+                              // App Subtitle
+                              Text(
+                                'Run the Story. Live the Adventure.',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     
                     const SizedBox(height: 60),
                     
                     // Loading Indicator
-                    const SizedBox(
+                    SizedBox(
                       width: 40,
                       height: 40,
                       child: CircularProgressIndicator(
                         strokeWidth: 3,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                       ),
                     ),
                     
@@ -198,9 +236,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     // Loading Text
                     Text(
                       'Initializing Firebase...',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white.withValues(alpha: 0.7),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onBackground.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

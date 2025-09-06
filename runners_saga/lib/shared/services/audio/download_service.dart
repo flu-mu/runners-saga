@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../../shared/providers/firebase_providers.dart';
 
 class DownloadResult {
   final bool success;
@@ -259,12 +258,9 @@ class DownloadService {
     Function(double)? onProgress,
   }) async {
     try {
-      // Extract file names from the URLs and use Firebase Storage directly
-      final fileNames = audioFileUrls.map((url) {
-        // Extract filename from URL
-        final parts = url.split('/');
-        return parts.last; // Get the filename
-      }).toList();
+      // Extract proper file names from the URLs and use Firebase Storage directly
+      // Important: Firebase googleapis URLs include an encoded path; use helper to decode
+      final fileNames = audioFileUrls.map((url) => _getFileNameFromUrl(url)).toList();
       
       // Use Firebase Storage to get proper download URLs
       return await downloadEpisodeFromFirebase(episodeId, fileNames, onProgress: onProgress);
@@ -316,8 +312,8 @@ class DownloadService {
     try {
       print('🔍 _getFileNameFromUrl called with: $url');
       
-      // Handle Firebase Storage URLs specifically
-      if (url.contains('firebasestorage.app')) {
+      // Handle Firebase Storage URLs specifically (both domain styles)
+      if (url.contains('firebasestorage.app') || url.contains('firebasestorage.googleapis.com')) {
         // For Firebase Storage URLs like:
         // https://firebasestorage.googleapis.com/v0/b/bucket/o/audio%2Fepisodes%2FS01E02%2FS01E02.mp3?alt=media&token=...
         // We need to extract the filename from the encoded path
@@ -480,7 +476,5 @@ class DownloadService {
     }
   }
 }
-
-
 
 

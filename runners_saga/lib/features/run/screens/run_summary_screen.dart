@@ -7,10 +7,10 @@ import '../../../shared/providers/run_providers.dart';
 import '../../../shared/providers/run_session_providers.dart';
 import '../../../shared/providers/run_config_providers.dart';
 import '../../../shared/providers/run_completion_providers.dart';
-import '../../../shared/services/run/run_completion_service.dart';
-import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/services/settings/settings_service.dart';
 import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
+import '../../../shared/widgets/ui/seasonal_background.dart';
+import '../../../core/themes/theme_factory.dart';
 
 class RunSummaryScreen extends ConsumerStatefulWidget {
   final String? episodeId;
@@ -131,9 +131,14 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      backgroundColor: kMidnightNavy,
-      body: SafeArea(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SeasonalBackground(
+        showHeaderPattern: true,
+        headerHeight: 120,
+        child: SafeArea(
         child: Column(
           children: [
             // Header
@@ -168,6 +173,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           ],
         ),
       ),
+      ),
       bottomNavigationBar: BottomNavigationWidget(
         currentIndex: BottomNavIndex.workouts.value,
       ),
@@ -175,11 +181,15 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
   }
 
   Widget _buildHeader() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [kElectricAqua.withValues(alpha: 0.2), kDeepTeal.withValues(alpha: 0.1)],
+          colors: [
+            theme.colorScheme.primary.withOpacity(0.20),
+            theme.colorScheme.secondary.withOpacity(0.10),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -190,13 +200,17 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
             children: [
               IconButton(
                 onPressed: () => context.go('/home'),
-                icon: Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: theme.appBarTheme.foregroundColor ?? theme.colorScheme.onBackground,
+                  size: 24,
+                ),
               ),
               Expanded(
                 child: Text(
                   'Run Complete!',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
+                    color: theme.colorScheme.onBackground,
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
@@ -209,7 +223,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           Text(
             'Great job on your run!',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: kTextMid,
+              color: theme.colorScheme.onBackground.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -219,15 +233,16 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
   }
 
   Widget _buildStatsCard() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: theme.cardTheme.color ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -238,7 +253,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           Text(
             'Run Statistics',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: kElectricAqua,
+              color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -247,12 +262,12 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           // Stats Grid
           Row(
             children: [
-              Expanded(child: _buildStatItem('Time', _formatDuration(_totalTime), Icons.timer, kEmberCoral)),
+              Expanded(child: _buildStatItem('Time', _formatDuration(_totalTime), Icons.timer, theme.colorScheme.error)),
               Expanded(
                 child: FutureBuilder<String>(
                   future: _formatDistanceWithUnits(_totalDistance),
                   builder: (context, snapshot) {
-                    return _buildStatItem('Distance', snapshot.data ?? '${_totalDistance.toStringAsFixed(1)} km', Icons.flag, kMeadowGreen);
+                    return _buildStatItem('Distance', snapshot.data ?? '${_totalDistance.toStringAsFixed(1)} km', Icons.flag, theme.colorScheme.tertiary);
                   },
                 ),
               ),
@@ -265,7 +280,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
                 child: FutureBuilder<String>(
                   future: _formatPaceWithUnits(_averagePace),
                   builder: (context, snapshot) {
-                    return _buildStatItem('Pace', snapshot.data ?? '${_averagePace.toStringAsFixed(1)} min/km', Icons.speed, kDeepTeal);
+                    return _buildStatItem('Pace', snapshot.data ?? '${_averagePace.toStringAsFixed(1)} min/km', Icons.speed, theme.colorScheme.secondary);
                   },
                 ),
               ),
@@ -273,7 +288,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
                 child: FutureBuilder<String>(
                   future: _formatEnergyWithUnits(_caloriesBurned.toDouble()),
                   builder: (context, snapshot) {
-                    return _buildStatItem('Calories', snapshot.data ?? '$_caloriesBurned', Icons.local_fire_department, kElectricAqua);
+                    return _buildStatItem('Calories', snapshot.data ?? '$_caloriesBurned', Icons.local_fire_department, theme.colorScheme.primary);
                   },
                 ),
               ),
@@ -289,9 +304,9 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.10),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Column(
         children: [
@@ -309,7 +324,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: kTextMid,
+              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -337,24 +352,25 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
   }
 
   Widget _buildEpisodeCard() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: theme.cardTheme.color ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kRoyalPlum.withValues(alpha: 0.3)),
+        border: Border.all(color: theme.colorScheme.secondary.withOpacity(0.30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.play_circle, color: kRoyalPlum, size: 24),
+              Icon(Icons.play_circle, color: theme.colorScheme.secondary, size: 24),
               const SizedBox(width: 12),
               Text(
                 'Episode Complete',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: kRoyalPlum,
+                  color: theme.colorScheme.secondary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -364,7 +380,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           Text(
             _episode!.title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.white,
+              color: theme.colorScheme.onBackground,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -372,26 +388,26 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
           Text(
             _episode!.description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: kTextMid,
+              color: theme.colorScheme.onBackground.withOpacity(0.7),
             ),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: kMeadowGreen.withValues(alpha: 0.2),
+              color: theme.colorScheme.tertiary.withOpacity(0.20),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: kMeadowGreen.withValues(alpha: 0.5)),
+              border: Border.all(color: theme.colorScheme.tertiary.withOpacity(0.50)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, color: kMeadowGreen, size: 16),
+                Icon(Icons.check_circle, color: theme.colorScheme.tertiary, size: 16),
                 const SizedBox(width: 6),
                 Text(
                   'Objective Complete',
                   style: TextStyle(
-                    color: kMeadowGreen,
+                    color: theme.colorScheme.tertiary,
                     fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
@@ -405,24 +421,25 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
   }
 
   Widget _buildAchievementsCard() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: kSurfaceBase,
+        color: theme.cardTheme.color ?? theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kEmberCoral.withValues(alpha: 0.3)),
+        border: Border.all(color: theme.colorScheme.error.withOpacity(0.30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.emoji_events, color: kEmberCoral, size: 24),
+              Icon(Icons.emoji_events, color: theme.colorScheme.error, size: 24),
               const SizedBox(width: 12),
               Text(
                 'Achievements Unlocked',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: kEmberCoral,
+                  color: theme.colorScheme.error,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -435,14 +452,14 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen> {
             children: _achievements.map((achievement) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: kEmberCoral.withValues(alpha: 0.2),
+                color: theme.colorScheme.error.withOpacity(0.20),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: kEmberCoral.withValues(alpha: 0.5)),
+                border: Border.all(color: theme.colorScheme.error.withOpacity(0.50)),
               ),
               child: Text(
                 achievement,
                 style: TextStyle(
-                  color: kEmberCoral,
+                  color: theme.colorScheme.error,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
                 ),
