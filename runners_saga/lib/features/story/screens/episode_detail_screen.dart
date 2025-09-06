@@ -783,7 +783,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'External music will duck during scenes',
+                'Music will duck during scenes and restore after',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
                 ),

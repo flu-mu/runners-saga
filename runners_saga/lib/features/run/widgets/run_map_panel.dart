@@ -9,7 +9,11 @@ import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 
 class RunMapPanel extends ConsumerStatefulWidget {
-  const RunMapPanel({super.key});
+  /// When true, the panel expands to fill available height without
+  /// imposing the default min/max constraints.
+  final bool expanded;
+
+  const RunMapPanel({super.key, this.expanded = false});
 
   @override
   ConsumerState<RunMapPanel> createState() => _RunMapPanelState();
@@ -61,180 +65,194 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
       });
     }
 
+    final decoration = BoxDecoration(
+      color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.2),
+          blurRadius: 8,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+
+    final child = ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        children: [
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: centerCandidate ?? const LatLng(0, 0),
+              initialZoom: (centerCandidate != null) ? 15 : 2.5,
+              maxZoom: 18,
+              minZoom: 1,
+              // Prevent map from being too zoomed out
+              onMapReady: () {
+                if (centerCandidate != null) {
+                  _mapController.move(centerCandidate, 15);
+                }
+              },
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: const ['a', 'b', 'c'],
+                userAgentPackageName: 'runners_saga',
+              ),
+              // Add KM markers layer
+              if (polylinePoints.length > 1) _buildKmMarkers(polylinePoints),
+              // Route polyline
+              if (polylinePoints.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: polylinePoints, 
+                      color: Theme.of(context).colorScheme.primary, 
+                      strokeWidth: 4,
+                    ),
+                  ],
+                ),
+              // Current position marker - only when we have a GPS center
+              if (centerCandidate != null)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: centerCandidate,
+                      width: 24,
+                      height: 24,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Theme.of(context).colorScheme.onPrimary, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.my_location,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          // Map controls overlay
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Column(
+              children: [
+                // Zoom in button
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    onPressed: () => _mapController.move(
+                      _mapController.camera.center,
+                      _mapController.camera.zoom + 1,
+                    ),
+                    icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary, size: 20),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Zoom out button
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    onPressed: () => _mapController.move(
+                      _mapController.camera.center,
+                      _mapController.camera.zoom - 1,
+                    ),
+                    icon: Icon(Icons.remove, color: Theme.of(context).colorScheme.primary, size: 20),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Fit route button
+                if (polylinePoints.length > 1)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        final bounds = LatLngBounds.fromPoints(polylinePoints);
+                        _mapController.fitCamera(
+                          CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(32)),
+                        );
+                      },
+                      icon: Icon(Icons.fit_screen, color: Theme.of(context).colorScheme.primary, size: 20),
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // If expanded, do not apply tight height constraints so the parent
+    // Expanded can size it. Otherwise, keep the compact card sizing.
+    if (widget.expanded) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: decoration,
+        child: child,
+      );
+    }
+
     return Container(
-      // Make height flexible to prevent overflow
+      // Default compact height for list/scroll views
       constraints: const BoxConstraints(
         minHeight: 200,
         maxHeight: 300,
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: centerCandidate ?? const LatLng(0, 0),
-                initialZoom: (centerCandidate != null) ? 15 : 2.5,
-                maxZoom: 18,
-                minZoom: 1,
-                // Prevent map from being too zoomed out
-                onMapReady: () {
-                  if (centerCandidate != null) {
-                    _mapController.move(centerCandidate, 15);
-                  }
-                },
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: const ['a', 'b', 'c'],
-                  userAgentPackageName: 'runners_saga',
-                ),
-                // Add KM markers layer
-                if (polylinePoints.length > 1) _buildKmMarkers(polylinePoints),
-                // Route polyline
-                if (polylinePoints.isNotEmpty)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: polylinePoints, 
-                        color: Theme.of(context).colorScheme.primary, 
-                        strokeWidth: 4,
-                      ),
-                    ],
-                  ),
-                // Current position marker - only when we have a GPS center
-                if (centerCandidate != null)
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: centerCandidate,
-                        width: 24,
-                        height: 24,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Theme.of(context).colorScheme.onPrimary, width: 3),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.my_location,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            size: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            // Map controls overlay
-            Positioned(
-              top: 8,
-              right: 8,
-              child: Column(
-                children: [
-                  // Zoom in button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      onPressed: () => _mapController.move(
-                        _mapController.camera.center,
-                        _mapController.camera.zoom + 1,
-                      ),
-                      icon: Icon(Icons.add, color: Theme.of(context).colorScheme.primary, size: 20),
-                      padding: const EdgeInsets.all(8),
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Zoom out button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      onPressed: () => _mapController.move(
-                        _mapController.camera.center,
-                        _mapController.camera.zoom - 1,
-                      ),
-                      icon: Icon(Icons.remove, color: Theme.of(context).colorScheme.primary, size: 20),
-                      padding: const EdgeInsets.all(8),
-                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Fit route button
-                  if (polylinePoints.length > 1)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          final bounds = LatLngBounds.fromPoints(polylinePoints);
-                          _mapController.fitCamera(
-                            CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(32)),
-                          );
-                        },
-                        icon: Icon(Icons.fit_screen, color: Theme.of(context).colorScheme.primary, size: 20),
-                        padding: const EdgeInsets.all(8),
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      decoration: decoration,
+      child: child,
     );
   }
 

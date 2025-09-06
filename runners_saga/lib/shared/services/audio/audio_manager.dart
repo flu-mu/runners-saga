@@ -34,6 +34,8 @@ class AudioManager {
   bool _isBackgroundMusicPlaying = false;
   bool _isStoryAudioPlaying = false;
   bool _isSfxPlaying = false;
+  bool _backgroundDucked = false;
+  double _preDuckBackgroundVolume = 0.5;
   
   // Audio queue
   final List<AudioItem> _audioQueue = [];
@@ -204,6 +206,64 @@ class AudioManager {
         break;
     }
   }
+
+  /// Duck internal/background music to a fraction of its normal volume
+  Future<void> duckBackgroundMusic({double fraction = 0.10, bool gradual = true}) async {
+    try {
+      if (!_isBackgroundMusicPlaying) return;
+      if (_backgroundDucked) return; // already ducked
+      _preDuckBackgroundVolume = _backgroundMusicVolume;
+      final target = (_preDuckBackgroundVolume * fraction).clamp(0.0, 1.0);
+
+      if (gradual) {
+        const fadeSteps = 6;
+        const fadeDuration = Duration(milliseconds: 300);
+        for (int i = 1; i <= fadeSteps; i++) {
+          final v = _preDuckBackgroundVolume - (i * (_preDuckBackgroundVolume - target) / fadeSteps);
+          await _backgroundMusicPlayer.setVolume(v);
+          await Future.delayed(fadeDuration ~/ fadeSteps);
+        }
+      } else {
+        await _backgroundMusicPlayer.setVolume(target);
+      }
+      _backgroundDucked = true;
+      if (kDebugMode) {
+        print('🔇 AudioManager: Background music ducked to ${fraction * 100}%');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ AudioManager: Error ducking background music: $e');
+      }
+    }
+  }
+
+  /// Restore background/internal music volume after ducking
+  Future<void> restoreBackgroundMusic({bool gradual = true}) async {
+    try {
+      if (!_isBackgroundMusicPlaying) return;
+      final target = _preDuckBackgroundVolume.clamp(0.0, 1.0);
+      if (gradual) {
+        const fadeSteps = 10;
+        const fadeDuration = Duration(milliseconds: 500);
+        final currentVol = await _backgroundMusicPlayer.volume;
+        for (int i = 1; i <= fadeSteps; i++) {
+          final v = currentVol + (i * (target - currentVol) / fadeSteps);
+          await _backgroundMusicPlayer.setVolume(v);
+          await Future.delayed(fadeDuration ~/ fadeSteps);
+        }
+      } else {
+        await _backgroundMusicPlayer.setVolume(target);
+      }
+      _backgroundDucked = false;
+      if (kDebugMode) {
+        print('🔊 AudioManager: Background music volume restored');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ AudioManager: Error restoring background music: $e');
+      }
+    }
+  }
   
   /// Fade in story audio
   Future<void> _fadeInStoryAudio() async {
@@ -322,4 +382,3 @@ class AudioManager {
     await _sfxPlayer.dispose();
   }
 }
-

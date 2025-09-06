@@ -504,7 +504,8 @@ class RunSessionManager {
   void _onSceneComplete(SceneType scene) {
     onSceneCompleted?.call(scene);
     
-    // Background music handling removed to avoid issues
+    // Restore internal/background music volume after scene
+    _audioManager.restoreBackgroundMusic(gradual: true);
   }
 
   /// Update and notify stats

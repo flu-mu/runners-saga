@@ -1492,508 +1492,152 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
       );
     }
 
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: kMidnightNavy,
-      appBar: AppBar(
-        title: const Text('Your Run', style: TextStyle(color: Colors.white)),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => context.pop(),
+      backgroundColor: theme.colorScheme.background,
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            // Compact metrics header (ZRX-style)
+            _buildCompactHeader(currentEpisode),
+
+            // Expanded map fills the remaining space
+            const Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: RunMapPanel(expanded: true),
+              ),
+            ),
+
+            // Bottom controls bar
+            _buildBottomControlsBar(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Compact top header with distance/time/pace and subtle progress
+  Widget _buildCompactHeader(EpisodeModel? episode) {
+    final theme = Theme.of(context);
+    final stats = ref.watch(currentRunStatsProvider);
+    final progress = ref.watch(currentRunProgressProvider);
+
+    final title = episode?.title ?? 'Your Run';
+    final primary = theme.colorScheme.primary;
+    final surface = theme.colorScheme.surface;
+
+    return Container(
+      padding: const EdgeInsets.only(top: 44, left: 16, right: 16, bottom: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            primary.withOpacity(0.22),
+            surface.withOpacity(0.10),
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Top row: title + close
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                color: theme.colorScheme.onSurface,
+                onPressed: () => context.pop(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Thin progress bar under title
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: 6,
+              backgroundColor: theme.dividerColor.withOpacity(0.4),
+              valueColor: AlwaysStoppedAnimation<Color>(primary),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Big distance centered
+          FutureBuilder<String>(
+            future: _formatDistanceWithUnits(stats?.distance ?? 0.0),
+            builder: (context, snapshot) {
+              return Column(
+                children: [
+                  Text(
+                    snapshot.data ?? (stats?.distance ?? 0.0).toStringAsFixed(2),
+                    style: theme.textTheme.headlineLarge?.copyWith(fontSize: 44),
+                  ),
+                  Text('Distance', style: theme.textTheme.labelMedium),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          // Time and pace row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Column(
+                children: [
+                  Text(
+                    '${_elapsedTime.inMinutes}:${(_elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
+                    style: theme.textTheme.headlineSmall,
+                  ),
+                  Text('Time', style: theme.textTheme.labelMedium),
+                ],
+              ),
+              Column(
+                children: [
+                  FutureBuilder<String>(
+                    future: _formatPaceWithUnits(stats?.averagePace ?? 0.0),
+                    builder: (context, snapshot) => Text(
+                      snapshot.data ?? _formatPace(stats?.averagePace, stats?.distance),
+                      style: theme.textTheme.headlineSmall,
+                    ),
+                  ),
+                  Text('Pace', style: theme.textTheme.labelMedium),
+                ],
+              ),
+            ],
           ),
         ],
       ),
-      // Scene Notification Overlay removed - no currentSceneProvider available
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Episode Info Card
-            if (currentEpisode != null)
-              Container(
-                margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: kSurfaceBase,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.play_circle,
-                        color: kElectricAqua,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Current Episode',
-                        style: TextStyle(
-                          color: kElectricAqua,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    currentEpisode.title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    currentEpisode.objective,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: kTextMid,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    currentEpisode.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final userRunTarget = ref.watch(userRunTargetProvider);
-                      
-                      // Debug logging
-                      if (userRunTarget != null) {
-                      } else {
-                      }
-                      
-                      return Row(
-                        children: [
-                          // Show distance target only if user selected distance
-                          if (userRunTarget != null && userRunTarget.targetDistance > 0)
-                            Expanded(
-                              child: _buildEpisodeStat(
-                                'Target',
-                                '${userRunTarget.targetDistance} km',
-                                Icons.flag,
-                                Colors.orange,
-                              ),
-                            ),
-                          // Show time target only if user selected time
-                          if (userRunTarget != null && userRunTarget.targetTime.inMinutes > 0)
-                            Expanded(
-                              child: _buildEpisodeStat(
-                                'Time',
-                                '${userRunTarget.targetTime.inMinutes} min',
-                                Icons.timer,
-                                Colors.blue,
-                              ),
-                            ),
-                          // No fallback to episode defaults - only show user selection
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.audio_file,
-                        color: Colors.purple.shade600,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Audio Files: ${currentEpisode.audioFiles.length}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.purple.shade600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            
-            // Simple Timer Display
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Theme.of(context).dividerColor,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                       _getTimerDisplayIcon(),
-                       color: Theme.of(context).colorScheme.primary,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _getTimerDisplayText(),
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '${_elapsedTime.inMinutes}:${(_elapsedTime.inSeconds % 60).toString().padLeft(2, '0')}',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  Text(
-                    _isPaused ? 'Paused Time' : 'Elapsed Time',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 16),
-                  // Debug button to check timer status
-                  ElevatedButton(
-                    onPressed: () {
-                      final runSessionManager = ref.read(runSessionControllerProvider.notifier);
-                    },
-                    child: const Text('Debug Timer Status'),
-                  ),
-                ],
-              ),
-            ),
+    );
+  }
 
-          // Run Stats - Now in a scrollable column
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Map panel (Phase C basic) - Fixed height
-                const SizedBox(
-                  height: 200,
-                  child: RunMapPanel(),
-                ),
-                const SizedBox(height: 16),
-                const SceneProgressIndicator(),
-                const SizedBox(height: 8),
-                const SceneHud(),
-                const SizedBox(height: 16),
-                  // Scene Progress Indicator
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final currentScene = ref.watch(currentSceneProvider);
-                      final playedScenes = ref.watch(playedScenesProvider);
-                      final currentProgress = ref.watch(currentRunProgressProvider);
-                      
-                      return Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.purple.shade50,
-                              Colors.blue.shade50,
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.purple.shade200),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.theater_comedy,
-                                  color: Colors.purple.shade600,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Story Progress',
-                                  style: TextStyle(
-                                    color: Colors.purple.shade600,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            
-                            // Scene Progress Bar
-                            Container(
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: FractionallySizedBox(
-                                alignment: Alignment.centerLeft,
-                                widthFactor: currentProgress,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.purple.shade400,
-                                        Colors.blue.shade400,
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            
-                            const SizedBox(height: 12),
-                            
-                            // Scene Markers
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: SceneType.values.map((scene) {
-                                final isPlayed = playedScenes.contains(scene);
-                                final isCurrent = currentScene == scene;
-                                final triggerPercentage = SceneTriggerService.getSceneTriggerPercentage(scene);
-                                
-                                return Column(
-                                  children: [
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        color: isPlayed 
-                                          ? Colors.green 
-                                          : isCurrent 
-                                            ? Colors.orange 
-                                            : Colors.grey.shade300,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: isCurrent ? Colors.orange.shade600 : Colors.transparent,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      child: isPlayed 
-                                        ? const Icon(Icons.check, color: Colors.white, size: 16)
-                                        : isCurrent 
-                                          ? const Icon(Icons.play_arrow, color: Colors.white, size: 16)
-                                          : null,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${(triggerPercentage * 100).toInt()}%',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Text(
-                                      SceneTriggerService.getSceneTitle(scene).split(' ').first,
-                                      style: TextStyle(
-                                        fontSize: 8,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                            
-                            const SizedBox(height: 12),
-                            
-                            // Current Scene Info
-                            if (currentScene != null)
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.orange.shade200),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.volume_up,
-                                      color: Colors.orange.shade600,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Playing: ${SceneTriggerService.getSceneTitle(currentScene!)}',
-                                        style: TextStyle(
-                                          color: Colors.orange.shade700,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 24),
-
-                  // Stats Grid
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final currentStats = ref.watch(currentRunStatsProvider);
-                      final sessionState = ref.watch(currentRunSessionProvider);
-                      
-                      return Column(
-                        children: [
-                          // GPS Status Indicator
-                          _buildGpsStatusIndicator(),
-                          
-                          const SizedBox(height: 16),
-                          
-                          // Pace Zone Indicator
-                          _buildPaceZoneIndicator(),
-                          
-                          const SizedBox(height: 16),
-                          
-                          Row(
-                            children: [
-                              Expanded(
-                                child: FutureBuilder<String>(
-                                  future: _formatDistanceWithUnits(currentStats?.distance ?? 0.0),
-                                  builder: (context, snapshot) {
-                                    return _buildStatCard(
-                                      'Distance',
-                                      snapshot.data ?? '${(currentStats?.distance ?? 0.0).toStringAsFixed(2)} km',
-                                      Icons.straighten,
-                                      Colors.green,
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: FutureBuilder<String>(
-                                  future: _formatSpeedWithUnits(_formatSpeed(currentStats?.distance, currentStats?.elapsedTime).isNotEmpty 
-                                      ? double.tryParse(_formatSpeed(currentStats?.distance, currentStats?.elapsedTime)) ?? 0.0 
-                                      : 0.0),
-                                  builder: (context, snapshot) {
-                                    return _buildStatCard(
-                                      'Speed',
-                                      snapshot.data ?? '${_formatSpeed(currentStats?.distance, currentStats?.elapsedTime)} km/h',
-                                      Icons.speed,
-                                      Colors.orange,
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildStatCard(
-                                  'Current Pace',
-                                  _buildCurrentPaceDisplay(),
-                                  Icons.trending_up,
-                                  _getPaceZoneColor(_getPaceZone(_currentPace)),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: FutureBuilder<String>(
-                                  future: _formatSpeedWithUnits(_currentSpeed),
-                                  builder: (context, snapshot) {
-                                    return _buildStatCard(
-                                      'Current Speed',
-                                      snapshot.data ?? '${_currentSpeed.toStringAsFixed(1)} km/h',
-                                      Icons.speed,
-                                      Colors.orange,
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          Row(
-                            children: [
-                              Expanded(
-                                child: FutureBuilder<String>(
-                                  future: _formatPaceWithUnits(currentStats?.averagePace ?? 0.0),
-                                  builder: (context, snapshot) {
-                                    return _buildStatCard(
-                                      'Avg Pace',
-                                      snapshot.data ?? '${_formatPace(currentStats?.averagePace, currentStats?.distance)} min/km',
-                                      Icons.trending_up,
-                                      Colors.blue,
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: FutureBuilder<String>(
-                                  future: _formatEnergyWithUnits(_calculateCalories(currentStats?.distance ?? 0.0, currentStats?.elapsedTime ?? Duration.zero).toDouble()),
-                                  builder: (context, snapshot) {
-                                    return _buildStatCard(
-                                      'Calories',
-                                      snapshot.data ?? '${_calculateCalories(currentStats?.distance ?? 0.0, currentStats?.elapsedTime ?? Duration.zero).toStringAsFixed(0)} kcal',
-                                      Icons.local_fire_department,
-                                      Colors.redAccent,
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Control Buttons
-                  Center(
-                    child: _buildControlButtons(),
-                  ),
-                  
-                  const SizedBox(height: 24), // Bottom padding for safe area
-                ],
-              ),
-            ),
-          ],
+  /// Bottom controls styled as a compact sticky bar
+  Widget _buildBottomControlsBar() {
+    final theme = Theme.of(context);
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withOpacity(0.9),
+          border: Border(top: BorderSide(color: theme.dividerColor)),
         ),
+        child: _buildControlButtons(),
       ),
     );
   }

@@ -359,12 +359,14 @@ class SceneTriggerService {
     try {
       _audioSession = await audio_session.AudioSession.instance;
       
-      // Enhanced configuration for full background audio support
+      // Enhanced configuration for full background audio support with ducking
       final config = audio_session.AudioSessionConfiguration(
         avAudioSessionCategory: audio_session.AVAudioSessionCategory.playback,
-        avAudioSessionCategoryOptions: audio_session.AVAudioSessionCategoryOptions.allowBluetooth |
-                                      audio_session.AVAudioSessionCategoryOptions.mixWithOthers |
-                                      audio_session.AVAudioSessionCategoryOptions.allowAirPlay,
+        // Mix with others and duck other audio during scene playback (iOS)
+        avAudioSessionCategoryOptions: audio_session.AVAudioSessionCategoryOptions.mixWithOthers |
+            audio_session.AVAudioSessionCategoryOptions.duckOthers |
+            audio_session.AVAudioSessionCategoryOptions.allowBluetooth |
+            audio_session.AVAudioSessionCategoryOptions.allowAirPlay,
         avAudioSessionMode: audio_session.AVAudioSessionMode.defaultMode,
         avAudioSessionRouteSharingPolicy: audio_session.AVAudioSessionRouteSharingPolicy.defaultPolicy,
         avAudioSessionSetActiveOptions: audio_session.AVAudioSessionSetActiveOptions.none,
@@ -373,7 +375,8 @@ class SceneTriggerService {
           flags: audio_session.AndroidAudioFlags.none,
           usage: audio_session.AndroidAudioUsage.media,
         ),
-        androidAudioFocusGainType: audio_session.AndroidAudioFocusGainType.gain,
+        // Request transient may-duck focus (Android)
+        androidAudioFocusGainType: audio_session.AndroidAudioFocusGainType.gainTransientMayDuck,
         androidWillPauseWhenDucked: true,
       );
 
@@ -419,6 +422,43 @@ class SceneTriggerService {
         if (kDebugMode) {
           debugPrint('❌ Audio session recovery failed: $recoveryError');
         }
+      }
+    }
+  }
+
+  // Enable ducking by activating the audio session configured above
+  Future<void> _enableDucking() async {
+    try {
+      if (_audioSession == null) {
+        await _initializeBackgroundAudio();
+      }
+      if (_audioSession != null && !_isAudioSessionActive) {
+        await _audioSession!.setActive(true);
+        _isAudioSessionActive = true;
+      }
+      if (kDebugMode) {
+        debugPrint('🔇 Ducking enabled');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Failed to enable ducking: $e');
+      }
+    }
+  }
+
+  // Disable ducking by releasing audio focus
+  Future<void> _disableDucking() async {
+    try {
+      if (_audioSession != null && _isAudioSessionActive) {
+        await _audioSession!.setActive(false);
+        _isAudioSessionActive = false;
+      }
+      if (kDebugMode) {
+        debugPrint('🔊 Ducking disabled');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Failed to disable ducking: $e');
       }
     }
   }
@@ -622,10 +662,10 @@ class SceneTriggerService {
         return;
       }
 
-      // Ensure audio session active before playback
+      // Ensure audio session active before playback (enables ducking)
       try {
         if (_audioSession != null) {
-          await _audioSession!.setActive(true);
+          await _enableDucking();
           if (kDebugMode) {
             debugPrint('🎵 Audio session activated successfully');
           }
@@ -734,7 +774,7 @@ class SceneTriggerService {
   Future<void> _playSceneFromMultipleFiles(SceneType sceneType) async {
     try {
       if (_audioSession != null) {
-        await _audioSession!.setActive(true);
+        await _enableDucking();
       }
       
       // Map scene type to audio file index
@@ -838,6 +878,8 @@ class SceneTriggerService {
     
     onSceneComplete?.call(sceneType);
     _currentScene = null;
+    // Release ducking so external music returns to normal
+    _disableDucking();
     
     // DO NOT auto-progress to next scene
     // Scenes should only be triggered by progress milestones (0%, 20%, 40%, 70%, 90%)

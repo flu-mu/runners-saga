@@ -108,6 +108,33 @@ Verification
   - runners_saga/lib/features/run/screens/run_screen.dart (finish flow uses live session stats)
   - runners_saga/lib/shared/services/run/run_completion_service.dart (MET calorie calc + weight provider)
 
+### 12) Compact ZRX-Style Layout Applied
+- Condensed header: Added a single compact top header showing episode title, thin progress bar, large distance, and a row for time and pace. Uses theme colors.
+- Expanded map: The map now fills the remaining vertical space for a more immersive view. Removed the multi-card layout to reduce wasted space.
+- Sticky bottom controls: Pause/Resume and Finish Run are placed in a compact bottom bar that stays above the safe area.
+- Theme adherence: All colors are taken from season theme (Theme.of(context).colorScheme), preserving brand consistency.
+- Files:
+  - runners_saga/lib/features/run/screens/run_screen.dart (replaced card-heavy layout with compact header and bottom controls)
+  - runners_saga/lib/features/run/widgets/run_map_panel.dart (added expanded parameter for full-height map)
+- **Status**: ✅ Working well, ready for git commit.
+
+### 13) Duck Music Implementation
+- **Music Ducking System**: Implemented system-level ducking during scene playback so external players (Apple Music, Spotify, etc.) lower volume while story audio plays and restore after scenes.
+- **Audio Session Configuration**: 
+  - iOS: Added `duckOthers` to category options
+  - Android: Uses `gainTransientMayDuck` for audio focus
+- **Internal Player Ducking**: Added duck/restore helpers to in-app background music player that ducks to ~10% during scenes and restores after.
+- **Settings Updates**:
+  - Renamed "ZRX PLAYER MUSIC VOLUME" to "SAGA VOLUME" in settings screen
+  - Updated episode music sheet description to explain ducking behavior
+- **Files**:
+  - runners_saga/lib/shared/services/story/scene_trigger_service.dart (ducking enable/disable methods)
+  - runners_saga/lib/shared/services/audio/audio_manager.dart (internal player ducking helpers)
+  - runners_saga/lib/shared/services/run/run_session_manager.dart (scene start/complete ducking hooks)
+  - runners_saga/lib/features/settings/screens/settings_screen.dart (SAGA VOLUME rename)
+  - runners_saga/lib/features/story/screens/episode_detail_screen.dart (updated music description)
+- **Testing Required**: Need to test tomorrow to verify ducking works with external players (Apple Music) and internal player.
+
 ---
 
 ## 📌 Follow-ups (Nice-to-have)

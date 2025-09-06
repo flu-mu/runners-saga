@@ -171,7 +171,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _sectionTitle('APP VOLUME'),
           _buildAppVolumeSection(),
           
-          _sectionTitle('ZRX PLAYER MUSIC VOLUME'),
+          _sectionTitle('SAGA VOLUME'),
           _buildMusicVolumeSection(),
           
           _sectionTitle('Import Runs'),

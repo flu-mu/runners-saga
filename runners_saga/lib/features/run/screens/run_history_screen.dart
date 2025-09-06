@@ -1248,6 +1248,7 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
     if (totalDistance <= 0 || totalTime.inSeconds <= 0) return [];
 
     final segments = <KilometerSegment>[];
+    int allocatedTimeSec = 0; // running total to ensure cumulative time continuity
     double accumulatedDistance = 0.0;
     int startIndex = 0;
 
@@ -1272,7 +1273,9 @@ class _RunHistoryScreenState extends ConsumerState<RunHistoryScreen>
         if (segmentTimeSec <= 0) {
           if (i == route.length - 1) {
             // Last segment gets remaining time
-            segmentTimeSec = (totalTime.inSeconds - allocatedTimeSec).clamp(0, totalTime.inSeconds);
+            segmentTimeSec = (totalTime.inSeconds - allocatedTimeSec)
+                .clamp(0, totalTime.inSeconds)
+                .toInt();
           } else {
             segmentTimeSec = ((totalTime.inSeconds * (segmentDistanceKm / totalDistance))).round();
           }
