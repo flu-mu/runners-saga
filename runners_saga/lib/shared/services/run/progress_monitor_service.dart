@@ -6,8 +6,8 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/run_enums.dart';
 import '../story/scene_trigger_service.dart';
-import 'coach_service.dart';
-import '../../providers/coach_providers.dart';
+import '../../../features/settings/screens/coach_service.dart';
+import '../../models/coach_providers.dart';
 import '../../models/run_stats_model.dart';
 
 class ProgressMonitorService {
@@ -320,7 +320,7 @@ class ProgressMonitorService {
       _updateElapsedTime();
       _updateDistanceForNonGps();
       _updateProgress();
-
+      
       _checkForCoachReadout();
       
       if (kDebugMode) {

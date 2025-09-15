@@ -112,8 +112,8 @@ class RunSessionManager {
         trackingEnabled: trackingEnabled,
         onDistanceUpdate: _onDistanceUpdate,
         onTimeUpdate: _onTimeUpdate,
-        onPaceUpdate: _onPaceUpdate,
-        onProgressUpdate: _onProgressUpdate,
+        onPaceUpdate: _onPaceUpdate, 
+        onProgressUpdate: _onProgressUpdate, 
         onRouteUpdate: _onRouteUpdate,
       );
 
@@ -381,7 +381,7 @@ class RunSessionManager {
 
 
   /// Handle progress updates
-  void _onProgressUpdate(double progress) {
+  void _onProgressUpdate(double progress, Duration elapsedTime, double distance) {
     // Don't process updates if session is stopped or globally stopped
     if (_globallyStopped || (!_isSessionActive && _isPaused == false)) {
       if (kDebugMode) {
@@ -399,7 +399,7 @@ class RunSessionManager {
     
     // Update scene trigger service with progress
     if (_isSessionActive && !_isPaused) {
-      _sceneTrigger.updateProgress(progress: progress);
+      _sceneTrigger.updateProgress(progress: progress, elapsedTime: elapsedTime, distance: distance);
     }
     
     // Update stats to reflect the new progress
@@ -851,32 +851,4 @@ enum RunSessionState {
   inactive,
   running,
   playingScene,
-  paused,
-}
-
-/// Run statistics
-class RunStats {
-  final double distance;
-  final Duration elapsedTime;
-  final double currentPace;
-  final double averagePace;
-  final double maxPace;
-  final double minPace;
-  final double progress;
-  final List<SceneType> playedScenes;
-  final SceneType? currentScene;
-  final List<LocationPoint> route;
-  
-  RunStats({
-    required this.distance,
-    required this.elapsedTime,
-    required this.currentPace,
-    required this.averagePace,
-    required this.maxPace,
-    required this.minPace,
-    required this.progress,
-    required this.playedScenes,
-    this.currentScene,
-    required this.route,
-  });
 }

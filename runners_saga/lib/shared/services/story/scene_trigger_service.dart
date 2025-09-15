@@ -2,13 +2,14 @@ import 'dart:async';
 
 import 'package:audio_session/audio_session.dart' as audio_session;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:runners_saga/shared/models/episode_model.dart';
 import 'package:runners_saga/shared/services/audio/download_service.dart';
-import 'package:runners_saga/shared/services/audio/audio_scheduler_service.dart';
+import '../../../features/settings/screens/audio_scheduler_service.dart';
 import 'package:runners_saga/shared/services/settings/settings_service.dart';
 import 'package:runners_saga/shared/models/run_enums.dart';
 

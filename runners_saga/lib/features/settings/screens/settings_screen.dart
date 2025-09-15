@@ -13,7 +13,7 @@ import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
 import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/services/settings/settings_service.dart';
 import '../../../shared/providers/run_config_providers.dart';
-import '../../../shared/providers/coach_providers.dart';
+import '../../models/coach_providers.dart';
 import '../../../shared/models/run_enums.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/themes/theme_selector_widget.dart';
