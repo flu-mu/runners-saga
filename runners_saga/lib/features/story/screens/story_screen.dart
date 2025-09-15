@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../shared/providers/auth_providers.dart';
-import '../../../shared/providers/story_providers.dart';
 import '../../../shared/models/season_model.dart';
 import '../../../shared/models/episode_model.dart';
-import '../../../core/constants/app_theme.dart';
 import '../../../shared/widgets/ui/seasonal_background.dart';
 import '../../../core/themes/theme_factory.dart';
 
@@ -47,7 +44,7 @@ class StoryScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSeasonCard(BuildContext context, WidgetRef ref, SeasonModel season) {
+  Widget _buildSeasonCard(BuildContext context, WidgetRef _ref, SeasonModel season) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 4,
@@ -55,7 +52,7 @@ class StoryScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
-        onTap: () => _navigateToSeasonDetails(context, ref, season),
+        onTap: () => _navigateToSeasonDetails(context, _ref, season),
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(20),
@@ -188,7 +185,7 @@ class StoryScreen extends ConsumerWidget {
     }
   }
 
-  void _navigateToSeasonDetails(BuildContext context, WidgetRef ref, SeasonModel season) {
+  void _navigateToSeasonDetails(BuildContext context, WidgetRef _ref, SeasonModel season) {
     context.push('/story/${season.id}');
   }
 }

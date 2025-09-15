@@ -134,7 +134,7 @@ class HomeScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Abel Township Saga section
+                      // Northgate Saga section
                       Container(
                 width: double.infinity,
                         padding: const EdgeInsets.all(20.0),
@@ -160,7 +160,7 @@ class HomeScreen extends ConsumerWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                                 Text(
-                                  'Abel Township Saga',
+                                  'Northgate Saga',
                                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                     color: theme.colorScheme.onBackground,
                                     fontWeight: FontWeight.w600,
@@ -199,7 +199,7 @@ class HomeScreen extends ConsumerWidget {
                                   elevation: 0,
                                 ),
                                 child: Text(
-                                  'Enter Abel Township',
+                                  'Enter Northgate',
                                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: theme.colorScheme.primary,
@@ -247,7 +247,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Explore additional storylines and running adventures beyond Abel Township.',
+                              'Explore additional storylines and running adventures beyond Northgate.',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: kTextHigh,
                                 fontWeight: FontWeight.w500,

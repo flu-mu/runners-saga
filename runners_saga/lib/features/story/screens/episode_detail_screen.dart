@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/story_providers.dart';
-import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/providers/run_providers.dart';
+import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/providers/run_config_providers.dart';
-import '../../../shared/models/run_enums.dart';
-import '../../../core/services/auth_service.dart';
 import '../../../shared/providers/run_session_providers.dart';
+import '../../../shared/models/run_enums.dart';
 import '../../../shared/models/run_target_model.dart';
 import '../../../shared/models/episode_model.dart';
 import 'package:go_router/go_router.dart';
@@ -14,9 +14,12 @@ import 'package:flutter/foundation.dart';
 import '../../run/widgets/run_target_sheet.dart';
 import '../../../shared/services/audio/download_service.dart';
 import '../../../shared/services/firebase/firebase_storage_service.dart';
-import '../../../core/constants/app_theme.dart';
 import '../../../shared/widgets/ui/seasonal_background.dart';
+import '../../../core/constants/app_theme.dart';
+import '../../../shared/services/settings/settings_service.dart';
 import '../../../core/themes/theme_factory.dart';
+import '../../run/screens/step_count_settings_screen.dart';
+import '../../run/screens/simulate_running_settings_screen.dart';
 
 class EpisodeDetailScreen extends ConsumerStatefulWidget {
   final String episodeId;
@@ -122,7 +125,7 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     
     // Set default tracking mode if none selected
     if (ref.read(trackingModeProvider) == null) {
-      ref.read(trackingModeProvider.notifier).state = TrackingMode.gps;
+      ref.read(trackingModeProvider.notifier).setTrackingMode(TrackingMode.gps);
     }
     
     // Set default sprint intensity if none selected
@@ -247,11 +250,11 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final episodeAsync = ref.watch(episodeByIdProvider(widget.episodeId));
-    final unit = ref.watch(unitSystemProvider);
+    // Removed unused: unit system is not referenced in this view
     final sprint = ref.watch(sprintIntensityProvider);
     final tracking = ref.watch(trackingModeProvider);
     final music = ref.watch(musicSourceProvider);
-    final weightKg = ref.watch(userWeightKgProvider);
+    // Removed unused: weight is configured in Settings, not used here
     final selectedTarget = ref.watch(selectedRunTargetProvider);
     final theme = ThemeFactory.getCurrentTheme();
 
@@ -534,16 +537,39 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
                 const SizedBox(height: 12),
                 _tile(context, 'Music', subtitle: music?.name ?? 'External Player', icon: Icons.music_note, onTap: _showMusicSheet),
                 const SizedBox(height: 12),
-                _tile(context, 'Duration', subtitle: selectedTarget?.displayName ?? 'Select duration', icon: Icons.timer, onTap: (){
-                  showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                    ),
-                    builder: (_) => const RunTargetSheet(),
-                  );
-                }),
+                _tile(
+                  context,
+                  'Duration',
+                  subtitle: () {
+                    final clipMode = ref.watch(clipIntervalModeProvider);
+                    final clipKm = ref.watch(clipIntervalDistanceKmProvider);
+                    final clipMin = ref.watch(clipIntervalMinutesProvider);
+                    final unit = ref.watch(distanceUnitProvider);
+                    final isMiles = unit == DistanceUnit.miles;
+                    final symbol = isMiles ? 'mi' : 'km';
+                    String clipText;
+                    if (clipMode == ClipIntervalMode.distance) {
+                      final val = isMiles ? (clipKm * 0.621371) : clipKm;
+                      clipText = 'clips every ${val.toStringAsFixed(1)} $symbol';
+                    } else {
+                      clipText = 'clips every ${clipMin.toStringAsFixed(1)} min';
+                    }
+                    final base = selectedTarget?.displayName ?? 'Select duration';
+                    return '$base • $clipText';
+                  }(),
+                  icon: Icons.timer,
+                  onTap: (){
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      builder: (_) => const RunTargetSheet(),
+                    );
+                  },
+                ),
               ],
             ),
           );
@@ -635,56 +661,222 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        final current = ref.read(trackingModeProvider);
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
+        return Consumer(builder: (context, refSheet, _) {
+          final current = refSheet.watch(trackingModeProvider) ?? TrackingMode.gps;
+          final trackingEnabled = refSheet.watch(trackingEnabledProvider);
+          final unit = refSheet.watch(distanceUnitProvider);
+          final meters = refSheet.watch(stepStrideMetersProvider);
+          final storedPaceMinPerKm = refSheet.watch(simulatePaceMinPerKmProvider);
+          final isMiles = unit == DistanceUnit.miles;
+          final paceDisplay = storedPaceMinPerKm * (isMiles ? (1 / 0.621371) : 1.0);
+          int metersInt = meters.floor();
+          int cmInt = ((meters - metersInt) * 100).round();
+          int paceMin = paceDisplay.floor();
+          int paceSec = (((paceDisplay - paceMin) * 60) / 5).round() * 5;
+
+          return Container(
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 8),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header with red brand background and master toggle
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: kEmberCoral,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.explore, color: Colors.white),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text('Tracking', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                          ),
+                          Switch(
+                            value: trackingEnabled,
+                            activeColor: Colors.white,
+                            onChanged: (v) {
+                              refSheet.read(trackingEnabledProvider.notifier).setEnabled(v);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // GPS option
+                    RadioListTile<TrackingMode>(
+                      value: TrackingMode.gps,
+                      groupValue: current,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      title: Text('GPS', style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
+                      subtitle: Text('Track your movement outdoors. Your run will be mapped as you go.',
+                          style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7))),
+                      onChanged: (v) async {
+                        if (v != null) {
+                          await refSheet.read(trackingModeProvider.notifier).setTrackingMode(v);
+                        }
+                      },
+                    ),
+                    const Divider(height: 1),
+                    // Step Counting with embedded picker
+                    RadioListTile<TrackingMode>(
+                      value: TrackingMode.steps,
+                      groupValue: current,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      title: Text('Step Counting', style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
+                      subtitle: Text('Detects steps while your phone is in your pocket or on your body. Suitable for treadmills and indoor runs.',
+                          style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7))),
+                      onChanged: (v) async {
+                        if (v != null) {
+                          await refSheet.read(trackingModeProvider.notifier).setTrackingMode(v);
+                        }
+                      },
+                    ),
+                    // Indicator under Step Counting
+                    if (true) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 4),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Stride: ${metersInt + (cmInt/100.0)} m',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                              )),
+                        ),
+                      ),
+                    ],
+                    if (current == TrackingMode.steps) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('STRIDE LENGTH', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7))),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 160,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 100,
+                              child: CupertinoPicker(
+                                itemExtent: 32,
+                                scrollController: FixedExtentScrollController(initialItem: metersInt.clamp(0, 3)),
+                                onSelectedItemChanged: (i) {
+                                  metersInt = i;
+                                  final val = metersInt + (cmInt / 100.0);
+                                  refSheet.read(stepStrideMetersProvider.notifier).setStride(val);
+                                },
+                                children: List.generate(4, (i) => Center(child: Text('$i m'))),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 120,
+                              child: CupertinoPicker(
+                                itemExtent: 32,
+                                scrollController: FixedExtentScrollController(initialItem: (cmInt / 5).round()),
+                                onSelectedItemChanged: (i) {
+                                  cmInt = i * 5;
+                                  final val = metersInt + (cmInt / 100.0);
+                                  refSheet.read(stepStrideMetersProvider.notifier).setStride(val);
+                                },
+                                children: List.generate(21, (i) => Center(child: Text('${i * 5} cm'))),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const Divider(height: 1),
+                    // Simulate Running with embedded picker
+                    RadioListTile<TrackingMode>(
+                      value: TrackingMode.simulate,
+                      groupValue: current,
+                      activeColor: Theme.of(context).colorScheme.primary,
+                      title: Text('Simulate Running', style: TextStyle(color: Theme.of(context).colorScheme.onBackground)),
+                      subtitle: Text('The app will assume you are running at a fixed pace. Use this option for any form of exercise or activity.',
+                          style: TextStyle(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7))),
+                      onChanged: (v) async {
+                        if (v != null) {
+                          await refSheet.read(trackingModeProvider.notifier).setTrackingMode(v);
+                        }
+                      },
+                    ),
+                    // Indicator under Simulate Running
+                    if (true) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 4),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Pace: ${paceMin.toString()}m ${paceSec.toString().padLeft(2,'0')}s / ${isMiles ? 'mile' : 'km'}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                                ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (current == TrackingMode.simulate) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('RUNNING PACE', style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7))),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('per ${isMiles ? 'mile' : 'kilometer'}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7))),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 160,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 110,
+                              child: CupertinoPicker(
+                                itemExtent: 32,
+                                scrollController: FixedExtentScrollController(initialItem: paceMin.clamp(3, 20) - 3),
+                                onSelectedItemChanged: (i) async {
+                                  paceMin = i + 3;
+                                  final displayPace = paceMin + (paceSec / 60.0);
+                                  // Convert back to min/km for storage when miles
+                                  final toStore = isMiles ? (displayPace * 0.621371) : displayPace;
+                                  await refSheet.read(simulatePaceMinPerKmProvider.notifier).setPace(toStore);
+                                },
+                                children: List.generate(18, (i) => Center(child: Text('${i + 3} min'))),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 120,
+                              child: CupertinoPicker(
+                                itemExtent: 32,
+                                scrollController: FixedExtentScrollController(initialItem: (paceSec / 5).round()),
+                                onSelectedItemChanged: (i) async {
+                                  paceSec = i * 5;
+                                  final displayPace = paceMin + (paceSec / 60.0);
+                                  final toStore = isMiles ? (displayPace * 0.621371) : displayPace;
+                                  await refSheet.read(simulatePaceMinPerKmProvider.notifier).setPace(toStore);
+                                },
+                                children: List.generate(12, (i) => Center(child: Text('${i * 5} sec'))),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Tracking Mode',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onBackground,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Choose how to track your run',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 16),
-              for (final mode in TrackingMode.values)
-                RadioListTile<TrackingMode>(
-                  value: mode,
-                  groupValue: current,
-                  title: Text(
-                    mode.name,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onBackground),
-                  ),
-                  activeColor: Theme.of(context).colorScheme.primary,
-                  onChanged: (v) { 
-                    if (v!=null) { 
-                      ref.read(trackingModeProvider.notifier).state = v; 
-                      Navigator.pop(ctx); 
-                    } 
-                  },
-                ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
+            );
+          });
       },
     );
   }

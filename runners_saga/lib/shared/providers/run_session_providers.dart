@@ -8,6 +8,7 @@ import '../models/run_model.dart';
 import '../models/run_target_model.dart';
 import '../models/run_enums.dart';
 import 'settings_providers.dart';
+import 'run_config_providers.dart';
 
 part 'run_session_providers.g.dart';
 
@@ -214,11 +215,28 @@ class RunSessionController extends _$RunSessionController {
       ref.read(currentRunEpisodeProvider.notifier).setEpisode(episode);
       
       // Start the session with user's selected targets
+      // Pull tracking configuration from providers
+      double strideMeters = 1.0;
+      double simulatePace = 6.0;
+      bool trackingEnabled = true;
+      try {
+        strideMeters = ref.read(stepStrideMetersProvider);
+      } catch (_) {}
+      try {
+        simulatePace = ref.read(simulatePaceMinPerKmProvider);
+      } catch (_) {}
+      try {
+        trackingEnabled = ref.read(trackingEnabledProvider);
+      } catch (_) {}
+
       await state.startSession(
         episode,
         userTargetTime: userTargetTime,
         userTargetDistance: userTargetDistance,
         trackingMode: trackingMode,
+        strideMeters: strideMeters,
+        simulatePaceMinPerKm: simulatePace,
+        trackingEnabled: trackingEnabled,
       );
     } catch (e) {
       // Handle error
@@ -346,6 +364,16 @@ class RunSessionController extends _$RunSessionController {
   
   /// Get played scenes
   List<SceneType> get playedScenes => state.playedScenes;
+
+  /// Update clip interval configuration mid-run
+  void updateClipInterval(ClipIntervalMode mode, {double? distanceKm, double? minutes}) {
+    state.updateClipInterval(mode, distanceKm: distanceKm, minutes: minutes);
+  }
+
+  /// Refresh clip interval from SettingsService mid-run
+  Future<void> refreshClipIntervalFromSettings() async {
+    await state.refreshClipIntervalFromSettings();
+  }
 
   // Expose the callback setter
   set onTimeUpdated(Function(Duration time)? callback) {

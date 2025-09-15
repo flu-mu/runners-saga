@@ -11,13 +11,13 @@
 - ✅ Phase E1: Map Improvements - PARTIALLY COMPLETED
 
 ### What's Working Now
-- ✅ Home screen with "Midnight Trail" theme and clickable "Abel Township Saga" button
+- ✅ Home screen with "Midnight Trail" theme and clickable "Northgate Saga" button
 - ✅ Season/episode selection screen with horizontal season tabs and vertical episode lists
 - ✅ Episode detail screen with blue background and run parameter configuration
 - ✅ All run parameter options (Duration, Tracking, Sprints, Music) work as bottom sheets
 - ✅ Sensible defaults set automatically: Duration (first option), Tracking (GPS), Sprints (Off), Music (External)
 - ✅ Start Workout button is active immediately with defaults
-- ✅ Navigation flow: Home → Abel Township → Seasons → Episode → Run works end-to-end
+- ✅ Navigation flow: Home → Northgate → Seasons → Episode → Run works end-to-end
 - ✅ Firebase integration working (with fallback data when collections don't exist)
 - ✅ Audio scene triggering working during runs
 - ✅ App builds and runs successfully on iOS device

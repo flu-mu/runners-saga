@@ -16,6 +16,27 @@ enum MusicSource {
   internal,
 }
 
+// How to space story clips during a workout
+enum ClipIntervalMode {
+  distance, // play clips every X km/mi
+  time,     // play clips every X minutes
+}
+
+// --- Coach Feature Enums ---
+
+enum CoachFrequencyType {
+  time,
+  distance,
+}
+
+enum CoachStat {
+  pace,
+  distance,
+  time,
+  splitPace,
+  heartRate,
+}
+
 extension TrackingModeExtension on TrackingMode {
   String get name {
     switch (this) {
@@ -54,14 +75,3 @@ extension MusicSourceExtension on MusicSource {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-

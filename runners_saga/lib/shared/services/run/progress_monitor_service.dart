@@ -2,8 +2,13 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert'; // Added for jsonEncode
-import '../story/scene_trigger_service.dart'; // Add scene trigger service import
+import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/run_enums.dart';
+import '../story/scene_trigger_service.dart';
+import 'coach_service.dart';
+import '../../providers/coach_providers.dart';
+import '../../models/run_stats_model.dart';
 
 class ProgressMonitorService {
   // Timer and monitoring state
@@ -13,6 +18,7 @@ class ProgressMonitorService {
   bool _timersStopped = false; // Flag to prevent timer restart
   bool _globallyStopped = false; // Global flag to prevent any restart
   bool _forceStopped = false; // Additional force stop flag
+  late final Ref _ref;
 
   DateTime? _startTime;
   DateTime? _pauseTime;
@@ -39,16 +45,27 @@ class ProgressMonitorService {
   // Scene trigger integration
   SceneTriggerService? _sceneTriggerService;
   Timer? _backgroundProgressTimer;
+
+  // Coach readout tracking
+  Duration _lastReadoutTime = Duration.zero;
+  double _lastReadoutDistance = 0.0;
   
   // Targets
   Duration _targetTime = Duration.zero;
   double _targetDistance = 0.0;
+
+  // Tracking configuration
+  TrackingMode _trackingMode = TrackingMode.gps;
+  double _strideMeters = 1.0; // meters per step for step-counting
+  double _simulatePaceMinPerKm = 6.0; // minutes per kilometer for simulated runs
+  bool _trackingEnabled = true;
+  int _steps = 0; // simple accumulator; real step events should update this
   
   // Callbacks
   Function(double distance)? onDistanceUpdate;
   Function(Duration time)? onTimeUpdate;
   Function(double pace)? onPaceUpdate;
-  Function(double progress)? onProgressUpdate;
+  Function(double progress, Duration elapsedTime, double distance)? onProgressUpdate;
   Function(List<Position> route)? onRouteUpdate;
   
   // Getters
@@ -67,14 +84,22 @@ class ProgressMonitorService {
   void initialize({
     required Duration targetTime,
     required double targetDistance,
+    TrackingMode trackingMode = TrackingMode.gps,
+    double strideMeters = 1.0,
+    double simulatePaceMinPerKm = 6.0,
+    bool trackingEnabled = true,
     Function(double distance)? onDistanceUpdate,
     Function(Duration time)? onTimeUpdate,
     Function(double pace)? onPaceUpdate,
-    Function(double progress)? onProgressUpdate,
+    Function(double progress, Duration elapsedTime, double distance)? onProgressUpdate,
     Function(List<Position> route)? onRouteUpdate,
   }) {
     _targetTime = targetTime;
     _targetDistance = targetDistance;
+    _trackingMode = trackingMode;
+    _strideMeters = strideMeters;
+    _simulatePaceMinPerKm = simulatePaceMinPerKm;
+    _trackingEnabled = trackingEnabled;
     this.onDistanceUpdate = onDistanceUpdate;
     this.onTimeUpdate = onTimeUpdate;
     this.onPaceUpdate = onPaceUpdate;
@@ -82,6 +107,11 @@ class ProgressMonitorService {
     this.onRouteUpdate = onRouteUpdate;
     
     // Don't reset state here - it will be reset when start() is called
+  }
+
+  /// Set the Riverpod ref for service access.
+  void setRef(Ref ref) {
+    _ref = ref;
   }
 
   /// Start monitoring progress
@@ -94,6 +124,8 @@ class ProgressMonitorService {
     try {
       _startTime = DateTime.now();
       _isMonitoring = true;
+      _lastReadoutTime = Duration.zero;
+      _lastReadoutDistance = 0.0;
       
       if (kDebugMode) {
         print('Progress monitor start time set to: $_startTime');
@@ -102,30 +134,34 @@ class ProgressMonitorService {
       // Start progress timer immediately (don't wait for location)
       _startProgressTimer();
       
-      // Try to start location tracking (but don't fail if it doesn't work)
-      try {
-        // Check location permissions
-        final permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          final requested = await Geolocator.requestPermission();
-          if (requested != LocationPermission.whileInUse && 
-              requested != LocationPermission.always) {
-            // Don't throw, just log and continue without location
-            if (kDebugMode) {
-              print('Location permission denied, continuing without location tracking');
+      // Start appropriate tracking based on mode
+      if (_trackingMode == TrackingMode.gps && _trackingEnabled) {
+        // Try to start location tracking (but don't fail if it doesn't work)
+        try {
+          // Check location permissions
+          final permission = await Geolocator.checkPermission();
+          if (permission == LocationPermission.denied) {
+            final requested = await Geolocator.requestPermission();
+            if (requested != LocationPermission.whileInUse &&
+                requested != LocationPermission.always) {
+              if (kDebugMode) {
+                print('Location permission denied, continuing without location tracking');
+              }
+            } else {
+              _startLocationTracking();
             }
           } else {
-            // Start location tracking
             _startLocationTracking();
           }
-        } else {
-          // Start location tracking
-          _startLocationTracking();
+        } catch (locationError) {
+          if (kDebugMode) {
+            print('Location tracking failed, continuing without it: $locationError');
+          }
         }
-      } catch (locationError) {
-        // Don't fail the entire start process if location fails
+      } else {
+        // Step counting or simulate modes do not start GPS
         if (kDebugMode) {
-          print('Location tracking failed, continuing without it: $locationError');
+          print('ProgressMonitorService: Using ${_trackingMode.name} mode - GPS not started');
         }
       }
       
@@ -282,12 +318,48 @@ class ProgressMonitorService {
       
       // Only proceed if monitoring is active
       _updateElapsedTime();
+      _updateDistanceForNonGps();
       _updateProgress();
+
+      _checkForCoachReadout();
       
       if (kDebugMode) {
         print('Simple timer tick: elapsedTime=${_elapsedTime.inSeconds}s, progress=${(_calculateProgress() * 100).toStringAsFixed(1)}%');
       }
     });
+  }
+
+  /// Update distance for non-GPS tracking modes on each tick
+  void _updateDistanceForNonGps() {
+    if (!_trackingEnabled) {
+      // Explicitly disabled tracking; keep distance 0
+      return;
+    }
+    if (_trackingMode == TrackingMode.simulate) {
+      // pace: minutes per km
+      final minutes = _elapsedTime.inSeconds / 60.0;
+      final distance = _simulatePaceMinPerKm > 0 ? minutes / _simulatePaceMinPerKm : 0.0;
+      if ((distance - _currentDistance).abs() > 1e-6) {
+        _currentDistance = distance;
+        onDistanceUpdate?.call(_currentDistance);
+      }
+    } else if (_trackingMode == TrackingMode.steps) {
+      // Distance from steps; expects _steps to be updated by a step-counting service
+      final distance = (_steps * _strideMeters) / 1000.0; // km
+      if ((distance - _currentDistance).abs() > 1e-6) {
+        _currentDistance = distance;
+        onDistanceUpdate?.call(_currentDistance);
+      }
+    }
+  }
+
+  /// External API to feed step counts (to be connected to a pedometer service)
+  void addSteps(int stepDelta) {
+    if (stepDelta <= 0) return;
+    _steps += stepDelta;
+    if (_trackingMode == TrackingMode.steps) {
+      _updateDistanceForNonGps();
+    }
   }
 
   /// Stop progress timer
@@ -471,7 +543,7 @@ class ProgressMonitorService {
     }
     
     final progress = _calculateProgress();
-    onProgressUpdate?.call(progress);
+    onProgressUpdate?.call(progress, _elapsedTime, _currentDistance);
   }
 
   /// Calculate current progress

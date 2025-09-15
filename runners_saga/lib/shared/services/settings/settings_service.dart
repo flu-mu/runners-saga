@@ -27,6 +27,15 @@ class SettingsService {
   static const String _userHeightCmKey = 'user_height_cm';
   static const String _userAgeKey = 'user_age_years';
   static const String _userGenderKey = 'user_gender';
+  // Tracking configuration keys
+  static const String _trackStrideMetersKey = 'track_stride_meters';
+  static const String _trackSimPaceMinPerKmKey = 'track_sim_pace_min_per_km';
+  static const String _trackingModeKey = 'tracking_mode';
+  static const String _trackingEnabledKey = 'tracking_enabled';
+  // Clip interval (scene spacing) keys
+  static const String _clipIntervalModeKey = 'clip_interval_mode'; // 0=distance,1=time
+  static const String _clipIntervalDistanceKmKey = 'clip_interval_distance_km';
+  static const String _clipIntervalMinutesKey = 'clip_interval_minutes';
 
   // Default values
   static const DistanceUnit _defaultDistanceUnit = DistanceUnit.kilometers;
@@ -37,6 +46,11 @@ class SettingsService {
   static const int _defaultUserHeightCm = 170;
   static const int _defaultUserAgeYears = 30;
   static const Gender _defaultUserGender = Gender.preferNotToSay;
+  // Defaults for tracking configs
+  static const double _defaultStrideMeters = 1.0; // 1 m default stride
+  static const double _defaultSimPaceMinPerKm = 6.0; // 6:00 /km
+  static const double _defaultClipIntervalDistanceKm = 0.4; // 400 m
+  static const double _defaultClipIntervalMinutes = 3.0; // 3 minutes
 
   // Distance unit conversion constants
   static const double _kmToMiles = 0.621371;
@@ -264,14 +278,79 @@ class SettingsService {
     final unit = await getPaceUnitSymbol();
     return '${convertedPace.toStringAsFixed(1)} $unit';
   }
+
+  // ---------- Tracking configuration: Step stride + Simulate pace ----------
+
+  /// Get saved stride length (meters per step)
+  Future<double> getStrideLengthMeters() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_trackStrideMetersKey) ?? _defaultStrideMeters;
+  }
+
+  /// Set stride length (meters per step)
+  Future<void> setStrideLengthMeters(double meters) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_trackStrideMetersKey, meters.clamp(0.3, 2.5));
+  }
+
+  /// Get saved simulate running pace (minutes per kilometer)
+  Future<double> getSimulatePaceMinPerKm() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_trackSimPaceMinPerKmKey) ?? _defaultSimPaceMinPerKm;
+  }
+
+  /// Set simulate running pace (minutes per kilometer)
+  Future<void> setSimulatePaceMinPerKm(double minPerKm) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_trackSimPaceMinPerKmKey, minPerKm.clamp(3.0, 20.0));
+  }
+
+  /// Persist tracking mode (enum index)
+  Future<void> setTrackingModeIndex(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_trackingModeKey, index);
+  }
+
+  /// Get stored tracking mode index (or null if not set)
+  Future<int?> getTrackingModeIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_trackingModeKey);
+  }
+
+  /// Tracking enabled on/off
+  Future<void> setTrackingEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_trackingEnabledKey, enabled);
+  }
+
+  Future<bool> getTrackingEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_trackingEnabledKey) ?? true;
+  }
+
+  // ---------- Scene clip interval preferences ----------
+  Future<int> getClipIntervalModeIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_clipIntervalModeKey) ?? 0;
+  }
+  Future<void> setClipIntervalModeIndex(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_clipIntervalModeKey, index.clamp(0, 1));
+  }
+  Future<double> getClipIntervalDistanceKm() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_clipIntervalDistanceKmKey) ?? _defaultClipIntervalDistanceKm;
+  }
+  Future<void> setClipIntervalDistanceKm(double km) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_clipIntervalDistanceKmKey, km.clamp(0.1, 10.0));
+  }
+  Future<double> getClipIntervalMinutes() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_clipIntervalMinutesKey) ?? _defaultClipIntervalMinutes;
+  }
+  Future<void> setClipIntervalMinutes(double minutes) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_clipIntervalMinutesKey, minutes.clamp(0.5, 30.0));
+  }
 }
-
-
-
-
-
-
-
-
-
-

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:runners_saga/core/constants/app_theme.dart';
 import 'package:runners_saga/shared/widgets/ui/seasonal_background.dart';
 import 'package:runners_saga/core/themes/theme_factory.dart';
 import 'package:runners_saga/shared/models/episode_model.dart';
@@ -53,7 +52,7 @@ class _SeasonsScreenState extends ConsumerState<SeasonsScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      'Abel Township Saga',
+                      'Northgate Township Saga',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: theme.colorScheme.onBackground,
                         fontWeight: FontWeight.w600,

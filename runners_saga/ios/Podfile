@@ -34,9 +34,14 @@ end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+    # Force pods to iOS 12.0 to silence deployment target warnings
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+    end
+
     flutter_additional_ios_build_settings(target)
   end
-  
+
   # Fix gRPC modulemap
   `mkdir -p Pods/Headers/Private/grpc`
   `cp "Pods/Target Support Files/gRPC-Core/gRPC-Core.modulemap" "Pods/Headers/Private/grpc/gRPC-Core.modulemap" 2>/dev/null || true`

@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:audio_session/audio_session.dart' as audio_session;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:runners_saga/shared/models/episode_model.dart';
 import 'package:runners_saga/shared/services/audio/download_service.dart';
+import 'package:runners_saga/shared/services/audio/audio_scheduler_service.dart';
+import 'package:runners_saga/shared/services/settings/settings_service.dart';
+import 'package:runners_saga/shared/models/run_enums.dart';
 
 enum SceneType {
   scene1,
@@ -48,6 +51,18 @@ class SceneTriggerService {
   Duration? _targetTime;
   double? _targetDistance;
   bool _isRunning = false;
+  late final Ref _ref;
+
+  // Interval-based triggering configuration
+  ClipIntervalMode _clipIntervalMode = ClipIntervalMode.distance;
+  double _clipIntervalDistanceKm = 0.4; // default 400 m
+  double _clipIntervalMinutes = 3.0;    // default 3 minutes
+  double _lastTriggerDistanceKm = 0.0;
+  Duration _lastTriggerElapsed = Duration.zero;
+
+  // Latest progress metrics
+  Duration _currentElapsed = Duration.zero;
+  double _currentDistanceKm = 0.0;
 
   // Audio file mode properties
   bool _isSingleFileMode = false;
@@ -91,6 +106,11 @@ class SceneTriggerService {
     throw UnsupportedError('Audio file information should come from episode data, not hardcoded values');
   }
 
+  /// Set the Riverpod ref for service access.
+  void setRef(Ref ref) {
+    _ref = ref;
+  }
+
   // Initialization
   Future<void> initialize({
     Duration? targetTime,
@@ -106,6 +126,24 @@ class SceneTriggerService {
     _currentScene = null;
     _isRunning = false;
     _currentEpisode = episode;
+
+    // Load interval triggering configuration from settings
+    try {
+      final settings = SettingsService();
+      final modeIdx = await settings.getClipIntervalModeIndex();
+      _clipIntervalMode = modeIdx == 1 ? ClipIntervalMode.time : ClipIntervalMode.distance;
+      _clipIntervalDistanceKm = await settings.getClipIntervalDistanceKm();
+      _clipIntervalMinutes = await settings.getClipIntervalMinutes();
+      _lastTriggerDistanceKm = 0.0;
+      _lastTriggerElapsed = Duration.zero;
+      if (kDebugMode) {
+        debugPrint('🎯 Clip interval config: mode=${_clipIntervalMode.name}, dist=${_clipIntervalDistanceKm}km, time=${_clipIntervalMinutes}min');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Failed to load clip interval settings: $e');
+      }
+    }
 
     // ONLY use multiple audio files system - completely disable single file mode
     if (episode?.audioFiles != null && episode!.audioFiles.isNotEmpty) {
@@ -222,7 +260,7 @@ class SceneTriggerService {
           title: _currentEpisode?.title ?? 'Episode',
           artist: 'Runner\'s Saga',
           duration: Duration.zero, // Will be set automatically
-          artUri: Uri.parse('https://example.com/artwork.jpg'), // Optional: add actual artwork
+          //artUri: Uri.parse('https://example.com/artwork.jpg'), // Optional: add actual artwork
         );
         
         // Create AudioSource with MediaItem for background support
@@ -359,6 +397,29 @@ class SceneTriggerService {
     try {
       _audioSession = await audio_session.AudioSession.instance;
       
+      // Attach debug listeners to observe focus/interruptions and device changes
+      try {
+        _audioSession!.interruptionEventStream.listen((event) {
+          if (kDebugMode) {
+            debugPrint('🎧 [AudioSession] Interruption: begin=${event.begin}, type=${event.type}');
+          }
+        });
+      } catch (_) {}
+      try {
+        _audioSession!.becomingNoisyEventStream.listen((_) {
+          if (kDebugMode) {
+            debugPrint('📉 [AudioSession] Becoming noisy (e.g., headphones unplugged)');
+          }
+        });
+      } catch (_) {}
+      try {
+        _audioSession!.devicesChangedEventStream.listen((event) {
+          if (kDebugMode) {
+            debugPrint('📱 [AudioSession] Devices changed');
+          }
+        });
+      } catch (_) {}
+      
       // Enhanced configuration for full background audio support with ducking
       final config = audio_session.AudioSessionConfiguration(
         avAudioSessionCategory: audio_session.AVAudioSessionCategory.playback,
@@ -450,7 +511,11 @@ class SceneTriggerService {
   Future<void> _disableDucking() async {
     try {
       if (_audioSession != null && _isAudioSessionActive) {
-        await _audioSession!.setActive(false);
+        // On iOS, notify others on deactivation so external apps restore volume
+        await _audioSession!.setActive(
+          false,
+          avAudioSessionSetActiveOptions: audio_session.AVAudioSessionSetActiveOptions.notifyOthersOnDeactivation,
+        );
         _isAudioSessionActive = false;
       }
       if (kDebugMode) {
@@ -565,6 +630,10 @@ class SceneTriggerService {
   void updateProgress({double? progress, Duration? elapsedTime, double? distance}) {
     if (!_isRunning) return;
 
+    // capture latest metrics for interval markers and debug
+    if (elapsedTime != null) _currentElapsed = elapsedTime;
+    if (distance != null) _currentDistanceKm = distance;
+
     if (progress != null) {
       _currentProgress = progress.clamp(0.0, 1.0);
     } else if (_targetTime != null && elapsedTime != null) {
@@ -574,6 +643,9 @@ class SceneTriggerService {
     }
 
     _checkSceneTriggers();
+
+    // Interval-based triggering works alongside milestone triggers
+    _checkIntervalTrigger(elapsedTime: elapsedTime, distanceKm: distance);
   }
 
   void _checkSceneTriggers() {
@@ -585,12 +657,85 @@ class SceneTriggerService {
     }
   }
 
+  /// Check if we should trigger the next scene based on clip interval mode.
+  void _checkIntervalTrigger({Duration? elapsedTime, double? distanceKm}) {
+    // Determine next scene to trigger
+    if (_playedScenes.length >= SceneType.values.length) return; // no more scenes
+    final nextScene = SceneType.values[_playedScenes.length];
+
+    // If next scene would be scene1 and none played yet, rely on milestone (0%) instead
+    if (nextScene == SceneType.scene1 && _playedScenes.isEmpty) return;
+
+    bool shouldTrigger = false;
+    if (_clipIntervalMode == ClipIntervalMode.distance) {
+      if (distanceKm != null) {
+        final since = distanceKm - _lastTriggerDistanceKm;
+        if (since >= _clipIntervalDistanceKm - 1e-6) {
+          shouldTrigger = true;
+          _lastTriggerDistanceKm = distanceKm;
+        }
+      }
+    } else {
+      if (elapsedTime != null) {
+        final since = elapsedTime - _lastTriggerElapsed;
+        final threshold = Duration(milliseconds: (_clipIntervalMinutes * 60000).round());
+        if (since >= threshold) {
+          shouldTrigger = true;
+          _lastTriggerElapsed = elapsedTime;
+        }
+      }
+    }
+
+    if (shouldTrigger) {
+      if (kDebugMode) {
+        debugPrint('⏱️ Interval trigger -> next scene: ${getSceneTitle(nextScene)}');
+      }
+      _triggerScene(nextScene);
+    }
+  }
+
+  /// Reload clip-interval configuration from Settings mid-run.
+  Future<void> refreshClipIntervalFromSettings() async {
+    try {
+      final settings = SettingsService();
+      final modeIdx = await settings.getClipIntervalModeIndex();
+      final dist = await settings.getClipIntervalDistanceKm();
+      final mins = await settings.getClipIntervalMinutes();
+      setClipInterval(
+        modeIdx == 1 ? ClipIntervalMode.time : ClipIntervalMode.distance,
+        distanceKm: dist,
+        minutes: mins,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ Failed to refresh clip interval settings: $e');
+      }
+    }
+  }
+
+  /// Directly set clip-interval configuration mid-run.
+  void setClipInterval(ClipIntervalMode mode, {double? distanceKm, double? minutes}) {
+    _clipIntervalMode = mode;
+    if (distanceKm != null) _clipIntervalDistanceKm = distanceKm;
+    if (minutes != null) _clipIntervalMinutes = minutes;
+    // Reset baselines to avoid immediate trigger spikes
+    _lastTriggerDistanceKm = _currentDistanceKm;
+    _lastTriggerElapsed = _currentElapsed;
+    if (kDebugMode) {
+      debugPrint('🔧 Clip interval updated: mode=${_clipIntervalMode.name}, dist=${_clipIntervalDistanceKm}km, time=${_clipIntervalMinutes}min');
+    }
+  }
+
   Future<void> _triggerScene(SceneType sceneType) async {
     if (_playedScenes.contains(sceneType)) return;
     
     await _stopCurrentScene();
     _playedScenes.add(sceneType);
     _currentScene = sceneType;
+
+    // Reset interval baselines at start of each scene
+    _lastTriggerDistanceKm = _currentDistanceKm;
+    _lastTriggerElapsed = _currentElapsed;
     
     if (kDebugMode) {
       debugPrint('🎬 Scene triggered: ${SceneTriggerService.getSceneTitle(sceneType)}');
@@ -598,9 +743,20 @@ class SceneTriggerService {
     }
     
     onSceneStart?.call(sceneType);
-    
-    // Play scene audio regardless of background state
-    await _playSceneAudio(sceneType);
+
+    final audioScheduler = _ref.read(audioSchedulerServiceProvider);
+
+    // Create a normal-priority audio request for the story scene
+    final request = AudioRequest(
+      priority: AudioPriority.normal,
+      playFunction: () async {
+        // This is where the original logic to play the audio goes.
+        await _playSceneAudio(sceneType);
+      },
+    );
+
+    // Add the request to the scheduler's queue
+    audioScheduler.add(request);
   }
 
   Future<void> _playSceneAudio(SceneType sceneType) async {
@@ -808,7 +964,7 @@ class SceneTriggerService {
         title: '${_currentEpisode?.title ?? 'Episode'} - ${SceneTriggerService.getSceneTitle(sceneType)}',
         artist: 'Runner\'s Saga',
         duration: Duration.zero, // Will be set automatically
-        artUri: Uri.parse('https://example.com/artwork.jpg'), // Optional: add actual artwork
+        //artUri: Uri.parse('https://example.com/artwork.jpg'), // Optional: add actual artwork
       );
       
       // Create AudioSource with MediaItem for background support
@@ -876,6 +1032,9 @@ class SceneTriggerService {
       debugPrint('✅ Scene audio completed: ${SceneTriggerService.getSceneTitle(sceneType)}');
     }
     
+    // Notify the scheduler that playback is complete
+    _ref.read(audioSchedulerServiceProvider).playbackComplete();
+
     onSceneComplete?.call(sceneType);
     _currentScene = null;
     // Release ducking so external music returns to normal

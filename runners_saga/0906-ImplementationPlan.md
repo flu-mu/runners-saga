@@ -133,7 +133,23 @@ Verification
   - runners_saga/lib/shared/services/run/run_session_manager.dart (scene start/complete ducking hooks)
   - runners_saga/lib/features/settings/screens/settings_screen.dart (SAGA VOLUME rename)
   - runners_saga/lib/features/story/screens/episode_detail_screen.dart (updated music description)
-- **Testing Required**: Need to test tomorrow to verify ducking works with external players (Apple Music) and internal player.
+- **Status**: ❌ **Not working correctly** - Duck music system not functioning as expected
+- **Next Steps**: Add debug printouts to monitor actual volume levels of external apps during ducking
+
+### 14) Pause/Resume Button Functionality
+- **Current Issue**: Pause button pauses the timer but doesn't change to "Resume" text
+- **Required Behavior**: 
+  - When paused: Button should show "Resume" text and timer should stop
+  - When clicked again: Button should show "Pause" text and timer should resume
+- **Implementation Needed**: Update pause button state management and text display logic
+
+### 15) 🚨 CRITICAL: Firebase Security Rules Expiration
+- **URGENT**: Client access to Cloud Firestore database will expire in 2 days
+- **Current Status**: Database is in Test Mode (completely open to Internet)
+- **Risk**: All client requests will be denied after 30 days (2 days remaining)
+- **Required Action**: Write strong security rules before expiration
+- **Impact**: App will stop working if not addressed
+- **Priority**: **CRITICAL** - Must be fixed tomorrow
 
 ---
 

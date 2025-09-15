@@ -13,6 +13,8 @@ import '../../../shared/widgets/navigation/bottom_navigation_widget.dart';
 import '../../../shared/providers/settings_providers.dart';
 import '../../../shared/services/settings/settings_service.dart';
 import '../../../shared/providers/run_config_providers.dart';
+import '../../../shared/providers/coach_providers.dart';
+import '../../../shared/models/run_enums.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/themes/theme_selector_widget.dart';
 import '../../../shared/widgets/ui/seasonal_background.dart';
@@ -173,6 +175,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           
           _sectionTitle('SAGA VOLUME'),
           _buildMusicVolumeSection(),
+
+          _sectionTitle('COACH'),
+          _buildCoachSettingsSection(),
           
           _sectionTitle('Import Runs'),
           Container(
@@ -945,6 +950,94 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCoachSettingsSection() {
+    final coachEnabled = ref.watch(coachEnabledProvider);
+    final frequencyType = ref.watch(coachFrequencyTypeProvider);
+    final timeFrequency = ref.watch(coachTimeFrequencyProvider);
+    final distanceFrequency = ref.watch(coachDistanceFrequencyProvider);
+    final statsToRead = ref.watch(coachStatsProvider);
+    final distanceUnit = ref.watch(distanceUnitProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: kSurfaceBase,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile(
+            title: Text('Enable Coach', style: TextStyle(color: Colors.white)),
+            value: coachEnabled,
+            onChanged: (value) => ref.read(coachEnabledProvider.notifier).setEnabled(value),
+            activeColor: kElectricAqua,
+          ),
+          Divider(color: Colors.white24),
+          const SizedBox(height: 8),
+          Text('Frequency', style: TextStyle(color: Colors.white70)),
+          if (coachEnabled) ...[
+            ToggleButtons(
+              children: [
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text('By Time')),
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text('By Distance')),
+              ],
+              isSelected: [frequencyType == CoachFrequencyType.time, frequencyType == CoachFrequencyType.distance],
+              onPressed: (index) {
+                final newType = index == 0 ? CoachFrequencyType.time : CoachFrequencyType.distance;
+                ref.read(coachFrequencyTypeProvider.notifier).setType(newType);
+              },
+              color: Colors.white,
+              selectedColor: kMidnightNavy,
+              fillColor: kElectricAqua,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ],
+          if (coachEnabled && frequencyType == CoachFrequencyType.time) ...[
+            Slider(
+              value: timeFrequency,
+              min: 5,
+              max: 15,
+              divisions: 10,
+              label: '${timeFrequency.round()} min',
+              onChanged: (value) => ref.read(coachTimeFrequencyProvider.notifier).setMinutes(value),
+            ),
+            Center(child: Text('Every ${timeFrequency.round()} minutes', style: TextStyle(color: Colors.white70))),
+          ] else if (coachEnabled && frequencyType == CoachFrequencyType.distance) ...[
+            Slider(
+              value: distanceFrequency,
+              min: 0.5,
+              max: 5.0,
+              divisions: 9,
+              label: '${distanceFrequency.toStringAsFixed(1)} ${distanceUnit == DistanceUnit.kilometers ? 'km' : 'mi'}',
+              onChanged: (value) => ref.read(coachDistanceFrequencyProvider.notifier).setDistance(value),
+            ),
+            Center(child: Text('Every ${distanceFrequency.toStringAsFixed(1)} ${distanceUnit == DistanceUnit.kilometers ? 'km' : 'mi'}', style: TextStyle(color: Colors.white70))),
+          ],
+          const SizedBox(height: 16),
+          Divider(color: Colors.white24),
+          const SizedBox(height: 8),
+          Text('Stats to Read Out', style: TextStyle(color: Colors.white70)),
+          if (coachEnabled)
+            ...CoachStat.values.map((stat) {
+              return CheckboxListTile(
+                title: Text(stat.name[0].toUpperCase() + stat.name.substring(1), style: TextStyle(color: Colors.white)),
+                value: statsToRead.contains(stat),
+                onChanged: (value) {
+                  if (value != null) {
+                    ref.read(coachStatsProvider.notifier).toggleStat(stat, value);
+                  }
+                },
+                activeColor: kElectricAqua,
+                checkColor: kMidnightNavy,
+              );
+            }).toList(),
+        ],
       ),
     );
   }

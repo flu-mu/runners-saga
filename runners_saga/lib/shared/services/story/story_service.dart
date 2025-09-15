@@ -1293,7 +1293,7 @@ class StoryService {
       SeasonModel(
         id: 'S01',
         title: 'Season 1',
-        description: 'The beginning of your journey in Abel Township',
+        description: 'The beginning of your journey in Northgate',
         episodeIds: ['S01E01', 'S01E02', 'S01E03'],
         totalEpisodes: 3,
         completedEpisodes: 0,

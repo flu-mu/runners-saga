@@ -44,7 +44,7 @@ class SeasonHubScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSeasonList(BuildContext context, WidgetRef ref, List<SeasonModel> seasons) {
+  Widget _buildSeasonList(BuildContext context, WidgetRef _ref, List<SeasonModel> seasons) {
     if (seasons.isEmpty) {
       return _buildEmptyState(context);
     }
@@ -54,7 +54,7 @@ class SeasonHubScreen extends ConsumerWidget {
       itemCount: seasons.length,
       itemBuilder: (context, index) {
         final season = seasons[index];
-        return _buildSeasonCard(context, ref, season);
+        return _buildSeasonCard(context, _ref, season);
       },
     );
   }
@@ -242,7 +242,7 @@ class SeasonHubScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, Object error) {
+  Widget _buildErrorState(BuildContext context, Object _error) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -282,7 +282,7 @@ class SeasonHubScreen extends ConsumerWidget {
 
 
 
-  void _openSeasonDetails(BuildContext context, WidgetRef ref, SeasonModel season) {
+  void _openSeasonDetails(BuildContext context, WidgetRef _ref, SeasonModel season) {
     // Season details functionality removed
     print('Season details functionality removed');
   }

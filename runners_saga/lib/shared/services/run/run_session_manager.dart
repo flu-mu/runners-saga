@@ -56,6 +56,16 @@ class RunSessionManager {
   double get currentProgress => _progressMonitor.progress;
   List<SceneType> get playedScenes => _sceneTrigger.playedScenes.toList();
 
+  /// Update clip interval configuration during an active session
+  void updateClipInterval(ClipIntervalMode mode, {double? distanceKm, double? minutes}) {
+    _sceneTrigger.setClipInterval(mode, distanceKm: distanceKm, minutes: minutes);
+  }
+
+  /// Refresh clip interval configuration from settings
+  Future<void> refreshClipIntervalFromSettings() async {
+    await _sceneTrigger.refreshClipIntervalFromSettings();
+  }
+
   /// Initialize the run session manager
   Future<void> initialize() async {
     await _audioManager.initialize();
@@ -74,6 +84,9 @@ class RunSessionManager {
     required Duration userTargetTime,
     required double userTargetDistance,
     required TrackingMode trackingMode,
+    double strideMeters = 1.0,
+    double simulatePaceMinPerKm = 6.0,
+    bool trackingEnabled = true,
   }) async {
     if (_isSessionActive) {
       throw Exception('Session already active');
@@ -93,6 +106,10 @@ class RunSessionManager {
       _progressMonitor.initialize(
         targetTime: userTargetTime,
         targetDistance: userTargetDistance,
+        trackingMode: trackingMode,
+        strideMeters: strideMeters,
+        simulatePaceMinPerKm: simulatePaceMinPerKm,
+        trackingEnabled: trackingEnabled,
         onDistanceUpdate: _onDistanceUpdate,
         onTimeUpdate: _onTimeUpdate,
         onPaceUpdate: _onPaceUpdate,
@@ -459,6 +476,18 @@ class RunSessionManager {
     onSceneStarted?.call(scene);
     if (kDebugMode) {
       print('🎬 onSceneStarted callback completed');
+    }
+
+    // Duck internal/background music so story audio is prominent
+    try {
+      await _audioManager.duckBackgroundMusic(fraction: 0.10, gradual: true);
+      if (kDebugMode) {
+        print('🔇 RunSessionManager: Requested internal music ducking at scene start');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ RunSessionManager: Failed to duck internal music: $e');
+      }
     }
     
     // Check if episode is downloaded; in single-file mode, playback is handled by SceneTriggerService
