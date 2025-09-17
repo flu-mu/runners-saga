@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/run_enums.dart';
 
 enum DistanceUnit {
   kilometers,
@@ -32,6 +33,13 @@ class SettingsService {
   static const String _trackSimPaceMinPerKmKey = 'track_sim_pace_min_per_km';
   static const String _trackingModeKey = 'tracking_mode';
   static const String _trackingEnabledKey = 'tracking_enabled';
+  // Coach settings keys
+  static const String _coachEnabledKey = 'coach_enabled';
+  static const String _coachFrequencyTypeKey = 'coach_frequency_type';
+  static const String _coachTimeFrequencyKey = 'coach_time_frequency';
+  static const String _coachDistanceFrequencyKey = 'coach_distance_frequency';
+  static const String _coachStatsKey = 'coach_stats';
+
   // Clip interval (scene spacing) keys
   static const String _clipIntervalModeKey = 'clip_interval_mode'; // 0=distance,1=time
   static const String _clipIntervalDistanceKmKey = 'clip_interval_distance_km';
@@ -51,6 +59,12 @@ class SettingsService {
   static const double _defaultSimPaceMinPerKm = 6.0; // 6:00 /km
   static const double _defaultClipIntervalDistanceKm = 0.4; // 400 m
   static const double _defaultClipIntervalMinutes = 3.0; // 3 minutes
+  // Defaults for coach settings
+  static const bool _defaultCoachEnabled = true;
+  static const CoachFrequencyType _defaultCoachFrequencyType = CoachFrequencyType.time;
+  static const double _defaultCoachTimeFrequency = 10.0;
+  static const double _defaultCoachDistanceFrequency = 1.0;
+  static const Set<CoachStat> _defaultCoachStats = {CoachStat.pace, CoachStat.distance};
 
   // Distance unit conversion constants
   static const double _kmToMiles = 0.621371;
@@ -352,5 +366,61 @@ class SettingsService {
   Future<void> setClipIntervalMinutes(double minutes) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_clipIntervalMinutesKey, minutes.clamp(0.5, 30.0));
+  }
+
+  // ---------- Coach Settings ----------
+
+  Future<bool> getCoachEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_coachEnabledKey) ?? _defaultCoachEnabled;
+  }
+
+  Future<void> setCoachEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_coachEnabledKey, enabled);
+  }
+
+  Future<CoachFrequencyType> getCoachFrequencyType() async {
+    final prefs = await SharedPreferences.getInstance();
+    final index = prefs.getInt(_coachFrequencyTypeKey) ?? _defaultCoachFrequencyType.index;
+    return CoachFrequencyType.values[index];
+  }
+
+  Future<void> setCoachFrequencyType(CoachFrequencyType type) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_coachFrequencyTypeKey, type.index);
+  }
+
+  Future<double> getCoachTimeFrequency() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_coachTimeFrequencyKey) ?? _defaultCoachTimeFrequency;
+  }
+
+  Future<void> setCoachTimeFrequency(double minutes) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_coachTimeFrequencyKey, minutes);
+  }
+
+  Future<double> getCoachDistanceFrequency() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_coachDistanceFrequencyKey) ?? _defaultCoachDistanceFrequency;
+  }
+
+  Future<void> setCoachDistanceFrequency(double distance) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_coachDistanceFrequencyKey, distance);
+  }
+
+  Future<Set<CoachStat>> getCoachStats() async {
+    final prefs = await SharedPreferences.getInstance();
+    final statsStringList = prefs.getStringList(_coachStatsKey);
+    if (statsStringList == null) return _defaultCoachStats;
+    return statsStringList.map((s) => CoachStat.values.firstWhere((e) => e.name == s)).toSet();
+  }
+
+  Future<void> setCoachStats(Set<CoachStat> stats) async {
+    final prefs = await SharedPreferences.getInstance();
+    final statsStringList = stats.map((s) => s.name).toList();
+    await prefs.setStringList(_coachStatsKey, statsStringList);
   }
 }

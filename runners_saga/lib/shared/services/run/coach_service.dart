@@ -4,7 +4,7 @@ import '../../models/run_enums.dart';
 import '../../models/run_stats_model.dart';
 import '../../providers/coach_providers.dart';
 import '../../providers/settings_providers.dart';
-import '../../shared/services/audio/audio_scheduler_service.dart';
+import '../audio/audio_scheduler_service.dart';
 
 /// Provider for the CoachService.
 final coachServiceProvider = Provider<CoachService>((ref) {
@@ -38,22 +38,6 @@ class CoachService {
     });
   }
 
-  /// Checks if a readout is due based on the user's settings and current progress.
-  /// This logic will live in `ProgressMonitorService` but is shown here for context.
-  ///
-  /// Example logic:
-  /// bool isReadoutDue(RunStats stats, RunStats lastReadoutStats) {
-  ///   final type = _ref.read(coachFrequencyTypeProvider);
-  ///   if (type == CoachFrequencyType.time) {
-  ///     final frequency = _ref.read(coachTimeFrequencyProvider); // in minutes
-  ///     return stats.elapsedTime.inMinutes >= lastReadoutStats.elapsedTime.inMinutes + frequency;
-  -///   } else {
-  -///     final frequency = _ref.read(coachDistanceFrequencyProvider); // in km/mi
-  -///     // Note: Handle unit conversion if necessary
-  -///     return stats.distance >= lastReadoutStats.distance + frequency;
-  -///   }
-  -/// }
-
   /// Constructs the readout string and speaks it.
   Future<void> performReadout({
     required Duration elapsedTime,
@@ -76,6 +60,9 @@ class CoachService {
         final readoutString = await _buildReadoutString(elapsedTime, distance, averagePace, heartRate, statsToRead);
         if (readoutString.isNotEmpty) {
           await _flutterTts.speak(readoutString);
+        } else {
+          // If there's nothing to say, complete immediately so the queue can proceed.
+          audioScheduler.playbackComplete();
         }
       },
     );

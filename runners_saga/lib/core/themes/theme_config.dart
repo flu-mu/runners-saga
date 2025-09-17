@@ -20,7 +20,7 @@ enum ThemeType {
 /// - ThemeType.sunsetRunner (warm orange and red tones)
 /// - ThemeType.forestExplorer (natural green and brown tones)
 /// - ThemeType.oceanBreeze (cool blue and teal tones)
-const ThemeType currentTheme = ThemeType.midnightTrail;
+const ThemeType currentTheme = ThemeType.forestExplorer;
 
 /// Theme configuration class
 class ThemeConfig {

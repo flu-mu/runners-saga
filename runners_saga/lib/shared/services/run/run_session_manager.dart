@@ -13,6 +13,7 @@ import '../audio/download_service.dart';
 import '../../models/episode_model.dart';
 import '../../models/run_model.dart';
 import '../../models/run_target_model.dart';
+import '../../models/run_stats_model.dart';
 import '../../models/run_enums.dart';
 // import '../../providers/settings_providers.dart';
 
@@ -130,22 +131,6 @@ class RunSessionManager {
       
       // Set up scene trigger callbacks
       _sceneTrigger.onSceneStart = _onSceneStart;
-      _sceneTrigger.onSceneComplete = _onSceneComplete;
-      _sceneTrigger.onProgressUpdate = _onProgressUpdate;
-      
-      // ONLY use multiple audio files mode - completely disable single file mode
-      if (episode.audioFiles.isNotEmpty) {
-        print('🎵 Episode uses multiple audio files mode (audioFiles) - enabling automatically');
-        print('📋 Episode audio files: ${episode.audioFiles}');
-        print('📊 Audio files count: ${episode.audioFiles.length}');
-        
-        _sceneTrigger.loadAudioFilesFromDatabase(episode.audioFiles);
-      } else {
-        // NO SINGLE FILE MODE - only multiple files mode supported
-        print('❌ Episode has no audioFiles - single file mode completely disabled');
-        print('❌ Episode will not play audio - only multiple files mode supported');
-        _sceneTrigger.loadAudioFilesFromDatabase([]);
-      }
       
       // Start progress monitoring (but without blocking timers)
       if (kDebugMode) {
@@ -851,4 +836,5 @@ enum RunSessionState {
   inactive,
   running,
   playingScene,
+  paused,
 }

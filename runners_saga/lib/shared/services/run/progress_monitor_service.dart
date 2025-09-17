@@ -6,9 +6,9 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/run_enums.dart';
 import '../story/scene_trigger_service.dart';
-import '../../../features/settings/screens/coach_service.dart';
-import '../../models/coach_providers.dart';
+import 'coach_service.dart';
 import '../../models/run_stats_model.dart';
+import '../../providers/coach_providers.dart';
 
 class ProgressMonitorService {
   // Timer and monitoring state
@@ -320,9 +320,7 @@ class ProgressMonitorService {
       _updateElapsedTime();
       _updateDistanceForNonGps();
       _updateProgress();
-      
       _checkForCoachReadout();
-      
       if (kDebugMode) {
         print('Simple timer tick: elapsedTime=${_elapsedTime.inSeconds}s, progress=${(_calculateProgress() * 100).toStringAsFixed(1)}%');
       }
@@ -795,6 +793,51 @@ class ProgressMonitorService {
           print('❌ Background scene trigger update failed: $e');
         }
       }
+    }
+  }
+
+  void _checkForCoachReadout() {
+    // Check if ref has been set. This is a safeguard.
+    try {
+      _ref;
+    } catch (e) {
+      // ref not set, can't check for readout
+      return;
+    }
+
+    final coachEnabled = _ref.read(coachEnabledProvider);
+    if (!coachEnabled) return;
+
+    final coachService = _ref.read(coachServiceProvider);
+    final frequencyType = _ref.read(coachFrequencyTypeProvider);
+    bool isDue = false;
+
+    if (frequencyType == CoachFrequencyType.time) {
+      final frequency = _ref.read(coachTimeFrequencyProvider); // in minutes
+      // Check if we have passed the next minute-based milestone
+      if (_elapsedTime.inMinutes > 0 &&
+          _elapsedTime.inMinutes >= _lastReadoutTime.inMinutes + frequency) {
+        isDue = true;
+      }
+    } else {
+      final frequency = _ref.read(coachDistanceFrequencyProvider); // in km or mi
+      // The distance unit is handled by the settings. We assume the frequency
+      // is in the same unit as the total distance (km).
+      if (_currentDistance > 0 &&
+          _currentDistance >= _lastReadoutDistance + frequency) {
+        isDue = true;
+      }
+    }
+
+    if (isDue) {
+      coachService.performReadout(
+        elapsedTime: _elapsedTime,
+        distance: _currentDistance,
+        averagePace: _averagePace,
+        heartRate: null, // No heart rate data yet
+      );
+      _lastReadoutTime = _elapsedTime;
+      _lastReadoutDistance = _currentDistance;
     }
   }
 }

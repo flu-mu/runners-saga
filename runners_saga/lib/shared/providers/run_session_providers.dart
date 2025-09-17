@@ -4,6 +4,7 @@ import '../services/run/run_session_manager.dart';
 import '../services/story/scene_trigger_service.dart';
 import '../services/run/progress_monitor_service.dart';
 import '../models/episode_model.dart';
+import '../models/run_stats_model.dart';
 import '../models/run_model.dart';
 import '../models/run_target_model.dart';
 import '../models/run_enums.dart';
