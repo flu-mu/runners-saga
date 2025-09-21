@@ -193,7 +193,7 @@ class RunSessionManager {
 
   /// Resume the current session
   Future<void> resumeSession() async {
-    if (_isSessionActive || !_isPaused) return;
+    if (!_isSessionActive || !_isPaused) return;
     
     // Don't resume if timers were explicitly stopped
     if (_timersStopped) return;

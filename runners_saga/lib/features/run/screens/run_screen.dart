@@ -44,6 +44,13 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   bool _isInitializing = true;
   bool _timerStopped = false; // Flag to prevent timer restart
   bool _disposed = false; 
+  bool _preloadComplete = false;
+  bool _mapReady = false;
+  bool _runStarted = false;
+  EpisodeModel? _preparedEpisode;
+  Duration? _preparedTargetTime;
+  double? _preparedTargetDistance;
+  TrackingMode _preparedTrackingMode = TrackingMode.gps;
   
   // Error handling and user feedback
   bool _isLoading = false;
@@ -55,15 +62,9 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   void initState() {
     super.initState();
     _isInitializing = true;
-    
-    // Start the run session automatically when screen loads
-    // User already selected "Start Run" on home screen
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startRun();
-    });
-    
     // Listen for app lifecycle changes to handle background processing
     WidgetsBinding.instance.addObserver(this);
+    _prepareRun();
   }
   
   /// Get episode ID from query parameters
@@ -393,11 +394,17 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
     }
   }
 
-  void _startRun() async {
-    // Read tracking mode to decide if GPS permission is needed
+  Future<void> _prepareRun() async {
+    setState(() {
+      _isInitializing = true;
+      _preloadComplete = false;
+      _runStarted = false;
+    });
+
     final selectedMode = ref.read(trackingModeProvider) ?? TrackingMode.gps;
+    _preparedTrackingMode = selectedMode;
+
     if (selectedMode == TrackingMode.gps) {
-      // Ensure GPS permission and service availability
       final permitted = await _ensureLocationPermission();
       if (!permitted) {
         setState(() {
@@ -406,40 +413,39 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
         return;
       }
     }
-    
-    // Don't start if timer was explicitly stopped
+
     if (_timerStopped) {
       setState(() {
         _isInitializing = false;
       });
       return;
     }
-    
-    // Don't start if there's already an active session
-    final isSessionActive = ref.read(runSessionControllerProvider.notifier).isSessionActive;
-    if (isSessionActive) {
+
+    final sessionController = ref.read(runSessionControllerProvider.notifier);
+    if (sessionController.isSessionActive) {
       setState(() {
         _isInitializing = false;
+        _preloadComplete = true;
+        _runStarted = true;
       });
       return;
     }
-    
-    // Debug: Check what target data is available
+
     final userRunTarget = ref.read(userRunTargetProvider);
-    
+    Duration? targetTime;
+    double? targetDistance;
+
     if (userRunTarget != null) {
       if (userRunTarget.targetDistance > 0) {
+        targetDistance = userRunTarget.targetDistance;
       } else if (userRunTarget.targetTime.inMinutes > 0) {
+        targetTime = userRunTarget.targetTime;
       }
-    } else {
     }
-    
-    // Get episode ID from query parameters and load episode data
+
     final episodeId = _getEpisodeIdFromQuery();
-    
     EpisodeModel? currentEpisode;
     if (episodeId != null) {
-      // Load episode data directly from the story service
       try {
         final episodeAsync = ref.read(episodeByIdProvider(episodeId));
         episodeAsync.whenData((episode) {
@@ -447,105 +453,96 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
             currentEpisode = episode;
           }
         });
-      } catch (e) {
-      }
+      } catch (_) {}
     }
-    
-    // If no episode loaded, create a fallback episode with audio files
-    if (currentEpisode == null) {
-      currentEpisode = EpisodeModel(
-        id: 'S01E01',
-        seasonId: 'S01',
-        title: 'Fallback Episode',
-        description: 'Fallback episode for testing',
-        status: 'unlocked',
-        order: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        objective: 'Complete your run',
-        targetDistance: 5.0,
-        targetTime: 1800000, // 30 minutes
-        audioFiles: [
-          // Audio files should come from episode data, not hardcoded
-        ],
-        requirements: {},
-        rewards: {},
-      );
+
+    currentEpisode ??= EpisodeModel(
+      id: 'S01E01',
+      seasonId: 'S01',
+      title: 'Fallback Episode',
+      description: 'Fallback episode for testing',
+      status: 'unlocked',
+      order: 1,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      objective: 'Complete your run',
+      targetDistance: 5.0,
+      targetTime: 1800000,
+      audioFiles: const [],
+      requirements: const {},
+      rewards: const {},
+    );
+
+    _preparedEpisode = currentEpisode;
+    _preparedTargetTime = targetTime;
+    _preparedTargetDistance = targetDistance;
+
+    setState(() {
+      _preloadComplete = true;
+      _isInitializing = !_mapReady;
+    });
+
+    _maybeStartRun();
+  }
+
+  void _handleMapReady() {
+    if (_disposed) return;
+    if (!_mapReady) {
+      setState(() {
+        _mapReady = true;
+      });
+      _maybeStartRun();
     }
-    
-    try {
-      // Get the user's selected run target from the provider
-      // User selects either distance OR time, not both
-      Duration? targetTime;
-      double? targetDistance;
-      
-      if (userRunTarget != null) {
-        // User selected a target - use their selection
-        if (userRunTarget.targetDistance > 0) {
-          // User selected distance target
-          targetDistance = userRunTarget.targetDistance;
-          targetTime = null; // No time target - user only selected distance
-        } else if (userRunTarget.targetTime.inMinutes > 0) {
-          // User selected time target
-          targetTime = userRunTarget.targetTime;
-          targetDistance = null; // No distance target - user only selected time
-        } else {
-        }
-      }
-      // No fallback to database - only show user selection
-      
-      
-      // Only start if user has selected a target AND timer wasn't stopped
-      if ((targetTime != null || targetDistance != null) && !_timerStopped) {
-        // Check if the run session manager can start a session
-        final canStart = ref.read(runSessionControllerProvider.notifier).canStartSession();
-        if (canStart) {
-          final trackingMode = selectedMode;
-          // Force debug logging for testing
-          
-          
-          // Set up time update callback BEFORE starting the session
-          // This ensures we don't miss any time updates
-          _startListeningToServiceUpdates();
-          
-          await ref.read(runSessionControllerProvider.notifier).startSession(
-            currentEpisode!,
-            userTargetTime: targetTime ?? const Duration(minutes: 30),
-            userTargetDistance: targetDistance ?? 5.0,
-            trackingMode: trackingMode,
-          );
-          
-          // Hook route updates to force map refresh via provider changes
-          ref.read(runSessionControllerProvider.notifier).state.onRouteUpdated = (route) {
-            setState(() {});
-          };
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Cannot start session - please try again'),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          }
-        }
-      } else if (_timerStopped) {
-      } else {
-      }
-      
+  }
+
+  Future<void> _maybeStartRun() async {
+    if (!mounted || _runStarted || !_preloadComplete || !_mapReady || _timerStopped) {
+      return;
+    }
+
+    final controller = ref.read(runSessionControllerProvider.notifier);
+    if (!controller.canStartSession()) {
       setState(() {
         _isInitializing = false;
       });
-      
-      // Note: Timer callback is now set up before starting the session
-      // No need to call _startSimpleTimer() here
-      
+      return;
+    }
+
+    if (_preparedEpisode == null || (_preparedTargetTime == null && _preparedTargetDistance == null)) {
+      setState(() {
+        _isInitializing = false;
+      });
+      return;
+    }
+
+    try {
+      _startListeningToServiceUpdates();
+
+      await controller.startSession(
+        _preparedEpisode!,
+        userTargetTime: _preparedTargetTime ?? const Duration(minutes: 30),
+        userTargetDistance: _preparedTargetDistance ?? 5.0,
+        trackingMode: _preparedTrackingMode,
+      );
+
+      controller.state.onRouteUpdated = (route) {
+        if (mounted && !_disposed) {
+          setState(() {});
+        }
+      };
+
+      setState(() {
+        _runStarted = true;
+        _isInitializing = false;
+      });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error starting run: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error starting run: $e')),
+      );
+      setState(() {
+        _isInitializing = false;
+      });
     }
   }
   
@@ -733,7 +730,10 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
             const Expanded(
               child: Padding(
                 padding: EdgeInsets.only(top: 8),
-                child: RunMapPanel(expanded: true),
+                child: RunMapPanel(
+                  expanded: true,
+                  onMapReady: _handleMapReady,
+                ),
               ),
             ),
 

@@ -12,8 +12,9 @@ class RunMapPanel extends ConsumerStatefulWidget {
   /// When true, the panel expands to fill available height without
   /// imposing the default min/max constraints.
   final bool expanded;
+  final VoidCallback? onMapReady;
 
-  const RunMapPanel({super.key, this.expanded = false});
+  const RunMapPanel({super.key, this.expanded = false, this.onMapReady});
 
   @override
   ConsumerState<RunMapPanel> createState() => _RunMapPanelState();
@@ -22,6 +23,7 @@ class RunMapPanel extends ConsumerStatefulWidget {
 class _RunMapPanelState extends ConsumerState<RunMapPanel> {
   final MapController _mapController = MapController();
   LatLng? _liveCenter; // first GPS fix when route is not yet populated
+  bool _hasNotifiedReady = false;
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +95,10 @@ class _RunMapPanelState extends ConsumerState<RunMapPanel> {
               onMapReady: () {
                 if (centerCandidate != null) {
                   _mapController.move(centerCandidate, 15);
+                }
+                if (!_hasNotifiedReady) {
+                  _hasNotifiedReady = true;
+                  widget.onMapReady?.call();
                 }
               },
             ),

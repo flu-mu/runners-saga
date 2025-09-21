@@ -49,15 +49,16 @@ Given the data, non-finite doubles are the only high-probability failure point t
 - **Local scene playback**: Scene trigger now loads the downloaded clips from disk, and `_episodeDir` logging only fires on first creation.
 - **Coach & pace**: Progress monitor sets pace for GPS, simulated, and step runs; coach readouts use the selected stats and new language dropdown before calling TTS.
 - **Background continuity**: Run no longer auto-pauses when the app backgrounds; coach and story audio keep playing.
+- **Deferred run start**: Session boot waits for run target prep *and* map readiness, reducing frame drops at launch.
 
 Next steps focus on performance and polish (see Task List).
 ---
 
 ## 📋 Immediate Task List
 1. **Run Screen Load Profiling** 🔁
-   - Profile start-up (map, scene/audio init) and gate `startSession` until UI is ready. Add lightweight placeholder for map if needed.
-2. **Resume Button Fix** 🔁
-   - Adjust `RunSessionManager.resumeSession` guard (`if (!_isSessionActive || !_isPaused) return;`) so the UI resume button works.
+   - Session start now waits for permission/episode prep **and** map-ready callback before kicking off; monitor freeze times and profile remaining hotspots.
+2. **Resume Button Fix** ✅
+   - Guard updated so paused sessions resume correctly when the user taps `Resume`.
 3. **Audio Session & Ducking** 🔁
    - Reapply `duckOthers` with the simplified config, request focus so Spotify/Apple Music duck, and ensure `_audioManager.restoreBackgroundMusic()` runs after scenes.
 4. **Internal Music Continuity** 🔁
