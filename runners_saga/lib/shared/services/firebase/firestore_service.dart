@@ -83,12 +83,24 @@ class FirestoreService {
       print('💾 FirestoreService.saveRun: Converting run to Firestore JSON...');
       final runData = run.toFirestore();
       print('💾 FirestoreService.saveRun: Firestore JSON conversion successful, ${runData.keys.length} keys');
-      
+
+      // Ensure fields required by security rules are present
+      runData['totalDistance'] = _coerceToDouble(runData['distance']);
+      runData['totalTime'] = _coerceToNumber(runData['duration']);
+      runData['status'] = runData['status'] ?? 'completed';
+
       // Add metadata - createdAt is already set by the model
       runData['updatedAt'] = FieldValue.serverTimestamp();
       runData['userId'] = userId; // Ensure userId is included
-      
+
       print('💾 FirestoreService.saveRun: Timestamps - createdAt: ${runData['createdAt']}');
+
+      // Dump payload for debugging Firestore rule failures
+      final payloadLog = StringBuffer('💾 FirestoreService.saveRun: Payload contents:\n');
+      runData.forEach((key, value) {
+        payloadLog.writeln('  $key: ${_formatForLog(value)}');
+      });
+      print(payloadLog.toString());
       
       // Save to Firestore - using top-level runs collection for easier querying
       print('💾 FirestoreService.saveRun: Saving to main runs collection...');
@@ -118,6 +130,9 @@ class FirestoreService {
       }
       
       final runData = run.toFirestore();
+      runData['totalDistance'] = _coerceToDouble(runData['distance']);
+      runData['totalTime'] = _coerceToNumber(runData['duration']);
+      runData['status'] = runData['status'] ?? 'completed';
       runData['updatedAt'] = FieldValue.serverTimestamp();
       runData['userId'] = userId; // Ensure userId is included
       
@@ -146,6 +161,9 @@ class FirestoreService {
       }
       
       final runData = completedRun.toFirestore();
+      runData['totalDistance'] = _coerceToDouble(runData['distance']);
+      runData['totalTime'] = _coerceToNumber(runData['duration']);
+      runData['status'] = runData['status'] ?? 'completed';
       runData['updatedAt'] = FieldValue.serverTimestamp();
       // completedAt is already set by the model
       runData['userId'] = userId;
@@ -1099,3 +1117,51 @@ class FirestoreService {
     }
   }
 }
+
+  String _formatForLog(dynamic value) {
+    if (value == null) {
+      return 'null';
+    }
+    if (value is List) {
+      final previewItems = value.take(3).map(_formatForLog).join(', ');
+      final suffix = value.length > 3 ? ', ... (total ${value.length})' : '';
+      return '[${previewItems}${suffix}]';
+    }
+    if (value is Map) {
+      final entries = value.entries
+          .take(5)
+          .map((e) => '${e.key}: ${_formatForLog(e.value)}')
+          .join(', ');
+      final suffix = value.length > 5 ? ', ...' : '';
+      return '{${entries}${suffix}}';
+    }
+    return value.toString();
+  }
+
+  double _coerceToDouble(dynamic value) {
+    if (value == null) {
+      return 0.0;
+    }
+    if (value is num) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      return parsed ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  num _coerceToNumber(dynamic value) {
+    if (value == null) {
+      return 0;
+    }
+    if (value is num) {
+      return value;
+    }
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      return parsed ?? 0;
+    }
+    return 0;
+  }

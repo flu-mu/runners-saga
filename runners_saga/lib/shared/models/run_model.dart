@@ -81,34 +81,57 @@ enum RunStatus {
   cancelled,
 }
 
+double _sanitizeDouble(double value, {double fallback = 0.0}) {
+  if (value.isFinite) {
+    return value;
+  }
+  return fallback;
+}
+
+double? _sanitizeNullableDouble(double? value) {
+  if (value == null) {
+    return null;
+  }
+  return value.isFinite ? value : null;
+}
+
 // Extension to convert Position to LocationPoint
 extension PositionExtension on Position {
-  LocationPoint toLocationPoint() {
+  LocationPoint toLocationPoint({
+    int elapsedSeconds = 0,
+    String elapsedTimeFormatted = '0:00',
+  }) {
     return LocationPoint(
       latitude: latitude,
       longitude: longitude,
-      accuracy: accuracy,
-      altitude: altitude,
-      speed: speed,
-      elapsedSeconds: 0, // Will be calculated when saving
-      heading: heading,
-      elapsedTimeFormatted: '0:00', // Will be calculated when saving
+      accuracy: _sanitizeDouble(accuracy),
+      altitude: _sanitizeDouble(altitude),
+      speed: _sanitizeDouble(speed),
+      elapsedSeconds: elapsedSeconds,
+      heading: _sanitizeNullableDouble(heading),
+      elapsedTimeFormatted: elapsedTimeFormatted,
     );
   }
 }
 
 // Extension to convert LatLng to LocationPoint
 extension LatLngExtension on LatLng {
-  LocationPoint toLocationPoint({double accuracy = 0.0, double altitude = 0.0, double speed = 0.0}) {
+  LocationPoint toLocationPoint({
+    double accuracy = 0.0,
+    double altitude = 0.0,
+    double speed = 0.0,
+    int elapsedSeconds = 0,
+    String elapsedTimeFormatted = '0:00',
+  }) {
     return LocationPoint(
       latitude: latitude,
       longitude: longitude,
-      accuracy: accuracy,
-      altitude: altitude,
-      speed: speed,
-      elapsedSeconds: 0, // Will be calculated when saving
-      heading: 0.0,
-      elapsedTimeFormatted: '0:00', // Will be calculated when saving
+      accuracy: _sanitizeDouble(accuracy),
+      altitude: _sanitizeDouble(altitude),
+      speed: _sanitizeDouble(speed),
+      elapsedSeconds: elapsedSeconds,
+      heading: null,
+      elapsedTimeFormatted: elapsedTimeFormatted,
     );
   }
 }
