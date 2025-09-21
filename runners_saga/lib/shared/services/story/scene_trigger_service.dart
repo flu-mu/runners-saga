@@ -69,11 +69,33 @@ class SceneTriggerService {
   bool _isSingleFileMode = false;
   String? _episodeAudioFile;
   List<String> _episodeAudioFiles = [];
+  List<String> _episodeLocalAudioFiles = [];
+  final Map<SceneType, String> _localSceneFileMap = {};
+  bool _backgroundSystemInitialized = false;
   Map<SceneType, Duration> _sceneTimestamps = {};
   final Map<SceneType, Duration> _sceneEndTimestamps = {}; // End timestamps
   bool _isAudioLoaded = false;
   EpisodeModel? _currentEpisode;
   final DownloadService _downloadService = DownloadService();
+  
+  String _extractFileName(String path) {
+    if (path.isEmpty) {
+      return path;
+    }
+
+    String candidate = path;
+
+    if (candidate.startsWith('http')) {
+      final encodedPathMatch = RegExp(r'/o/([^?]+)').firstMatch(candidate);
+      if (encodedPathMatch != null) {
+        candidate = Uri.decodeComponent(encodedPathMatch.group(1)!);
+      }
+    }
+
+    candidate = candidate.split('?').first;
+    final segments = candidate.split('/');
+    return segments.isNotEmpty ? segments.last : candidate;
+  }
   
   // Timer-based auto-pause properties
   Timer? _sceneEndTimer;
@@ -150,6 +172,7 @@ class SceneTriggerService {
     if (episode?.audioFiles != null && episode!.audioFiles.isNotEmpty) {
       _isSingleFileMode = false;
       _episodeAudioFiles = episode!.audioFiles;
+      _episodeLocalAudioFiles = [];
       
       if (kDebugMode) {
         debugPrint('🎵 Episode uses multiple audio files mode (audioFiles)');
@@ -345,6 +368,30 @@ class SceneTriggerService {
         return;
       }
 
+      final Map<String, String> localFileMap = {
+        for (final path in localFiles)
+          _extractFileName(path): path,
+      };
+
+      final List<String> orderedLocalFiles = [];
+      for (final remotePath in _episodeAudioFiles) {
+        final fileName = _extractFileName(remotePath);
+        final localPath = localFileMap[fileName];
+        if (localPath != null) {
+          orderedLocalFiles.add(localPath);
+        } else {
+          if (kDebugMode) {
+            debugPrint('❌ Missing local audio file for $fileName (remote: $remotePath)');
+          }
+        }
+      }
+
+      if (orderedLocalFiles.length != _episodeAudioFiles.length && kDebugMode) {
+        debugPrint('⚠️ Local file count (${orderedLocalFiles.length}) does not match expected (${_episodeAudioFiles.length})');
+      }
+
+      _episodeLocalAudioFiles = orderedLocalFiles;
+
       if (kDebugMode) {
         debugPrint('🎵 Found ${localFiles.length} local audio files');
         for (int i = 0; i < localFiles.length; i++) {
@@ -397,93 +444,25 @@ class SceneTriggerService {
   Future<void> _initializeBackgroundAudio() async {
     try {
       _audioSession = await audio_session.AudioSession.instance;
-      
-      // Attach debug listeners to observe focus/interruptions and device changes
-      try {
-        _audioSession!.interruptionEventStream.listen((event) {
-          if (kDebugMode) {
-            debugPrint('🎧 [AudioSession] Interruption: begin=${event.begin}, type=${event.type}');
-          }
-        });
-      } catch (_) {}
-      try {
-        _audioSession!.becomingNoisyEventStream.listen((_) {
-          if (kDebugMode) {
-            debugPrint('📉 [AudioSession] Becoming noisy (e.g., headphones unplugged)');
-          }
-        });
-      } catch (_) {}
-      try {
-        _audioSession!.devicesChangedEventStream.listen((event) {
-          if (kDebugMode) {
-            debugPrint('📱 [AudioSession] Devices changed');
-          }
-        });
-      } catch (_) {}
-      
-      // Enhanced configuration for full background audio support with ducking
-      final config = audio_session.AudioSessionConfiguration(
-        avAudioSessionCategory: audio_session.AVAudioSessionCategory.playback,
-        // Mix with others and duck other audio during scene playback (iOS)
-        avAudioSessionCategoryOptions: audio_session.AVAudioSessionCategoryOptions.mixWithOthers |
-            audio_session.AVAudioSessionCategoryOptions.duckOthers |
-            audio_session.AVAudioSessionCategoryOptions.allowBluetooth |
+
+      final config = audio_session.AudioSessionConfiguration.music().copyWith(
+        avAudioSessionCategoryOptions: audio_session.AVAudioSessionCategoryOptions.allowBluetooth |
             audio_session.AVAudioSessionCategoryOptions.allowAirPlay,
-        avAudioSessionMode: audio_session.AVAudioSessionMode.defaultMode,
-        avAudioSessionRouteSharingPolicy: audio_session.AVAudioSessionRouteSharingPolicy.defaultPolicy,
-        avAudioSessionSetActiveOptions: audio_session.AVAudioSessionSetActiveOptions.none,
-        androidAudioAttributes: const audio_session.AndroidAudioAttributes(
-          contentType: audio_session.AndroidAudioContentType.music,
-          flags: audio_session.AndroidAudioFlags.none,
-          usage: audio_session.AndroidAudioUsage.media,
-        ),
-        // Request transient may-duck focus (Android)
-        androidAudioFocusGainType: audio_session.AndroidAudioFocusGainType.gainTransientMayDuck,
-        androidWillPauseWhenDucked: true,
+        androidAudioFocusGainType: audio_session.AndroidAudioFocusGainType.gain,
+        androidWillPauseWhenDucked: false,
       );
 
-      // First set session inactive if it was active
-      try {
-        if (_isAudioSessionActive) {
-          await _audioSession!.setActive(false);
-          _isAudioSessionActive = false; // Track state
-        }
-      } catch (e) {
-        // Ignore deactivation errors
-        if (kDebugMode) {
-          debugPrint('🎵 Audio session deactivation skipped: $e');
-        }
-      }
-
-      // Configure the new session
       await _audioSession!.configure(config);
-      
-      // Activate the session
-      await _audioSession!.setActive(true);
-      _isAudioSessionActive = true; // Track state
-      
+      _isAudioSessionActive = false;
+      _backgroundSystemInitialized = true;
+
       if (kDebugMode) {
-        debugPrint('🎵 Background audio system initialized successfully');
+        debugPrint('🎵 Background audio session configured');
       }
     } catch (e) {
+      _isAudioSessionActive = false;
       if (kDebugMode) {
-        debugPrint('❌ Failed to initialize background audio: $e');
-        debugPrint('🎵 Audio session state: $_isAudioSessionActive');
-      }
-      
-      // Try to recover by using default configuration
-      try {
-        if (_audioSession != null) {
-          await _audioSession!.setActive(true);
-          _isAudioSessionActive = true; // Track state
-          if (kDebugMode) {
-            debugPrint('🎵 Recovered audio session with default configuration');
-          }
-        }
-      } catch (recoveryError) {
-        if (kDebugMode) {
-          debugPrint('❌ Audio session recovery failed: $recoveryError');
-        }
+        debugPrint('❌ Failed to configure background audio session: $e');
       }
     }
   }
@@ -953,9 +932,22 @@ class SceneTriggerService {
       }
 
       final audioFileUrl = _episodeAudioFiles[sceneIndex];
+      final localFilePath = sceneIndex < _episodeLocalAudioFiles.length
+          ? _episodeLocalAudioFiles[sceneIndex]
+          : null;
+
+      if (localFilePath == null) {
+        if (kDebugMode) {
+          debugPrint('❌ No local file available for scene index $sceneIndex (${SceneTriggerService.getSceneTitle(sceneType)})');
+        }
+        _onSceneAudioComplete(sceneType);
+        return;
+      }
+
       if (kDebugMode) {
         debugPrint('🎵 Multiple files mode: scene $sceneType maps to index $sceneIndex');
         debugPrint('🎵 Audio file URL: $audioFileUrl');
+        debugPrint('🎵 Local audio path: $localFilePath');
       }
 
       // Create MediaItem for background audio notifications
@@ -969,8 +961,8 @@ class SceneTriggerService {
       );
       
       // Create AudioSource with MediaItem for background support
-      final audioSource = AudioSource.uri(
-        Uri.parse(audioFileUrl),
+      final audioSource = AudioSource.file(
+        localFilePath,
         tag: mediaItem,
       );
       
@@ -981,6 +973,7 @@ class SceneTriggerService {
       if (kDebugMode) {
         debugPrint('🎵 Playing audio for scene: ${SceneTriggerService.getSceneTitle(sceneType)}');
         debugPrint('🎵 Audio file URL: $audioFileUrl');
+        debugPrint('🎵 Local file path: $localFilePath');
         debugPrint('🎵 MediaItem configured for background audio: ${mediaItem.title}');
       }
       

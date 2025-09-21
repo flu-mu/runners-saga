@@ -20,6 +20,14 @@ import '../../../core/themes/theme_selector_widget.dart';
 import '../../../shared/widgets/ui/seasonal_background.dart';
 import '../../../core/themes/theme_factory.dart';
 
+const Map<String, String> _coachLanguageOptions = {
+  'en-US': 'English (US)',
+  'en-GB': 'English (UK)',
+  'es-ES': 'Spanish',
+  'fr-FR': 'French',
+  'de-DE': 'German',
+};
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -961,6 +969,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final distanceFrequency = ref.watch(coachDistanceFrequencyProvider);
     final statsToRead = ref.watch(coachStatsProvider);
     final distanceUnit = ref.watch(distanceUnitProvider);
+    final coachLanguage = ref.watch(coachLanguageProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1018,6 +1027,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onChanged: (value) => ref.read(coachDistanceFrequencyProvider.notifier).setDistance(value),
             ),
             Center(child: Text('Every ${distanceFrequency.toStringAsFixed(1)} ${distanceUnit == DistanceUnit.kilometers ? 'km' : 'mi'}', style: TextStyle(color: Colors.white70))),
+          ],
+          if (coachEnabled) ...[
+            const SizedBox(height: 16),
+            Divider(color: Colors.white24),
+            const SizedBox(height: 8),
+            Text('Voice Language', style: TextStyle(color: Colors.white70)),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: kSurfaceBase.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: kElectricAqua.withValues(alpha: 0.3)),
+              ),
+              child: DropdownButton<String>(
+                value: _coachLanguageOptions.containsKey(coachLanguage) ? coachLanguage : _coachLanguageOptions.keys.first,
+                dropdownColor: kSurfaceBase,
+                underline: const SizedBox.shrink(),
+                isExpanded: true,
+                items: _coachLanguageOptions.entries
+                    .map((entry) => DropdownMenuItem<String>(
+                          value: entry.key,
+                          child: Text(entry.value, style: const TextStyle(color: Colors.white)),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    ref.read(coachLanguageProvider.notifier).setLanguage(value);
+                  }
+                },
+                iconEnabledColor: Colors.white,
+              ),
+            ),
           ],
           const SizedBox(height: 16),
           Divider(color: Colors.white24),

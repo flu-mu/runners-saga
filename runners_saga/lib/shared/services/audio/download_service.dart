@@ -26,9 +26,12 @@ class DownloadService {
     final dir = await getApplicationDocumentsDirectory();
     final p = '${dir.path}/$_episodeDirName/$episodeId';
     final d = Directory(p);
-    if (!d.existsSync()) d.createSync(recursive: true);
-    
-    print('🔍 _episodeDir created: $p');
+    if (!d.existsSync()) {
+      d.createSync(recursive: true);
+      if (kDebugMode) {
+        print('🔍 _episodeDir created: $p');
+      }
+    }
     return p;
   }
   
@@ -476,5 +479,4 @@ class DownloadService {
     }
   }
 }
-
 

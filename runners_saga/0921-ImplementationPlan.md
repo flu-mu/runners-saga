@@ -7,10 +7,13 @@
 
 ---
 
-## 🔁 Carried Forward From 0917
-- 🔄 **Fix Runs Not Saving to Firestore** *(still open) – now top priority with fresh debug logs*
-- 🔄 Pace metric continues to read `0.00` during runs *(secondary until persistence is stable)*
-- 🔄 Audio system regressions (story + coach) *(defer until persistence + pace resolved)*
+## 🔁 Carried Forward / New Follow-Ups
+- ✅ **Fix Runs Not Saving to Firestore**
+- ✅ Audio coach readouts, pace calculation, and background run behaviour
+- 🔄 Run screen load performance (map + audio should wait for UI readiness)
+- 🔄 Resume button restores session state
+- 🔄 External audio ducking (Spotify / Apple Music) + internal music restoration
+- 🔄 Audio session stability (OSStatus -50) while scenes initialise
 
 ---
 
@@ -41,29 +44,26 @@ Given the data, non-finite doubles are the only high-probability failure point t
 
 ---
 
-## ✅ Fix Implemented (0921)
-- **Sanitised GPS metrics before serialisation**: `PositionExtension.toLocationPoint` (and the LatLng helper) now coerces `accuracy`, `altitude`, `speed`, and `heading` to finite doubles. Any non-finite value is replaced with a safe fallback (`0` or `null`), ensuring Firestore receives strictly numeric data that will satisfy rules.
-- **Utility helpers added**: `_sanitizeDouble` and `_sanitizeNullableDouble` centralise the guard so future adjustments are easy.
+## ✅ Fixes Implemented Today
+- **Firestore safety net**: `PositionExtension.toLocationPoint` + sanitiser helpers ensure numeric fields stay finite; Firestore writes now succeed under current rules.
+- **Local scene playback**: Scene trigger now loads the downloaded clips from disk, and `_episodeDir` logging only fires on first creation.
+- **Coach & pace**: Progress monitor sets pace for GPS, simulated, and step runs; coach readouts use the selected stats and new language dropdown before calling TTS.
+- **Background continuity**: Run no longer auto-pauses when the app backgrounds; coach and story audio keep playing.
 
-Next action is to rerun the finish flow and verify the rule pass. If the write still fails we will log the final `run.toFirestore()` map so we can compare against expected rule schema.
-
+Next steps focus on performance and polish (see Task List).
 ---
 
 ## 📋 Immediate Task List
-1. **Verify Firestore Write After Sanitisation** ✅
-   - Re-ran a simulated session, finished the run, observed no `permission-denied`, and confirmed the document exists in Firestore with the GPS payload intact.
-   - ✅ Added temporary payload logger in `FirestoreService.saveRun` (0921) to capture the map before writing; keep it until rules sign-off.
-   - ✅ Mirrored rule-required fields (`totalDistance`, `totalTime`, `status`) before writes so Firestore validators pass even though the legacy schema uses `distance` / `duration`.
-   - 🔁 Follow-up: once QA validates multiple runs, remove the extra logger and redundant field mirrors if the Firestore schema is migrated.
-
-2. **Backfill Distance/Pace Metrics (if needed)
-   - Once persistence passes, double-check that `totalDistance`, `averagePace`, and `route` fields land as expected.
-
-3. **Revisit Pace Calculation Bug (from 0917)**
-   - Inspect `_onPositionUpdate` in `ProgressMonitorService`; recalc pace using per-segment deltas to prevent zeros.
-
-4. **Audio Regression Follow-Up**
-   - After persistence + pace are stable, resume debugging `SceneTriggerService` and `CoachService` playback.
+1. **Run Screen Load Profiling** 🔁
+   - Profile start-up (map, scene/audio init) and gate `startSession` until UI is ready. Add lightweight placeholder for map if needed.
+2. **Resume Button Fix** 🔁
+   - Adjust `RunSessionManager.resumeSession` guard (`if (!_isSessionActive || !_isPaused) return;`) so the UI resume button works.
+3. **Audio Session & Ducking** 🔁
+   - Reapply `duckOthers` with the simplified config, request focus so Spotify/Apple Music duck, and ensure `_audioManager.restoreBackgroundMusic()` runs after scenes.
+4. **Internal Music Continuity** 🔁
+   - Verify background track stays playing (volume-only duck) or restart it post-scene if required.
+5. **Clean-up Tasks** 🔁
+   - Remove Firestore payload logger once QA signs off; monitor logs for any remaining `OSStatus -50` errors.
 
 ---
 
@@ -79,3 +79,14 @@ Next action is to rerun the finish flow and verify the rule pass. If the write s
 - Keep the sanitisation helpers close to the model so any new GPS-derived fields will adopt the same guardrails by default.
 - Once persistence is verified, schedule a quick regression pass over GPX import (`SettingsScreen`) to ensure sanitisation doesn’t need to be mirrored there.
 - Coordinate with the pace fix: summary still shows fallback pace, so tackle the pace defect next.
+- Sanitised season documents on fetch so missing `order`/`totalEpisodes` values no longer crash `StoryService` (keeps stats tolerant of legacy Firestore data).
+- Episode download flow now enforces multi-file parity—cached status stays false until every scene file is present, preventing accidental single-file fallbacks.
+- **Audio Playback Investigation (0921)**
+  - Likely: iOS audio session fails with `OSStatus -50`. Simplified configuration pending validation; rerun after fresh build to confirm the session activates.
+  - Possible: `_localSceneFileMap` mismatch could leave scenes without a local path. Added guard/logging; monitor for `'No local file available'` warnings.
+  - Unlikely: Repeated `_episodeDir` creation means redownload; logging now only fires on first creation, confirming we’re just ensuring the folder exists.
+  - Unlikely: Coach ducking/audio scheduler blocking story clips. Reviewed logic—it only attenuates internal background music and exits when nothing is playing.
+- **New focus areas**
+  - Profile run screen load so audio/map start together.
+  - Fix resume guard so paused sessions restart cleanly.
+  - Extend ducking/resume logic for internal + external audio once session init stabilises.

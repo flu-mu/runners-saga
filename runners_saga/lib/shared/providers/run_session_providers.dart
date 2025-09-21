@@ -20,6 +20,7 @@ RunSessionManager runSessionManager(RunSessionManagerRef ref) {
   
   // Initialize the manager
   manager.initialize();
+  manager.attachRef(ref);
   
   // Don't dispose immediately - let the controller manage the lifecycle
   // ref.onDispose(() {
@@ -325,6 +326,11 @@ class RunSessionController extends _$RunSessionController {
   /// Reset the global stop flag
   void resetGlobalStop() {
     state.resetGlobalStop();
+  }
+  
+  /// Create run model from current session
+  RunModel createRunModel() {
+    return state.createRunModel();
   }
   
   /// Prepare manager to start a brand new run

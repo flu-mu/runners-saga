@@ -95,3 +95,22 @@ class CoachStatsNotifier extends StateNotifier<Set<CoachStat>> {
     state = newState;
   }
 }
+
+/// Provider for coach voice language
+final coachLanguageProvider = StateNotifierProvider<CoachLanguageNotifier, String>((ref) {
+  return CoachLanguageNotifier(ref.watch(settingsServiceProvider));
+});
+
+class CoachLanguageNotifier extends StateNotifier<String> {
+  final SettingsService _settingsService;
+  CoachLanguageNotifier(this._settingsService) : super('en-US') {
+    _load();
+  }
+
+  Future<void> _load() async => state = await _settingsService.getCoachLanguage();
+
+  Future<void> setLanguage(String language) async {
+    await _settingsService.setCoachLanguage(language);
+    state = language;
+  }
+}

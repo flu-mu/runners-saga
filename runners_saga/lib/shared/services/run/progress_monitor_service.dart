@@ -117,54 +117,49 @@ class ProgressMonitorService {
   /// Start monitoring progress
   Future<void> start() async {
     if (_isMonitoring) return;
-    
+
     // Simple check - only start if not already monitoring
     print('🚀 ProgressMonitorService: Starting progress monitor...');
-    
+
     try {
       _startTime = DateTime.now();
       _isMonitoring = true;
       _lastReadoutTime = Duration.zero;
       _lastReadoutDistance = 0.0;
-      
+
       if (kDebugMode) {
         print('Progress monitor start time set to: $_startTime');
       }
-      
+
       // Start progress timer immediately (don't wait for location)
       _startProgressTimer();
-      
-      // Start appropriate tracking based on mode
-      if (_trackingMode == TrackingMode.gps && _trackingEnabled) {
+
+      // Start location tracking if enabled, regardless of tracking mode.
+      // This allows us to record the user's route on a map even in 'simulate' or 'steps' mode.
+      if (_trackingEnabled) {
         // Try to start location tracking (but don't fail if it doesn't work)
         try {
           // Check location permissions
           final permission = await Geolocator.checkPermission();
           if (permission == LocationPermission.denied) {
             final requested = await Geolocator.requestPermission();
-            if (requested != LocationPermission.whileInUse &&
-                requested != LocationPermission.always) {
-              if (kDebugMode) {
-                print('Location permission denied, continuing without location tracking');
-              }
-            } else {
+            if (requested == LocationPermission.whileInUse || requested == LocationPermission.always) {
               _startLocationTracking();
+            } else if (kDebugMode) {
+              print('Location permission denied, continuing without location tracking');
             }
           } else {
             _startLocationTracking();
           }
         } catch (locationError) {
-          if (kDebugMode) {
-            print('Location tracking failed, continuing without it: $locationError');
-          }
+          if (kDebugMode) print('Location tracking failed, continuing without it: $locationError');
         }
       } else {
         // Step counting or simulate modes do not start GPS
         if (kDebugMode) {
-          print('ProgressMonitorService: Using ${_trackingMode.name} mode - GPS not started');
+          print('ProgressMonitorService: GPS tracking disabled by settings.');
         }
       }
-      
     } catch (e) {
       if (kDebugMode) {
         print('Error starting progress monitor: $e');
@@ -341,6 +336,7 @@ class ProgressMonitorService {
         _currentDistance = distance;
         onDistanceUpdate?.call(_currentDistance);
       }
+      _currentPace = _simulatePaceMinPerKm;
     } else if (_trackingMode == TrackingMode.steps) {
       // Distance from steps; expects _steps to be updated by a step-counting service
       final distance = (_steps * _strideMeters) / 1000.0; // km
@@ -348,7 +344,13 @@ class ProgressMonitorService {
         _currentDistance = distance;
         onDistanceUpdate?.call(_currentDistance);
       }
+      _currentPace = (_currentDistance > 0 && _elapsedTime.inSeconds > 0)
+          ? (_elapsedTime.inSeconds / 60.0) / _currentDistance
+          : 0.0;
     }
+
+    _updateAveragePace();
+    onPaceUpdate?.call(_currentPace);
   }
 
   /// External API to feed step counts (to be connected to a pedometer service)
@@ -442,62 +444,63 @@ class ProgressMonitorService {
 
   /// Handle position updates
   void _onPositionUpdate(Position position) {
-    if (!_isMonitoring) {
-      return; // Don't process if not monitoring
-    }
-    
+    if (!_isMonitoring) return;
+
     // Always add the position to route first
     _route.add(position);
-    
+
     if (kDebugMode) {
       print('📍 Position added to route: (${position.latitude}, ${position.longitude}) - Total points: ${_route.length}');
-      print('📍 Route now contains ${_route.length} GPS points');
     }
-    
-    // If this is the first position, just store it and return
-    if (_lastPosition == null) {
-      _lastPosition = position;
-      onRouteUpdate?.call(_route);
-      return;
-    }
-    
-    // Calculate distance from last position
-    final distance = Geolocator.distanceBetween(
-      _lastPosition!.latitude,
-      _lastPosition!.longitude,
-      position.latitude,
-      position.longitude,
-    ) / 1000; // Convert to kilometers
-    
-    // Update total distance
-    _currentDistance += distance;
-    
-    // Calculate current pace (minutes per kilometer)
-    if (distance > 0) {
-      // Calculate time difference using elapsed seconds or current time
-      final timeDiff = _lastPosition != null 
-          ? Duration(seconds: 5) // Assume 5 seconds between GPS updates
-          : Duration.zero;
-      if (timeDiff.inSeconds > 0) {
-        _currentPace = timeDiff.inMinutes / distance;
-        
-        // Update pace statistics
-        if (_currentPace > 0) {
-          _averagePace = (_averagePace * (_route.length - 1) + _currentPace) / _route.length;
+
+    // Only calculate distance and pace from GPS if in GPS mode.
+    if (_trackingMode == TrackingMode.gps) {
+      if (_lastPosition != null) {
+        final double distance = Geolocator.distanceBetween(
+          _lastPosition!.latitude,
+          _lastPosition!.longitude,
+          position.latitude,
+          position.longitude,
+        );
+        final Duration timeDiff = position.timestamp.difference(_lastPosition!.timestamp);
+
+        if (distance > 1 && timeDiff.inSeconds > 0) {
+          final double timeInMinutes = timeDiff.inSeconds / 60.0;
+          final double distanceInKm = distance / 1000.0;
+
+          _currentPace = timeInMinutes / distanceInKm;
+
           if (_currentPace > _maxPace) _maxPace = _currentPace;
-          if (_currentPace < _minPace) _minPace = _currentPace;
+          if (_currentPace > 0 && _currentPace < _minPace) _minPace = _currentPace;
+
+          onPaceUpdate?.call(_currentPace);
+
+          if (kDebugMode) {
+            print(' Pace updated: ${_currentPace.toStringAsFixed(2)} min/km (distance: ${distance.toStringAsFixed(1)}m, time: ${timeDiff.inSeconds}s)');
+          }
         }
+        _currentDistance += distance / 1000.0; // add distance in km
       }
     }
-    
+
     // Update last position
     _lastPosition = position;
     _lastGpsUpdate = DateTime.now(); // Update last GPS update time
     
     // Notify listeners
-    onDistanceUpdate?.call(_currentDistance);
-    onPaceUpdate?.call(_currentPace);
+    if (_trackingMode == TrackingMode.gps) {
+      onDistanceUpdate?.call(_currentDistance);
+    }
+    _updateAveragePace();
     onRouteUpdate?.call(_route);
+  }
+
+  void _updateAveragePace() {
+    if (_currentDistance > 0 && _elapsedTime.inSeconds > 0) {
+      _averagePace = (_elapsedTime.inSeconds / 60.0) / _currentDistance;
+    } else {
+      _averagePace = 0.0;
+    }
   }
 
   /// Update elapsed time

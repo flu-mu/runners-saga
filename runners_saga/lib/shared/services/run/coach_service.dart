@@ -52,11 +52,15 @@ class CoachService {
     if (statsToRead.isEmpty) return;
 
     final audioScheduler = _ref.read(audioSchedulerServiceProvider);
+    final language = _ref.read(coachLanguageProvider);
 
     // Create a high-priority audio request.
     final request = AudioRequest(
       priority: AudioPriority.high,
       playFunction: () async {
+        if (language.isNotEmpty) {
+          await _flutterTts.setLanguage(language);
+        }
         final readoutString = await _buildReadoutString(elapsedTime, distance, averagePace, heartRate, statsToRead);
         if (readoutString.isNotEmpty) {
           await _flutterTts.speak(readoutString);

@@ -1125,9 +1125,13 @@ class StoryService {
 
       print('🔍 StoryService: Seasons query successful, found ${querySnapshot.docs.length} seasons');
       
-      final seasons = querySnapshot.docs
-          .map((doc) => SeasonModel.fromJson(doc.data()))
-          .toList();
+      final seasons = querySnapshot.docs.map((doc) {
+        final rawData = doc.data();
+        print('🔍 StoryService: Raw season data (${doc.id}): $rawData');
+        final sanitized = _sanitizeSeasonDocument(doc.id, rawData);
+        print('🔍 StoryService: Sanitized season data (${doc.id}): $sanitized');
+        return SeasonModel.fromJson(sanitized);
+      }).toList();
       
       print('🔍 StoryService: Parsed ${seasons.length} seasons successfully');
       return seasons;
@@ -1327,6 +1331,59 @@ class StoryService {
         order: 3,
       ),
     ];
+  }
+
+  Map<String, dynamic> _sanitizeSeasonDocument(String docId, Map<String, dynamic> raw) {
+    final data = Map<String, dynamic>.from(raw);
+
+    data['id'] = _coerceString(data['id'], fallback: docId);
+    data['title'] = _coerceString(data['title'], fallback: 'Season $docId');
+    data['description'] = _coerceString(data['description'], fallback: '');
+    data['episodeIds'] = _coerceStringList(data['episodeIds']);
+
+    final inferredEpisodeCount = (data['episodeIds'] as List<String>).length;
+    data['totalEpisodes'] = _coerceInt(data['totalEpisodes'], fallback: inferredEpisodeCount);
+    data['completedEpisodes'] = _coerceInt(data['completedEpisodes']);
+    data['order'] = _coerceInt(data['order'], fallback: 0);
+    data['status'] = _coerceString(data['status'], fallback: 'active');
+
+    data['createdAt'] = data['createdAt'] ?? Timestamp.now();
+    data['updatedAt'] = data['updatedAt'] ?? data['createdAt'] ?? Timestamp.now();
+
+    final imageUrl = data['imageUrl'];
+    data['imageUrl'] = imageUrl is String && imageUrl.isNotEmpty ? imageUrl : null;
+
+    final metadata = data['metadata'];
+    data['metadata'] = metadata is Map<String, dynamic>
+        ? Map<String, dynamic>.from(metadata)
+        : null;
+
+    return data;
+  }
+
+  int _coerceInt(dynamic value, {int fallback = 0}) {
+    if (value == null) return fallback;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    return fallback;
+  }
+
+  String _coerceString(dynamic value, {required String fallback}) {
+    if (value is String && value.trim().isNotEmpty) {
+      return value;
+    }
+    return fallback;
+  }
+
+  List<String> _coerceStringList(dynamic value) {
+    if (value is List) {
+      return value.whereType<String>().toList();
+    }
+    return <String>[];
   }
 
   /// Get default episodes when Firebase has no data

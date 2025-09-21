@@ -38,10 +38,14 @@ class BackgroundServiceManager {
   Future<void> initialize() async {
     if (kIsWeb) return;
     
-    // Listen to background events from native side
-    _eventChannel.receiveBroadcastStream().listen((event) {
-      _handleBackgroundEvent(event.toString());
-    });
+    // Listen to background events from native side (guard against missing native implementation)
+    try {
+      _eventChannel.receiveBroadcastStream().listen((event) {
+        _handleBackgroundEvent(event.toString());
+      });
+    } on MissingPluginException catch (e) {
+      debugPrint('⚠️ BackgroundServiceManager: background events not available on this platform ($e)');
+    }
     
     // Check if background service is already running
     _isBackgroundServiceRunning = await checkBackgroundServiceStatus();
@@ -391,4 +395,3 @@ class BackgroundServiceManager {
     _backgroundEventController.close();
   }
 }
-

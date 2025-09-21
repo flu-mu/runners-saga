@@ -39,6 +39,7 @@ class SettingsService {
   static const String _coachTimeFrequencyKey = 'coach_time_frequency';
   static const String _coachDistanceFrequencyKey = 'coach_distance_frequency';
   static const String _coachStatsKey = 'coach_stats';
+  static const String _coachLanguageKey = 'coach_language';
 
   // Clip interval (scene spacing) keys
   static const String _clipIntervalModeKey = 'clip_interval_mode'; // 0=distance,1=time
@@ -65,6 +66,7 @@ class SettingsService {
   static const double _defaultCoachTimeFrequency = 10.0;
   static const double _defaultCoachDistanceFrequency = 1.0;
   static const Set<CoachStat> _defaultCoachStats = {CoachStat.pace, CoachStat.distance};
+  static const String _defaultCoachLanguage = 'en-US';
 
   // Distance unit conversion constants
   static const double _kmToMiles = 0.621371;
@@ -422,5 +424,15 @@ class SettingsService {
     final prefs = await SharedPreferences.getInstance();
     final statsStringList = stats.map((s) => s.name).toList();
     await prefs.setStringList(_coachStatsKey, statsStringList);
+  }
+
+  Future<String> getCoachLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_coachLanguageKey) ?? _defaultCoachLanguage;
+  }
+
+  Future<void> setCoachLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_coachLanguageKey, language);
   }
 }

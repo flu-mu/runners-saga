@@ -57,6 +57,19 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+<string>This app requires access to the local network for debugging.</string>
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>This app needs access to location services to track your running route and provide accurate distance measurements.</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app needs access to location services to track your running route and provide accurate distance measurements.</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>This app needs access to the microphone for audio playback during your running experience.</string>
+<key>UIBackgroundModes</key>
+<array>
+	<string>location</string>
+	<string>audio</string>
+</array>
 </dict>
 </plist>
     <key>NSMotionUsageDescription</key>

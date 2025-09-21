@@ -13,7 +13,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart';
 import '../../run/widgets/run_target_sheet.dart';
 import '../../../shared/services/audio/download_service.dart';
-import '../../../shared/services/firebase/firebase_storage_service.dart';
 import '../../../shared/widgets/ui/seasonal_background.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../shared/services/settings/settings_service.dart';
@@ -71,19 +70,15 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
           }
           
           bool isDownloaded = false;
-          
-          // Check if episode uses multiple audio files
+
           if (episode.audioFiles.isNotEmpty) {
-            // Prefer strict check; if it fails, fall back to lenient presence check
+            // Multi-file episodes require every scene file before we mark as cached
             isDownloaded = await service.isEpisodeProperlyDownloaded(widget.episodeId, episode.audioFiles);
             if (!isDownloaded) {
-              final anyFiles = await service.isEpisodeDownloaded(widget.episodeId);
-              if (anyFiles) {
-                isDownloaded = true;
-              }
+              debugPrint('⚠️ Episode ${episode.id} missing one or more multi-file downloads; prompting re-download.');
             }
           } else if (episode.audioFile != null && episode.audioFile!.isNotEmpty) {
-            // For single file mode, use the original check
+            // Legacy single-file episodes fall back to the simple presence check
             isDownloaded = await service.isEpisodeDownloaded(widget.episodeId);
           }
           
@@ -145,29 +140,28 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
     try {
       final service = DownloadService();
       
-      // Check if this episode uses single audio file mode
-      if (episode.audioFile != null && episode.audioFile!.isNotEmpty) {
-        // Single audio file mode - download the single file
-        print('🎵 Downloading single audio file: ${episode.audioFile}');
-        
-        final result = await service.downloadSingleAudioFile(
+      if (episode.audioFiles.isNotEmpty) {
+        // Preferred path: download each scene file individually
+        print('🎵 Downloading multiple audio files: ${episode.audioFiles.length} files');
+
+        final result = await service.downloadEpisodeFromDatabase(
           widget.episodeId,
-          episode.audioFile!,
+          episode.audioFiles,
           onProgress: (progress) {
             if (mounted) {
               setState(() { _progress = progress; });
             }
           },
         );
-        
-        setState(() { 
-          _downloading = false; 
-          _cached = result.success; 
-          _progress = result.success ? 1 : 0; 
+
+        setState(() {
+          _downloading = false;
+          _cached = result.success;
+          _progress = result.success ? 1 : 0;
         });
-        
+
         if (!mounted) return;
-        
+
         final snack = SnackBar(
           content: Text(
             result.success ? 'Episode downloaded successfully!' : 'Download failed: ${result.error}'
@@ -185,55 +179,48 @@ class _EpisodeDetailScreenState extends ConsumerState<EpisodeDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(snack);
         return;
       }
-      
-      // Multiple audio files mode (legacy) - download individual scene files
-      print('🎵 Downloading multiple audio files: ${episode.audioFiles.length} files');
-      
-      // Extract file names from the audio file paths
-      final fileNames = episode.audioFiles.map((path) {
-        // Handle both asset paths and Firebase URLs
-        if (path.startsWith('assets/')) {
-          return path.split('/').last;
-        } else {
-          // Already a Firebase URL, extract filename
-          return FirebaseStorageService.getFileNameFromUrl(path);
-        }
-      }).toList();
-      
-      // Use the database method to handle gs:// URLs
-      final result = await service.downloadEpisodeFromDatabase(
-        widget.episodeId, 
-        episode.audioFiles,
-        onProgress: (progress) {
-          if (mounted) {
-            setState(() { _progress = progress; });
-          }
-        },
-      );
-      
-      setState(() { 
-        _downloading = false; 
-        _cached = result.success; 
-        _progress = result.success ? 1 : 0; 
-      });
-      
-      if (!mounted) return;
-      
-      final snack = SnackBar(
-        content: Text(
-          result.success ? 'Episode downloaded successfully!' : 'Download failed: ${result.error}'
-        ),
-        backgroundColor: result.success ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.error,
-        duration: const Duration(seconds: 5),
-        action: result.success ? null : SnackBarAction(
-          label: 'Help',
-          textColor: Theme.of(context).colorScheme.onPrimary,
-          onPressed: () {
-            _showDownloadHelpDialog(context);
+
+      if (episode.audioFile != null && episode.audioFile!.isNotEmpty) {
+        // Legacy mode: download the single stitched file
+        print('🎵 Downloading single audio file: ${episode.audioFile}');
+
+        final result = await service.downloadSingleAudioFile(
+          widget.episodeId,
+          episode.audioFile!,
+          onProgress: (progress) {
+            if (mounted) {
+              setState(() { _progress = progress; });
+            }
           },
-        ),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(snack);
+        );
+
+        setState(() {
+          _downloading = false;
+          _cached = result.success;
+          _progress = result.success ? 1 : 0;
+        });
+
+        if (!mounted) return;
+
+        final snack = SnackBar(
+          content: Text(
+            result.success ? 'Episode downloaded successfully!' : 'Download failed: ${result.error}'
+          ),
+          backgroundColor: result.success ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 5),
+          action: result.success ? null : SnackBarAction(
+            label: 'Help',
+            textColor: Theme.of(context).colorScheme.onPrimary,
+            onPressed: () {
+              _showDownloadHelpDialog(context);
+            },
+          ),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snack);
+        return;
+      }
+
+      throw Exception('No audio files configured for this episode.');
       
     } catch (e) {
       setState(() { _downloading = false; _progress = 0; });

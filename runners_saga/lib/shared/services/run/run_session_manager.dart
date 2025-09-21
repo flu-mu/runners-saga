@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 // import 'package:flutter/material.dart'; // Not used
-// import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:just_audio/just_audio.dart';
 import 'progress_monitor_service.dart';
@@ -72,6 +72,12 @@ class RunSessionManager {
     await _audioManager.initialize();
     
     // Scene trigger callbacks will be set up in startSession
+  }
+
+  /// Attach Riverpod ref so child services can access providers
+  void attachRef(Ref ref) {
+    _progressMonitor.setRef(ref);
+    _sceneTrigger.setRef(ref);
   }
 
   /// Check if a new session can be started
@@ -582,30 +588,25 @@ class RunSessionManager {
     print('🔍 RunSessionManager: Creating run model...');
     
     final stats = _progressMonitor.getRunStats();
-    print('🔍 RunSessionManager: Progress monitor stats: $stats');
+    final elapsedTime = (stats['elapsedTime'] as Duration?) ?? Duration.zero;
+    final completedAt = DateTime.now();
+
+    // If _sessionStartTime is null, derive it from the completed time and duration.
+    // This is a much safer fallback than using DateTime.now() for the start time.
+    final startTime = _sessionStartTime ?? completedAt.subtract(elapsedTime);
     
     // Get the current user ID from Firebase Auth
     final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'unknown_user';
     print('🔍 RunSessionManager: Current user ID: $currentUserId');
     
-    // Check if we have session start time
-    if (_sessionStartTime == null) {
-      print('❌ RunSessionManager: _sessionStartTime is null! Using current time as fallback.');
-      _sessionStartTime = DateTime.now().subtract(const Duration(minutes: 30)); // Use a reasonable fallback
-    }
-    
     // Check route data
     final route = _progressMonitor.route;
     print('🔍 RunSessionManager: Route has ${route.length} GPS points');
-    if (route.isNotEmpty) {
-      print('🔍 RunSessionManager: First point: ${route.first.latitude}, ${route.first.longitude}');
-      print('🔍 RunSessionManager: Last point: ${route.last.latitude}, ${route.last.longitude}');
-    }
     
     return RunModel(
       userId: currentUserId,
-      createdAt: _sessionStartTime!,
-      completedAt: DateTime.now(),
+      createdAt: startTime,
+      completedAt: completedAt,
       route: route
           .map((pos) => LocationPoint(
                 latitude: pos.latitude,
@@ -616,12 +617,12 @@ class RunSessionManager {
                 elapsedSeconds: 0, // Will be calculated when saving
                 heading: pos.heading,
               ))
-          .toList(),
-      totalDistance: stats['distance'] as double,
-      totalTime: stats['elapsedTime'] as Duration,
-      averagePace: stats['averagePace'] as double,
-      maxPace: stats['maxPace'] as double,
-      minPace: stats['minPace'] as double,
+          .toList(growable: false), // Use toList() to create a new, independent copy of the route
+      totalDistance: (stats['distance'] as num?)?.toDouble() ?? 0.0,
+      totalTime: elapsedTime,
+      averagePace: (stats['averagePace'] as num?)?.toDouble() ?? 0.0,
+      maxPace: (stats['maxPace'] as num?)?.toDouble() ?? 0.0,
+      minPace: (stats['minPace'] as num?)?.toDouble() ?? 0.0,
       episodeId: _currentEpisode?.id ?? '',
       status: RunStatus.completed,
       achievements: [], // Add empty achievements list
@@ -663,7 +664,7 @@ class RunSessionManager {
     
     return RunModel(
       userId: currentUserId,
-      createdAt: _sessionStartTime!,
+      createdAt: _sessionStartTime ?? DateTime.now(),
       completedAt: DateTime.now(),
       route: route
           .map((pos) => LocationPoint(
@@ -675,7 +676,7 @@ class RunSessionManager {
                 elapsedSeconds: 0, // Will be calculated when saving
                 heading: pos.heading,
               ))
-          .toList(),
+          .toList(), // Use .toList() to create a new, independent copy of the route
       totalDistance: stats['distance'] as double,
       totalTime: stats['elapsedTime'] as Duration,
       averagePace: stats['averagePace'] as double,

@@ -9,6 +9,7 @@ import '../../../shared/providers/run_providers.dart';
 import '../../../shared/providers/run_config_providers.dart';
 import '../../../shared/models/run_enums.dart';
 import '../../../shared/models/run_target_model.dart';
+import '../../../shared/models/run_model.dart';
 
 import '../../../shared/providers/audio_providers.dart';
 import '../../../shared/services/settings/settings_service.dart';
@@ -135,9 +136,8 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   /// Handle app paused (minimized/background)
   void _onAppPaused() {
     if (_disposed) return;
-    // The RunSessionManager will handle backgrounding logic, including
-    // starting background services if needed.
-    ref.read(runSessionControllerProvider.notifier).pauseSession();
+    // Keep the run active while the app is backgrounded. Background
+    // services remain responsible for tracking.
   }
   
   /// Handle app detached (about to be terminated)
@@ -962,86 +962,83 @@ class _RunScreenState extends ConsumerState<RunScreen> with WidgetsBindingObserv
   }
 
   void _finishRun() async {
-  print('🚨 RunScreen: _finishRun() method called!');
+    print('🚨 RunScreen: _finishRun() method called!');
 
-  // Set up loading state for UI
-  setState(() {
-    _isLoading = true; // You can add a loading indicator to the UI
-  });
+    // Set up loading state for UI
+    setState(() {
+      _isLoading = true;
+    });
 
-  try {
-    // 1. Get the final, complete GPS data and stats from the session manager BEFORE stopping it.
-    final runSessionManager = ref.read(runSessionControllerProvider);
-    final gpsPositions = runSessionManager.progressMonitor.route;
-    final managerStats = ref.read(runSessionControllerProvider.notifier).getCurrentStats();
-    
-    // 2. Now that we have the data, stop all services.
     try {
-      _stopAllTimersAndServices();
-      ref.read(runSessionControllerProvider.notifier).nuclearStop();
-      _clearServiceCallbacks();
-    } catch (e) {
-      print('❌ RunScreen: Error stopping services during finish flow: $e');
-    }
+      // 1. Get an IMMUTABLE SNAPSHOT of the run data BEFORE stopping anything.
+      // This is the key fix. It prevents a race condition where data is cleared before it's saved.
+      final runSessionManager = ref.read(runSessionControllerProvider.notifier);
+      final runModel = runSessionManager.createRunModel();
 
-    // Check if there is any data to save
-    if (gpsPositions.isEmpty) {
-      print('⚠️ RunScreen: No GPS data to save. Navigating to summary.');
-      _showToast('No run data to save.', isError: true);
-      if (mounted) {
-        context.go('/run/summary');
+      // 2. Now that we have a safe copy of the data, stop all services.
+      try {
+        _stopAllTimersAndServices();
+        runSessionManager.nuclearStop();
+        _clearServiceCallbacks();
+      } catch (e) {
+        print('❌ RunScreen: Error stopping services during finish flow: $e');
       }
-      return;
-    }
-    
-    print('📍 RunScreen: Finalizing run with ${gpsPositions.length} GPS points');
-    
-    // 3. Use the dedicated RunCompletionService to handle all saving logic
-    final runCompletionService = RunCompletionService(ProviderScope.containerOf(context));
-    
-    // Pass the captured data to the service
-    final summaryData = await runCompletionService.completeRunWithData(
-      gpsPositions,
-      duration: managerStats?.elapsedTime ?? Duration.zero, // No fallback to local state
-      distance: managerStats?.distance ?? 0.0, // No fallback to local state
-      episodeId: _getEpisodeIdFromQuery() ?? 'unknown',
-    );
 
-    // 4. Wait for the service to complete successfully
-    if (summaryData != null) {
+      // 3. Check if there is any data to save in our snapshot.
+      if (runModel.route == null || runModel.route!.isEmpty) {
+        print('⚠️ RunScreen: No GPS data to save. Navigating to summary.');
+        _showToast('No run data to save.', isError: true);
+        if (mounted) {
+          context.go('/run/summary');
+        }
+        return;
+      }
+
+      print('📍 RunScreen: Finalizing run with ${runModel.route!.length} GPS points');
+
+      // 4. Save the RunModel snapshot directly to Firestore.
+      final firestoreService = ref.read(firestoreServiceProvider);
+      final runId = await firestoreService.saveRun(runModel);
+      print('💾 RunScreen: Run data saved successfully to Firestore with ID: $runId');
+
+      // 5. Create summary data from the saved model for the summary screen.
+      final episode = await ref.read(storyServiceProvider).getEpisodeById(runModel.episodeId ?? '');
+      final summaryData = RunSummaryData(
+        totalTime: runModel.totalTime ?? Duration.zero,
+        totalDistance: runModel.totalDistance ?? 0.0,
+        averagePace: runModel.averagePace ?? 0.0,
+        caloriesBurned: runModel.caloriesBurned?.round() ?? 0,
+        episode: episode,
+        achievements: runModel.achievements ?? [],
+        route: runModel.route ?? [],
+        createdAt: runModel.createdAt,
+        completedAt: runModel.completedAt ?? DateTime.now(),
+      );
+
+      // Set the summary data in the provider for the summary screen.
+      ref.read(currentRunSummaryProvider.notifier).state = summaryData;
+
       print('✅ RunScreen: Run completed successfully and saved!');
       _showToast('Run saved successfully!', isError: false);
-      
-      // 4. Navigate to the summary screen with the summary data
+
+      // 6. Navigate to the summary screen.
       if (mounted) {
-        // You might want to pass the summary data to the next screen for display
         context.go('/run/summary', extra: summaryData);
       }
-    } else {
-      // Handle the case where the service returns null, indicating a failure
-      print('❌ RunScreen: Run completion failed. Summary data is null.');
-      _showToast('Error saving run data. Try again later.', isError: true);
-      
-      // Navigate to summary anyway, but let the user know something went wrong
+    } catch (e) {
+      print('❌ RunScreen: Unhandled error in _finishRun: $e');
+      _showToast('An unexpected error occurred. Data might not be saved.', isError: true);
+
       if (mounted) {
         context.go('/run/summary');
       }
-    }
-    
-  } catch (e) {
-    print('❌ RunScreen: Unhandled error in _finishRun: $e');
-    _showToast('An unexpected error occurred. Data might not be saved.', isError: true);
-    
-    if (mounted) {
-      context.go('/run/summary');
-    }
-  } finally {
-    // Hide the loading indicator
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    } finally {
+      // Hide the loading indicator
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-}
 }

@@ -194,6 +194,9 @@ class SceneTriggerService {
       }
 
       final localFilePath = localFiles.first;
+      _episodeLocalAudioFiles
+        ..clear()
+        ..add(localFilePath);
       if (kDebugMode) {
         debugPrint('🎵 Using local file path: $localFilePath');
       }
@@ -232,32 +235,92 @@ class SceneTriggerService {
     }
   }
 
+  Future<void> _initializeMultipleAudioFiles() async {
+    _episodeLocalAudioFiles.clear();
+    _localSceneFileMap.clear();
+
+    if (_isSingleFileMode || _episodeAudioFiles.isEmpty) {
+      _isAudioLoaded = false;
+      return;
+    }
+
+    try {
+      if (kDebugMode) {
+        debugPrint('🎵 Initializing multiple audio files: ${_episodeAudioFiles.length} files');
+        debugPrint('🎵 Remote audio files: $_episodeAudioFiles');
+      }
+
+      final localFiles = await _downloadService.getLocalEpisodeFiles(_currentEpisode?.id ?? '');
+      if (localFiles.isEmpty) {
+        _isAudioLoaded = false;
+        if (kDebugMode) {
+          debugPrint('❌ No local audio files found for episode ${_currentEpisode?.id ?? 'unknown'}');
+        }
+        return;
+      }
+
+      final Map<String, String> localFileMap = {
+        for (final path in localFiles)
+          _extractFileName(path): path,
+      };
+
+      final List<SceneType> sceneOrder = [
+        SceneType.scene1,
+        SceneType.scene2,
+        SceneType.scene3,
+        SceneType.scene4,
+        SceneType.scene5,
+      ];
+
+      for (int i = 0; i < _episodeAudioFiles.length && i < sceneOrder.length; i++) {
+        final remotePath = _episodeAudioFiles[i];
+        final fileName = _extractFileName(remotePath);
+        final localPath = localFileMap[fileName];
+
+        if (localPath != null) {
+          final scene = sceneOrder[i];
+          _localSceneFileMap[scene] = localPath;
+          _episodeLocalAudioFiles.add(localPath);
+        } else if (kDebugMode) {
+          debugPrint('❌ Missing local audio file for scene index $i ($fileName)');
+        }
+      }
+
+      _isAudioLoaded = _localSceneFileMap.isNotEmpty;
+
+      if (kDebugMode) {
+        debugPrint('🎵 Local scene file map: $_localSceneFileMap');
+        debugPrint('🎵 Local audio files (ordered): $_episodeLocalAudioFiles');
+      }
+    } catch (e) {
+      _isAudioLoaded = false;
+      if (kDebugMode) {
+        debugPrint('❌ Failed to initialize multiple audio files: $e');
+      }
+    }
+  }
+
   Future<void> _initializeBackgroundAudio() async {
     try {
       _audioSession = await audio_session.AudioSession.instance;
-      
-      final config = AudioSessionConfiguration(
-        avAudioSessionCategory: audio_session.AVAudioSessionCategory.playback,
-        avAudioSessionCategoryOptions: audio_session.AVAudioSessionCategoryOptions.allowBluetooth,
-        avAudioSessionMode: audio_session.AVAudioSessionMode.defaultMode,
-        avAudioSessionRouteSharingPolicy: audio_session.AVAudioSessionRouteSharingPolicy.defaultPolicy,
-        avAudioSessionSetActiveOptions: audio_session.AVAudioSessionSetActiveOptions.none,
-        androidAudioAttributes: const audio_session.AndroidAudioAttributes(
-          contentType: audio_session.AndroidAudioContentType.music,
-          flags: audio_session.AndroidAudioFlags.none,
-          usage: audio_session.AndroidAudioUsage.media,
-        ),
+
+      final config = audio_session.AudioSessionConfiguration.music().copyWith(
+        avAudioSessionCategoryOptions: audio_session.AVAudioSessionCategoryOptions.allowBluetooth |
+            audio_session.AVAudioSessionCategoryOptions.allowAirPlay,
         androidAudioFocusGainType: audio_session.AndroidAudioFocusGainType.gain,
-        androidWillPauseWhenDucked: true,
+        androidWillPauseWhenDucked: false,
       );
 
       await _audioSession!.configure(config);
+      await _audioSession!.setActive(true);
+      _isAudioSessionActive = true;
       _backgroundSystemInitialized = true;
-      
+
       if (kDebugMode) {
         debugPrint('🎵 Background audio system initialized');
       }
     } catch (e) {
+      _isAudioSessionActive = false;
       if (kDebugMode) {
         debugPrint('❌ Failed to initialize background audio: $e');
       }
@@ -491,10 +554,11 @@ class SceneTriggerService {
 
   Future<void> _playSceneFromMultipleFiles(SceneType sceneType) async {
     try {
-      if (_audioSession != null) {
+      if (_audioSession != null && !_isAudioSessionActive) {
         await _audioSession!.setActive(true);
+        _isAudioSessionActive = true;
       }
-      
+
       final audioPath = _getAudioPathForScene(sceneType);
       if (audioPath == null) {
         if (kDebugMode) {
@@ -504,16 +568,29 @@ class SceneTriggerService {
         return;
       }
 
-      await _audioPlayer.setFilePath(audioPath);
+      final mediaItem = MediaItem(
+        id: '${_currentEpisode?.id ?? 'unknown'}_${sceneType.name}',
+        album: "Runner's Saga",
+        title: '${_currentEpisode?.title ?? 'Episode'} - ${SceneTriggerService.getSceneTitle(sceneType)}',
+        artist: "Runner's Saga",
+      );
+
+      final audioSource = AudioSource.file(
+        audioPath,
+        tag: mediaItem,
+      );
+
+      await _audioPlayer.setAudioSource(audioSource);
       await _audioPlayer.play();
-      
+
       if (kDebugMode) {
         debugPrint('🎵 Playing audio for scene: ${SceneTriggerService.getSceneTitle(sceneType)}');
         debugPrint('📁 Audio path: $audioPath');
+        debugPrint('🎵 MediaItem configured: ${mediaItem.title}');
       }
-      
+
       // Note: Scene completion is handled by the calling method
-      
+
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Error playing scene audio: $e');
@@ -592,22 +669,20 @@ class SceneTriggerService {
 
   String? _getAudioPathForScene(SceneType sceneType) {
     if (_isSingleFileMode) {
-      // In single file mode, return the local path to the single audio file
-      try {
-        final localFiles = _downloadService.getLocalEpisodeFiles(_currentEpisode?.id ?? '');
-        if (localFiles.isNotEmpty) {
-          return localFiles.first;
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('❌ Error getting local audio file path: $e');
-        }
+      if (_episodeLocalAudioFiles.isNotEmpty) {
+        return _episodeLocalAudioFiles.first;
+      }
+      if (kDebugMode) {
+        debugPrint('❌ No local audio file cached for single file mode');
       }
       return null;
     } else {
-      // Legacy multiple files mode - this should not be used anymore
+      final localPath = _localSceneFileMap[sceneType];
+      if (localPath != null) {
+        return localPath;
+      }
       if (kDebugMode) {
-        debugPrint('⚠️ Multiple files mode is deprecated - use single audio file mode');
+        debugPrint('❌ No local audio file mapped for scene: ${SceneTriggerService.getSceneTitle(sceneType)}');
       }
       return null;
     }
